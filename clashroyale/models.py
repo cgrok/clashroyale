@@ -97,6 +97,7 @@ class Member(BaseAttrDict):
         super().__init__(clan.client, data)
 
     def get_profile(self):
+        '''Returns the full player object corresponding to the member.'''
         return self.client.get_player(self.tag)
 
 class Clan(BaseAttrDict, Refreshable):
