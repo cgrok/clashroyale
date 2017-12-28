@@ -68,7 +68,7 @@ class Client:
         self.using_cache = bool(self.cache_fp)
         self.cache_reset = options.get('cache_expires', 300)
         if self.using_cache:
-            table = options.get('table_name')
+            table = options.get('table_name', 'data')
             self.cache = SqliteDict(self.cache_fp, table)
 
     def _resolve_cache(self, url, **params):
