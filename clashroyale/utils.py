@@ -92,3 +92,6 @@ class Endpoints:
     TOP = BASE + '/top'
     CONSTANTS = BASE + '/constants'
     POPULAR = BASE + '/popular'
+    TOURNAMENT = BASE + '/tournaments'
+    ENDPOINTS = BASE + '/endpoints'
+    VERSION = BASE + '/version'
