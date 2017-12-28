@@ -30,7 +30,7 @@ from .utils import Endpoints
 # METADATA #
 ############
 
-__version__ = 'v3.0.8'
+__version__ = 'v3.0.9'
 __title__ = 'clashroyale'
 __license__ = 'MIT'
 __author__ = 'kyb3r'

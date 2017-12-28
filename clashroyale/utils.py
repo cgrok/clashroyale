@@ -59,7 +59,7 @@ def clansearch(k, v):
     valid = ('name', 'score', 'minMembers', 'maxMembers')
     k = _to_camel_case(k)
     if k not in valid:
-        raise ValueError(f'Invalid search parameter passed: {param}')
+        raise ValueError(f'Invalid search parameter passed: {k}')
     return k, v
     
 def crtag(tag):
