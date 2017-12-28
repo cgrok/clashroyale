@@ -24,13 +24,17 @@ SOFTWARE.
 
 import asyncio
 import json
+from urllib.parse import urlencode
+from datetime import datetime
 
 import aiohttp
 import requests
 
 from .models import Player, Clan, PlayerInfo, ClanInfo, Constants, Tournament
 from .errors import NotFoundError, ServerError, NotResponding, Unauthorized
-from .utils import Endpoints, typecasted, crtag, clansearch
+from .utils import Endpoints, typecasted, crtag, clansearch, SqliteDict
+
+
 
 class Client:
     '''Represents an (a)sync client connection to cr-api.com
@@ -50,16 +54,33 @@ class Client:
         Whether or not to access keys in snake_case or camelCase
     '''
 
-    def __init__(self, token, session=None, timeout=10, is_async=False, camel_case=False):
+    def __init__(self, token, session=None, is_async=False, **options):
         self.token = token
         self.is_async = is_async
-        self.timeout = timeout
+        self.timeout = options.get('timeout', 10)
         self.session = session or (aiohttp.ClientSession() if is_async else requests.Session())
-        self.camel_case = camel_case
+        self.camel_case = options.get('camel_case', False)
         self.headers = {
             'auth': token,
             'user-agent': 'python-clashroyale (kyb3r)'
             }
+        self.cache_fp = options.get('cache_fp')
+        self.using_cache = bool(self.cache_fp)
+        self.cache_reset = options.get('cache_expires', 300)
+        if self.using_cache:
+            table = options.get('table_name')
+            self.cache = SqliteDict(self.cache_fp, table)
+
+    def _resolve_cache(self, url, **params):
+        bucket = url + (('?' + urlencode(params)) if params else '')
+        print(bucket)
+        cached_data = self.cache.get(bucket)
+        if not cached_data:
+            return None
+        prev = datetime.fromtimestamp(cached_data['timestamp'])
+        if (datetime.utcnow() - prev).total_seconds() < self.cache_reset:
+            return cached_data['data']
+        return None
 
     async def __aenter__(self):
         return self
@@ -80,6 +101,12 @@ class Client:
             data = text
         code = getattr(resp, 'status', None) or getattr(resp, 'status_code')
         if 300 > code >= 200: # Request was successful
+            if self.using_cache:
+                cached_data = {
+                    'timestamp': datetime.utcnow().timestamp(),
+                    'data': data
+                }
+                self.cache[resp.url] = cached_data
             return data
         if code == 401: # Unauthorized request - Invalid token
             raise Unauthorized(resp, data) 
@@ -96,6 +123,9 @@ class Client:
             raise NotResponding()
     
     def request(self, url, **params):
+        cache = self._resolve_cache(url, **params)
+        if cache is not None:
+            return cache
         if self.is_async:
             return self._arequest(url, **params)
         try:
