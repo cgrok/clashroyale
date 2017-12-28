@@ -1,5 +1,5 @@
 # clashroyale
-Async + Sync wrapper for cr-api.com
+This library is currently an (a)sync wrapper for https://cr-api.com with great functionality.
 
 ## Installation
 ```
