@@ -63,7 +63,7 @@ def clansearch(k, v):
     return k, v
     
 def crtag(tag):
-    tag = tag.strip('#').upper()
+    tag = tag.strip('#').upper().replace('O', '0')
     allowed = '0289PYLQGRJCUV'
     bad = []
     for c in tag:
