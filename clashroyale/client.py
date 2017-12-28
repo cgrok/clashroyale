@@ -22,14 +22,13 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 '''
 
-
 import asyncio
 import json
 import aiohttp
 import requests
 from .models import Player, Clan, PlayerInfo, ClanInfo, Constants
-from .errors import RequestError, NotFoundError, ServerError, NotResponding
-from .utils import Endpoints, _to_camel_case
+from .errors import RequestError, NotFoundError, ServerError, NotResponding, Unauthorized
+from .utils import Endpoints, _to_camel_case, typecasted, crtag, clansearch
 
 class Client:
     '''Represents an async client connection to cr-api.com
@@ -122,14 +121,20 @@ class Client:
             return [model(self, c) for c in data]
         else:
             return model(self, data)
-
-    def get_player(self, *tags):
+    
+    @typecasted()
+    def get_player(self, *tags: crtag):
         url = Endpoints.PLAYER + '/' + ','.join(tags)
         return self._get_model(url, Player)
-
-    def get_clan(self, *tags):
+    
+    @typecasted()
+    def get_clan(self, *tags: crtag):
         url = Endpoints.CLAN + '/' + ','.join(tags)
         return self._get_model(url, Clan)
+    
+    @typecasted()
+    def search_clans(self, **params: clansearch):
+        return self._get_model(Endpoints.SEARCH, ClanInfo, **params)
 
     def get_top_clans(self, country_key=None):
         url = '{0.base}/top/clans/' + (country_key or '')
@@ -146,13 +151,7 @@ class Client:
     def get_popular_players(self):
         url = Endpoints.POPULAR + '/players'
         return self._get_model(url, PlayerInfo)
-
-    def search_clans(self, **params):
-        valid = ('name', 'score', 'minMembers', 'maxMembers')
-        params = {_to_camel_case(k): v for k, v in params.items()}
-        if any(k not in valid for k in params):
-            raise ValueError('Invalid search parameter passed.')
-        return self._get_model(Endpoints.SEARCH, ClanInfo, **params)
+    
 
     def get_constants(self):
         return self._get_model(Endpoints.CONSTANTS, Constants)

@@ -33,7 +33,7 @@ class RequestError(Exception):
     def __init__(self, resp, data):
         self.response = resp
         self.code = getattr(resp, 'status', getattr(resp, 'status_code'))
-        self.method = resp.method
+        self.method = getattr(resp, 'method', None)
         self.reason = resp.reason
         self.error = data.get('error')
         if 'message' in data:
