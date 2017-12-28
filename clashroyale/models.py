@@ -127,3 +127,7 @@ class Clan(BaseAttrDict, Refreshable):
 class Constants(BaseAttrDict, Refreshable):
     '''Clash Royale constants storage'''
     pass
+
+class Tournament(BaseAttrDict, Refreshable):
+    '''Represents a clash royale tournament.'''
+    pass

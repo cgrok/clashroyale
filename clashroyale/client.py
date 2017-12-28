@@ -24,11 +24,13 @@ SOFTWARE.
 
 import asyncio
 import json
+
 import aiohttp
 import requests
-from .models import Player, Clan, PlayerInfo, ClanInfo, Constants
-from .errors import RequestError, NotFoundError, ServerError, NotResponding, Unauthorized
-from .utils import Endpoints, _to_camel_case, typecasted, crtag, clansearch
+
+from .models import Player, Clan, PlayerInfo, ClanInfo, Constants, Tournament
+from .errors import NotFoundError, ServerError, NotResponding, Unauthorized
+from .utils import Endpoints, typecasted, crtag, clansearch
 
 class Client:
     '''Represents an async client connection to cr-api.com
@@ -48,8 +50,10 @@ class Client:
         Whether or not to access keys in snake_case or camelCase
     '''
 
+    get_players = get_player
+    get_clans = get_clan
+
     def __init__(self, token, session=None, timeout=10, is_async=False, camel_case=False):
-        self.base = 'http://api.cr-api.com'
         self.token = token
         self.is_async = is_async
         self.timeout = timeout
@@ -121,6 +125,11 @@ class Client:
             return [model(self, c) for c in data]
         else:
             return model(self, data)
+
+    @typecasted()
+    def get_tournament(self, tag: crtag):
+        url = Endpoints.TOURNAMENT + '/' + tag
+        return self._get_model(url, Tournament)
     
     @typecasted()
     def get_player(self, *tags: crtag):
@@ -131,13 +140,22 @@ class Client:
     def get_clan(self, *tags: crtag):
         url = Endpoints.CLAN + '/' + ','.join(tags)
         return self._get_model(url, Clan)
-    
+
     @typecasted()
     def search_clans(self, **params: clansearch):
         return self._get_model(Endpoints.SEARCH, ClanInfo, **params)
 
+    def get_constants(self):
+        return self._get_model(Endpoints.CONSTANTS, Constants)
+
+    def get_version(self):
+        return self.request(Endpoints.VERSION)
+
+    def get_endpoints(self):
+        return self.request(Endpoints.ENDPOINTS)
+
     def get_top_clans(self, country_key=None):
-        url = '{0.base}/top/clans/' + (country_key or '')
+        url = Endpoints.TOP + '/clans/' + (country_key or '')
         return self._get_model(url, ClanInfo)
 
     def get_top_players(self, country_key=None):
@@ -151,11 +169,3 @@ class Client:
     def get_popular_players(self):
         url = Endpoints.POPULAR + '/players'
         return self._get_model(url, PlayerInfo)
-    
-
-    def get_constants(self):
-        return self._get_model(Endpoints.CONSTANTS, Constants)
-
-    get_players = get_player
-    get_clans = get_clan
-
