@@ -122,10 +122,16 @@ class Client:
         except asyncio.TimeoutError:
             raise NotResponding()
     
+    async def _do_nothing(self, arg):
+        return arg
+    
     def request(self, url, **params):
-        cache = self._resolve_cache(url, **params)
-        if cache is not None:
-            return cache
+        if self.using_cache:
+            cache = self._resolve_cache(url, **params)
+            if cache is not None:
+                if self.is_async:
+                    return self._do_nothing(cache)
+                return cache
         if self.is_async:
             return self._arequest(url, **params)
         try:
