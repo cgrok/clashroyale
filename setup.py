@@ -2,13 +2,12 @@ from setuptools import setup
 
 setup(
     name='clashroyale',
-    packages=['clashroyale'],  # this must be the same as the name above
-    version='v3.0.0',
+    packages=['clashroyale'],  
+    version='v3.0.2',
     description='An async wrapper for cr-api.com',
     author='kyb3r',
     license='MIT',
-    url='https://github.com/cgrok/clashroyale',  # use the URL to the github repo
-    keywords=['clashroyale'],  # arbitrary keywords
-    classifiers=[],
-    install_requires=['aiohttp>=2.0.0,<2.3.0'],
+    url='https://github.com/cgrok/clashroyale',  
+    keywords=['clashroyale'], 
+    install_requires=['aiohttp>=2.0.0,<2.3.0', 'python-box==3.1.1', 'requests==2.18.4'],
 )
