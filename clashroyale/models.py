@@ -23,7 +23,7 @@ SOFTWARE.
 '''
 
 from box import Box, BoxList
-from .utils import _to_snake_case
+from .utils import _to_snake_case, Endpoints
 
 class BaseAttrDict:
     '''Uses a python-box for data storage, this class 
@@ -91,7 +91,7 @@ class Refreshable:
     @property
     def url(self):
         endpoint = self.__class__.__name__.lower()
-        return f'{self.client.base}/{endpoint}/{self.tag}'
+        return f'{Endpoints.BASE}/{endpoint}/{self.tag}'
 
 class Player(BaseAttrDict, Refreshable, FullClan):
     '''A clash royale player model.'''

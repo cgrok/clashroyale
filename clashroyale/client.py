@@ -33,7 +33,7 @@ from .errors import NotFoundError, ServerError, NotResponding, Unauthorized
 from .utils import Endpoints, typecasted, crtag, clansearch
 
 class Client:
-    '''Represents an async client connection to cr-api.com
+    '''Represents an (a)sync client connection to cr-api.com
 
     Parameters
     ----------
@@ -49,9 +49,6 @@ class Client:
     camel_case: bool
         Whether or not to access keys in snake_case or camelCase
     '''
-
-    get_players = get_player
-    get_clans = get_clan
 
     def __init__(self, token, session=None, timeout=10, is_async=False, camel_case=False):
         self.token = token
@@ -81,7 +78,7 @@ class Client:
             data = json.loads(text)
         except:
             data = text
-        code = getattr(resp, 'status', getattr(resp, 'status_code'))
+        code = getattr(resp, 'status', None) or getattr(resp, 'status_code')
         if 300 > code >= 200: # Request was successful
             return data
         if code == 401: # Unauthorized request - Invalid token
@@ -135,11 +132,15 @@ class Client:
     def get_player(self, *tags: crtag):
         url = Endpoints.PLAYER + '/' + ','.join(tags)
         return self._get_model(url, Player)
+
+    get_players = get_player
     
     @typecasted()
     def get_clan(self, *tags: crtag):
         url = Endpoints.CLAN + '/' + ','.join(tags)
         return self._get_model(url, Clan)
+
+    get_clans = get_clan
 
     @typecasted()
     def search_clans(self, **params: clansearch):

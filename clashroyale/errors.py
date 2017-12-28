@@ -32,7 +32,7 @@ class RequestError(Exception):
     '''Base class for request errors'''
     def __init__(self, resp, data):
         self.response = resp
-        self.code = getattr(resp, 'status', getattr(resp, 'status_code'))
+        self.code = getattr(resp, 'status', None) or getattr(resp, 'status_code')
         self.method = getattr(resp, 'method', None)
         self.reason = resp.reason
         self.error = data.get('error')
