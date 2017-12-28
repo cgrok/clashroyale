@@ -73,14 +73,21 @@ class Client:
 
     def _resolve_cache(self, url, **params):
         bucket = url + (('?' + urlencode(params)) if params else '')
-        print(bucket)
         cached_data = self.cache.get(bucket)
         if not cached_data:
             return None
         prev = datetime.fromtimestamp(cached_data['timestamp'])
         if (datetime.utcnow() - prev).total_seconds() < self.cache_reset:
+            if self.is_async:
+                return self._do_nothing(cached_data['data'])
             return cached_data['data']
         return None
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        self.session.close()
 
     async def __aenter__(self):
         return self
@@ -106,7 +113,7 @@ class Client:
                     'timestamp': datetime.utcnow().timestamp(),
                     'data': data
                 }
-                self.cache[resp.url] = cached_data
+                self.cache[str(resp.url)] = cached_data
             return data
         if code == 401: # Unauthorized request - Invalid token
             raise Unauthorized(resp, data) 
@@ -129,8 +136,6 @@ class Client:
         if self.using_cache:
             cache = self._resolve_cache(url, **params)
             if cache is not None:
-                if self.is_async:
-                    return self._do_nothing(cache)
                 return cache
         if self.is_async:
             return self._arequest(url, **params)
@@ -141,7 +146,13 @@ class Client:
             raise NotResponding()
 
     async def _aget_model(self, url, model, **params):
-        data = await self.request(url, **params)
+        try:
+            data = await self.request(url, **params)
+        except Exception as e:
+            if self.using_cache:
+                data = self._resolve_cache(url, **params)
+            if 'data' not in locals():
+                raise e
 
         if isinstance(data, list):
             return [model(self, c) for c in data]
@@ -152,7 +163,13 @@ class Client:
         if self.is_async:
             return self._aget_model(url, model, **params)
 
-        data = self.request(url, **params)
+        try:
+            data = self.request(url, **params)
+        except Exception as e:
+            if self.using_cache:
+                data = self._resolve_cache(url, **params)
+            if 'data' not in locals():
+                raise e
 
         if isinstance(data, list):
             return [model(self, c) for c in data]
