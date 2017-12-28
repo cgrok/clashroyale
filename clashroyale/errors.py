@@ -32,7 +32,7 @@ class RequestError(Exception):
     '''Base class for request errors'''
     def __init__(self, resp, data):
         self.response = resp
-        self.code = resp.status
+        self.code = getattr(resp, 'status', getattr(resp, 'status_code'))
         self.method = resp.method
         self.reason = resp.reason
         self.error = data.get('error')
@@ -47,4 +47,8 @@ class NotFoundError(RequestError):
 
 class ServerError(RequestError):
     '''Raised if the api service is having issues'''
+    pass
+
+class Unauthorized(RequestError):
+    '''Raised if you passed an invalid token.'''
     pass
