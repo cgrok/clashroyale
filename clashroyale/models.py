@@ -21,20 +21,15 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 '''
-import json
-from os import path
-from . import core
+
 from box import Box, BoxList
-import re
-
-first_cap_re = re.compile('(.)([A-Z][a-z]+)')
-all_cap_re = re.compile('([a-z0-9])([A-Z])')
-
-def _to_snake_case(name):
-    s1 = first_cap_re.sub(r'\1_\2', name)
-    return all_cap_re.sub(r'\1_\2', s1).lower()
+from .utils import _to_snake_case
 
 class BaseAttrDict:
+    '''Uses a python-box for data storage, this class 
+    is used as a base class so we can easily add extra 
+    methods without interfering with the box itself.
+    '''
     def __init__(self, client, data):
         self.client = client
         self.from_data(data)
@@ -53,7 +48,7 @@ class BaseAttrDict:
             return super().__getattr__(attr)
 
     def __repr__(self):
-        _type = self.__class__.__name__.title()
+        _type = self.__class__.__name__
         return f'<{_type}: {self}>'
 
     def __str__(self):
@@ -61,8 +56,24 @@ class BaseAttrDict:
             return f'{self.name} (#{self.tag})'
         except AttributeError:
             return super().__str__()
+    
+class FullClan:
+    def get_clan(self):
+        '''(a)sync function to return clan.'''
+        if not self.clan.get('tag'):
+            raise ValueError('This player does not have a clan.')
+        return self.client.get_clan(self.clan.tag)
+
+class FullPlayer:
+    def get_profile(self):
+        return self.client.get_player(self.tag)
+
+    get_player = get_profile # consistancy
 
 class Refreshable:
+    '''Mixin class for re requesting data from 
+    the api for the specific model.
+    '''
     def refresh(self):
         '''(a)sync refresh the data.'''
         client = self.client
@@ -82,42 +93,37 @@ class Refreshable:
         endpoint = self.__class__.__name__.lower()
         return f'{self.client.base}/{endpoint}/{self.tag}'
 
+class Player(BaseAttrDict, Refreshable, FullClan):
+    '''A clash royale player model.'''
+    pass
 
-class Player(BaseAttrDict, Refreshable):
-    # TODO: Badge URL
-    def get_clan(self):
-        '''(a)sync function to return clan.'''
-        if not self.clan.get('tag'):
-            raise ValueError('This player does not have a clan.')
-        return self.client.get_clan(self.clan.tag)
-
-class Member(BaseAttrDict):
+class Member(BaseAttrDict, FullPlayer):
+    '''A clan member model, 
+    keeps a reference to the clan object it came from.
+    '''
     def __init__(self, clan, data):
         self.clan = clan
         super().__init__(clan.client, data)
 
-    def get_profile(self):
-        return self.client.get_player(self.tag)
+class PlayerInfo(BaseAttrDict, FullClan, FullPlayer):
+    '''Brief player model, 
+    does not contain full data, non refreshable.
+    '''
+    pass
+
+class ClanInfo(BaseAttrDict, FullClan):
+    '''Brief clan model, 
+    does not contain full data, non refreshable.
+    '''
+    pass
 
 class Clan(BaseAttrDict, Refreshable):
-    # TODO: Badge URL
+    '''A clash royale clan model, full data + refreshable.
+    '''
     def from_data(self, data):
         super().from_data(data)
         self.members = [Member(self, m) for m in data['members']]
 
-class Arena(BaseAttrDict):
-    def __str__(self):
-        return self.name
-
-    @property
-    def image_url(self):
-        return "http://api.cr-api.com" + self.image_url
-
-
 class Constants(BaseAttrDict, Refreshable):
-    # TODO: Special cases
+    '''Clash Royale constants storage'''
     pass
-
-
-# NOTE: Not done
-# TODO: Documentation
