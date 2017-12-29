@@ -52,7 +52,10 @@ class BaseAttrDict:
         try:
             return getattr(self._boxed_data, attr)
         except AttributeError:
-            return super().__getattr__(attr)
+            try:
+                return super().__getattr__(attr)
+            except AttributeError:
+                return None
 
     def __repr__(self):
         _type = self.__class__.__name__
