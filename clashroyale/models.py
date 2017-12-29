@@ -52,7 +52,10 @@ class BaseAttrDict:
         try:
             return getattr(self._boxed_data, attr)
         except AttributeError:
-            return super().__getattr__(attr)
+            try:
+                return super().__getattr__(attr)
+            except AttributeError:
+                return None
 
     def __repr__(self):
         _type = self.__class__.__name__
@@ -125,8 +128,8 @@ class ClanInfo(BaseAttrDict, FullClan):
 class Clan(BaseAttrDict, Refreshable):
     '''A clash royale clan model, full data + refreshable.
     '''
-    def from_data(self, data):
-        super().from_data(data)
+    def from_data(self, data, cached, ts):
+        super().from_data(data, cached, ts)
         self.members = [Member(self, m) for m in data['members']]
 
 class Constants(BaseAttrDict, Refreshable):

@@ -1,7 +1,7 @@
 import clashroyale
 import asyncio
 import os
-from collections import namedtuple
+
 
 token = os.getenv('crtoken') # get your token somehow.
 
@@ -9,9 +9,10 @@ token = os.getenv('crtoken') # get your token somehow.
 async def main():
     client = clashroyale.Client(token, is_async=True) # is_async=True argument
     # EVERYTHING IS THE SAME, BUT WITH await's
-    profile = await client.get_player('#8l9l9gl')
+    profile = await client.get_player('CY8G8VVQ')
     print(repr(profile))
     print(profile.name) 
+    print(profile.league_statistics)
     await profile.refresh() 
     print(profile.stats.favorite_card.name)
     clan = await profile.get_clan() 

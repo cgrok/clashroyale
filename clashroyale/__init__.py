@@ -30,7 +30,7 @@ from .utils import API
 # METADATA #
 ############
 
-__version__ = 'v3.1.4'
+__version__ = 'v3.1.5'
 __title__ = 'clashroyale'
 __license__ = 'MIT'
 __author__ = 'kyb3r'
