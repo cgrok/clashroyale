@@ -26,13 +26,14 @@ import asyncio
 import json
 from urllib.parse import urlencode
 from datetime import datetime
+fromts = datetime.fromtimestamp
 
 import aiohttp
 import requests
 
-from .models import Player, Clan, PlayerInfo, ClanInfo, Constants, Tournament
+from .models import Player, Clan, PlayerInfo, ClanInfo, Constants, Tournament, rlist
 from .errors import NotFoundError, ServerError, NotResponding, Unauthorized
-from .utils import Endpoints, typecasted, crtag, clansearch, SqliteDict
+from .utils import API, typecasted, crtag, clansearch, SqliteDict
 
 
 
@@ -76,11 +77,12 @@ class Client:
         cached_data = self.cache.get(bucket)
         if not cached_data:
             return None
-        prev = datetime.fromtimestamp(cached_data['timestamp'])
-        if (datetime.utcnow() - prev).total_seconds() < self.cache_reset:
+        last_updated = fromts(cached_data['c_timestamp'])
+        if (datetime.utcnow() - last_updated).total_seconds() < self.cache_reset:
+            ret = (cached_data['data'], True, last_updated)
             if self.is_async:
-                return self._do_nothing(cached_data['data'])
-            return cached_data['data']
+                return self._wrap_coro(ret)
+            return ret
         return None
 
     def __enter__(self):
@@ -110,11 +112,11 @@ class Client:
         if 300 > code >= 200: # Request was successful
             if self.using_cache:
                 cached_data = {
-                    'timestamp': datetime.utcnow().timestamp(),
+                    'c_timestamp': datetime.utcnow().timestamp(),
                     'data': data
                 }
                 self.cache[str(resp.url)] = cached_data
-            return data
+            return data, False, datetime.utcnow() # value, cached, last_updated
         if code == 401: # Unauthorized request - Invalid token
             raise Unauthorized(resp, data) 
         if code == 404: # Tag not found
@@ -129,11 +131,11 @@ class Client:
         except asyncio.TimeoutError:
             raise NotResponding()
     
-    async def _do_nothing(self, arg):
+    async def _wrap_coro(self, arg):
         return arg
     
-    def request(self, url, **params):
-        if self.using_cache:
+    def request(self, url, refresh=False, **params):
+        if self.using_cache and refresh is False: # Refresh=True forces a request instead of using cache
             cache = self._resolve_cache(url, **params)
             if cache is not None:
                 return cache
@@ -145,81 +147,89 @@ class Client:
         except requests.Timeout:
             raise NotResponding()
 
-    async def _aget_model(self, url, model, **params):
+    def _convert_model(self, data, cached, ts, model):
+        if isinstance(data, str):
+            return data # version endpoint, not feasable to add refresh functionality.
+        if isinstance(data, list): # Extra functionality
+            if all(isinstance(x, str) for x in data): # Endpoints endpoint
+                return rlist(self, data, cached, ts) # Extra functionality
+            return [model(self, d, cached=cached, ts=ts) for d in data]
+        else:
+            return model(self, data, cached=cached, ts=ts)
+
+    async def _aget_model(self, url, model=None, **params):
         try:
-            data = await self.request(url, **params)
+            data, cached, ts = await self.request(url, **params)
         except Exception as e:
             if self.using_cache:
-                data = self._resolve_cache(url, **params)
+                cache = self._resolve_cache(url, **params)
+                if cache is not None:
+                    data, cached, ts = cache
             if 'data' not in locals():
                 raise e
+        
+        return self._convert_model(data, cached, ts, model)
 
-        if isinstance(data, list):
-            return [model(self, c) for c in data]
-        else:
-            return model(self, data)
-
-    def _get_model(self, url, model, **params):
+    def _get_model(self, url, model=None, **params):
         if self.is_async:
             return self._aget_model(url, model, **params)
 
         try:
-            data = self.request(url, **params)
+            data, cached, ts = self.request(url, **params)
         except Exception as e:
             if self.using_cache:
-                data = self._resolve_cache(url, **params)
+                cache = self._resolve_cache(url, **params)
+                if cache is not None:
+                    data, cached, ts = cache
             if 'data' not in locals():
                 raise e
 
-        if isinstance(data, list):
-            return [model(self, c) for c in data]
-        else:
-            return model(self, data)
+        return self._convert_model(data, cached, ts, model)
 
     @typecasted()
     def get_tournament(self, tag: crtag):
-        url = Endpoints.TOURNAMENT + '/' + tag
+        url = API.TOURNAMENT + '/' + tag
         return self._get_model(url, Tournament)
     
     @typecasted()
     def get_player(self, *tags: crtag):
-        url = Endpoints.PLAYER + '/' + ','.join(tags)
+        url = API.PLAYER + '/' + ','.join(tags)
         return self._get_model(url, Player)
 
     get_players = get_player
     
     @typecasted()
     def get_clan(self, *tags: crtag):
-        url = Endpoints.CLAN + '/' + ','.join(tags)
+        url = API.CLAN + '/' + ','.join(tags)
         return self._get_model(url, Clan)
 
     get_clans = get_clan
 
     @typecasted()
     def search_clans(self, **params: clansearch):
-        return self._get_model(Endpoints.SEARCH, ClanInfo, **params)
+        return self._get_model(API.SEARCH, ClanInfo, **params)
 
     def get_constants(self):
-        return self._get_model(Endpoints.CONSTANTS, Constants)
+        return self._get_model(API.CONSTANTS, Constants)
 
     def get_version(self):
-        return self.request(Endpoints.VERSION)
+        return self._get_model(API.VERSION)
 
     def get_endpoints(self):
-        return self.request(Endpoints.ENDPOINTS)
+        return self._get_model(API.ENDPOINTS)
 
     def get_top_clans(self, country_key=None):
-        url = Endpoints.TOP + '/clans/' + (country_key or '')
+        url = API.TOP + '/clans/' + (country_key or '')
         return self._get_model(url, ClanInfo)
 
     def get_top_players(self, country_key=None):
-        url = Endpoints.TOP + '/players/' + (country_key or '')
+        url = API.TOP + '/players/' + (country_key or '')
         return self._get_model(url, PlayerInfo)
 
     def get_popular_clans(self):
-        url = Endpoints.POPULAR + '/clans'
+        url = API.POPULAR + '/clans'
         return self._get_model(url, Clan)
 
     def get_popular_players(self):
-        url = Endpoints.POPULAR + '/players'
+        url = API.POPULAR + '/players'
         return self._get_model(url, PlayerInfo)

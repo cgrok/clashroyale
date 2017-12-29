@@ -25,7 +25,12 @@ SOFTWARE.
 import inspect
 import re
 from functools import wraps
-
+from collections import namedtuple
+from collections import MutableMapping
+import sqlite3 as sqlite
+from contextlib import contextmanager
+import threading
+import pickle
 
 def typecasted():
     '''Decorator that converts arguments via annotations.'''
@@ -84,7 +89,7 @@ def _to_camel_case(snake):
     parts = snake.split('_')
     return parts[0] + "".join(x.title() for x in parts[1:])
 
-class Endpoints:
+class API:
     BASE = 'http://api.cr-api.com'
     PLAYER = BASE + '/players'
     CLAN = BASE + '/clans'
@@ -95,12 +100,6 @@ class Endpoints:
     TOURNAMENT = BASE + '/tournaments'
     ENDPOINTS = BASE + '/endpoints'
     VERSION = BASE + '/version'
-
-from collections import MutableMapping
-import sqlite3 as sqlite
-from contextlib import contextmanager
-import threading
-import pickle
 
 
 class SqliteDict(MutableMapping):

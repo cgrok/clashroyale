@@ -23,22 +23,29 @@ SOFTWARE.
 '''
 
 from box import Box, BoxList
-from .utils import _to_snake_case, Endpoints
+from .utils import _to_snake_case, API
 
 class BaseAttrDict:
     '''Uses a python-box for data storage, this class 
     is used as a base class so we can easily add extra 
     methods without interfering with the box itself.
     '''
-    def __init__(self, client, data):
+    def __init__(self, client, data, cached=False, ts=None):
         self.client = client
-        self.from_data(data)
+        self.from_data(data, cached, ts)
         
-    def from_data(self, data):
+    def from_data(self, data, cached, ts):
+        self.cached = cached
+        self.last_updated = ts 
         self.raw_data = data
-        self._boxed_data = Box(
-            data, camel_killer_box=not self.client.camel_case
-            )
+        if isinstance(data, list):
+            self._boxed_data = BoxList(
+                data, camel_killer_box=not self.client.camel_case
+                )
+        else:
+            self._boxed_data = Box(
+                data, camel_killer_box=not self.client.camel_case
+                )
         return self
 
     def __getattr__(self, attr):
@@ -76,22 +83,20 @@ class Refreshable:
     '''
     def refresh(self):
         '''(a)sync refresh the data.'''
-        client = self.client
-        if client.is_async:
+        if self.client.is_async:
             return self._arefresh()
         else:
-            data = client.request(self.url)
-            return self.from_data(data)
+            data, cached, ts = self.client.request(self.url, refresh=True)
+            return self.from_data(data, cached, ts)
 
     async def _arefresh(self):
-        client = self.client
-        data = await client.request(self.url)
-        return self.from_data(data)
+        data, cached, ts = await self.client.request(self.url, refresh=True)
+        return self.from_data(data, cached, ts)
 
     @property
     def url(self):
         endpoint = self.__class__.__name__.lower()
-        return f'{Endpoints.BASE}/{endpoint}/{self.tag}'
+        return f'{API.BASE}/{endpoint}/{self.tag}'
 
 class Player(BaseAttrDict, Refreshable, FullClan):
     '''A clash royale player model.'''
@@ -131,3 +136,18 @@ class Constants(BaseAttrDict, Refreshable):
 class Tournament(BaseAttrDict, Refreshable):
     '''Represents a clash royale tournament.'''
     pass
+
+class rlist(list, Refreshable):
+    def __init__(self, client, data, cached, ts):
+        self.client = client
+        self.from_data(data, cached, ts)
+    
+    def from_data(self, data, cached, ts):
+        self.cached = cached
+        self.last_updated = ts
+        super().__init__(data)
+        return self
+
+    @property
+    def url(self):
+        return f'{API.BASE}/endpoints'

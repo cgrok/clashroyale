@@ -24,13 +24,13 @@ SOFTWARE.
 
 from .client import Client
 from .errors import *
-from .utils import Endpoints
+from .utils import API
 
 ############
 # METADATA #
 ############
 
-__version__ = 'v3.1.3'
+__version__ = 'v3.1.4'
 __title__ = 'clashroyale'
 __license__ = 'MIT'
 __author__ = 'kyb3r'

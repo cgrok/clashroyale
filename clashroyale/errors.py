@@ -35,9 +35,12 @@ class RequestError(Exception):
         self.code = getattr(resp, 'status', None) or getattr(resp, 'status_code')
         self.method = getattr(resp, 'method', None)
         self.reason = resp.reason
-        self.error = data.get('error')
-        if 'message' in data:
-            self.error = data.get('message')
+        if isinstance(data, dict):
+            self.error = data.get('error')
+            if 'message' in data:
+                self.error = data.get('message')
+        else:
+            self.error = data
         self.fmt = '{0.reason} ({0.code}): {0.error}'.format(self)
         super().__init__(self.fmt)
 

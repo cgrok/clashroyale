@@ -1,6 +1,7 @@
 import clashroyale
 import asyncio
 import os
+from collections import namedtuple
 
 token = os.getenv('crtoken') # get your token somehow.
 
