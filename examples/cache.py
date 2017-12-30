@@ -4,7 +4,7 @@ import os
 c = clashroyale.Client(
     token=os.getenv('crtoken'),
     cache_fp='cache.db',
-    cache_expires=10
+    cache_expires=10 # Seconds before client should request from api again.
     )
 
 for x in range(100):

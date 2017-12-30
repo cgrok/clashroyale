@@ -76,7 +76,7 @@ class Client:
         self.camel_case = options.get('camel_case', False)
         self.headers = {
             'auth': token,
-            'user-agent': 'python-clashroyale (kyb3r)'
+            'user-agent': 'python-clashroyale-client (kyb3r)'
             }
         self.cache_fp = options.get('cache_fp')
         self.using_cache = bool(self.cache_fp)
