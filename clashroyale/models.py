@@ -26,9 +26,48 @@ from box import Box, BoxList
 from .utils import _to_snake_case, API
 
 class BaseAttrDict:
-    '''Uses a python-box for data storage, this class 
-    is used as a base class so we can easily add extra 
-    methods without interfering with the box itself.
+    '''This class is the base class for all models, its a 
+    wrapper around the `python-box`_ which allows access to data
+    via dot notation, in this case, API data will be accessed 
+    using this class. This class shouldnt normally be used by the 
+    user since its a base class for the actual models returned from
+    the client.
+
+    .. _python-box: https://github.com/cdgriffith/Box
+
+    Examples
+    --------
+
+    Accessing data via dot notation: ::
+
+        sample_data = {
+            "stats": {
+                "maxTrophies": 5724,
+                "favoriteCard": {
+                    "name": "P.E.K.K.A"
+                        }
+                    }
+                }
+
+        model = SomeModel(client, sample_data)
+        x = sample_data['stats']['maxTrophies']
+        # Same as 
+        x = model['stats']['max_trophies']
+        # Same as
+        x = model.stats.max_trophies
+    
+    This functionality allows this library to present API 
+    data in a clean dynamic way.
+
+    Attributes
+    ----------
+    raw_data: dict
+        The raw data in the form of a dictionary being used
+    cached: bool
+        Whether or not the data being used is cached data from 
+        the cache database.
+    last_updated: datetime.datetime
+        When the data which is currently being used was last updated.
     '''
     def __init__(self, client, data, cached=False, ts=None):
         self.client = client
@@ -56,6 +95,12 @@ class BaseAttrDict:
                 return super().__getattr__(attr)
             except AttributeError:
                 return None
+    
+    def __getitem__(self, item):
+        try:
+            return getattr(self._boxed_data, attr)
+        except AttributeError:
+            raise KeyError(f'No such key: {item}')
 
     def __repr__(self):
         _type = self.__class__.__name__

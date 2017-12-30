@@ -24,13 +24,15 @@ SOFTWARE.
 
 from .client import Client
 from .errors import *
-from .utils import API
+from .models import *
+from .utils import API, SqliteDict, typecasted
+
 
 ############
 # METADATA #
 ############
 
-__version__ = 'v3.1.5'
+__version__ = 'v3.1.6'
 __title__ = 'clashroyale'
 __license__ = 'MIT'
 __author__ = 'kyb3r'

@@ -38,21 +38,34 @@ from .utils import API, typecasted, crtag, clansearch, SqliteDict
 
 
 class Client:
-    '''Represents an (a)sync client connection to cr-api.com
+    '''A client that requests data from cr-api.com. This class can
+    either be async or non async.
 
     Parameters
     ----------
     token: str
         The api authorization token to be used for requests.
-    is_async: bool
+    is_async: Optional[bool]
         Toggle for asynchronous/synchronous usage of the client.
-        Defaults to False
-    session: (requests.Session, aiohttp.ClientSession)
-        The http session to be used for requests
-    timeout: int
+        Defaults to False.
+    session: Optional[Session]
+        The http (client)session to be used for requests. Can either be a 
+        requests.Session or aiohttp.ClientSession.
+    timeout: Optional[int]
         A timeout for requests to the API, defaults to 10 seconds.
-    camel_case: bool
-        Whether or not to access keys in snake_case or camelCase
+    cache_fp: Optional[str]
+        File path for the sqlite3 database to use for caching requests, 
+        if this parameter is provided, the client will use its caching system.
+    cache_expires: Optional[int]
+        The number of seconds to wait before the client will request 
+        from the api for a specific route, this defaults to 10 seconds.
+    table_name: Optional[str]
+        The table name to use for the cache database. Defaults to 'cache'
+    camel_case: Optional(bool)
+        Whether or not to access model data keys in snake_case or camelCase, 
+        this defaults to False (use snake_case)
+    
+
     '''
 
     def __init__(self, token, session=None, is_async=False, **options):
@@ -69,7 +82,7 @@ class Client:
         self.using_cache = bool(self.cache_fp)
         self.cache_reset = options.get('cache_expires', 300)
         if self.using_cache:
-            table = options.get('table_name', 'data')
+            table = options.get('table_name', 'cache')
             self.cache = SqliteDict(self.cache_fp, table)
 
     def _resolve_cache(self, url, **params):
