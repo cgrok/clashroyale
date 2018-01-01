@@ -246,3 +246,7 @@ class Client:
     def get_popular_players(self):
         url = API.POPULAR + '/players'
         return self._get_model(url, PlayerInfo)
+
+    def get_popular_tournaments(self):
+        url = API.POPULAR + '/tournaments'
+        return self._get_model(url, Tournament)
