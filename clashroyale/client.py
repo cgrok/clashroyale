@@ -31,9 +31,10 @@ fromts = datetime.fromtimestamp
 import aiohttp
 import requests
 
-from .models import Player, Clan, PlayerInfo, ClanInfo, Constants, Tournament, rlist
+from .models import (Player, Clan, PlayerInfo, ClanInfo, Constants, 
+                    Tournament, AuthStats, rlist)
 from .errors import NotFoundError, ServerError, NotResponding, Unauthorized
-from .utils import API, typecasted, crtag, clansearch, SqliteDict
+from .utils import API, typecasted, crtag, clansearch, keys, SqliteDict
 
 
 
@@ -198,54 +199,62 @@ class Client:
 
         return self._convert_model(data, cached, ts, model)
 
-    @typecasted() # Convert to a proper tag
+    def get_version(self):
+        return self._get_model(API.VERSION)
+
+    def get_endpoints(self):
+        return self._get_model(API.ENDPOINTS)
+    
+    @typecasted # Convert to a proper tag
     def get_tournament(self, tag: crtag):
         url = API.TOURNAMENT + '/' + tag
         return self._get_model(url, Tournament)
     
-    @typecasted()
+    @typecasted
     def get_player(self, *tags: crtag):
         url = API.PLAYER + '/' + ','.join(tags)
         return self._get_model(url, Player)
 
     get_players = get_player
     
-    @typecasted() 
+    @typecasted
     def get_clan(self, *tags: crtag):
         url = API.CLAN + '/' + ','.join(tags)
         return self._get_model(url, Clan)
 
     get_clans = get_clan
 
-    @typecasted() # Validate clan search parameters.
+    @typecasted # Validate clan search parameters.
     def search_clans(self, **params: clansearch):
         return self._get_model(API.SEARCH, ClanInfo, **params)
 
-    def get_constants(self):
-        return self._get_model(API.CONSTANTS, Constants)
-
-    def get_version(self):
-        return self._get_model(API.VERSION)
-
-    def get_endpoints(self):
-        return self._get_model(API.ENDPOINTS)
-
-    def get_top_clans(self, country_key=''):
+    @typecasted
+    def get_constants(self, **params: keys):
+        return self._get_model(API.CONSTANTS, Constants, **params)
+    
+    @typecasted
+    def get_top_clans(self, country_key='', **params: keys):
         url = API.TOP + '/clans/' + country_key
-        return self._get_model(url, ClanInfo)
-
-    def get_top_players(self, country_key=''):
+        return self._get_model(url, ClanInfo, **params)
+    
+    @typecasted
+    def get_top_players(self, country_key='', **params: keys):
         url = API.TOP + '/players/' + country_key
-        return self._get_model(url, PlayerInfo)
+        return self._get_model(url, PlayerInfo, **params)
 
-    def get_popular_clans(self):
+    def get_popular_clans(self, **params: keys):
         url = API.POPULAR + '/clans'
-        return self._get_model(url, Clan)
+        return self._get_model(url, Clan, **params)
 
-    def get_popular_players(self):
+    def get_popular_players(self, **params: keys):
         url = API.POPULAR + '/players'
-        return self._get_model(url, PlayerInfo)
+        return self._get_model(url, PlayerInfo, **params)
 
-    def get_popular_tournaments(self):
+    def get_popular_tournaments(self, **params: keys):
         url = API.POPULAR + '/tournaments'
-        return self._get_model(url, Tournament)
+        return self._get_model(url, Tournament, **params)
+
+    def get_auth_stats(self, **params: keys):
+        url = API.AUTH + '/stats'
+        return self._get_model(url, AuthStats, **params)
+
