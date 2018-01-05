@@ -32,39 +32,48 @@ from contextlib import contextmanager
 import threading
 import pickle
 
-def typecasted():
+
+    
+def typecasted(func):
     '''Decorator that converts arguments via annotations.'''
-    def deco(func):
-        signature = inspect.signature(func).parameters.items()
-        @wraps(func)
-        def wrapper(*args, **kwargs):
-            args = list(args)
-            new_args = []
-            new_kwargs = {}
-            for name, param in signature:
-                converter = param.annotation
-                if converter is inspect._empty:
-                    converter = lambda a: a # do nothing
-                if param.kind is param.POSITIONAL_OR_KEYWORD:
-                    to_conv = args.pop(0)
-                    new_args.append(converter(to_conv))
-                elif param.kind is param.VAR_POSITIONAL:
-                    for a in args:
-                        new_args.append(converter(a))
-                else:
-                    for k, v in kwargs.items():
-                        nk, nv = converter(k, v)
-                        new_kwargs[nk] = nv
-            return func(*new_args, **new_kwargs)
-        return wrapper
-    return deco
+    signature = inspect.signature(func).parameters.items()
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        args = list(args)
+        new_args = []
+        new_kwargs = {}
+        for name, param in signature:
+            converter = param.annotation
+            if converter is inspect._empty:
+                converter = lambda a: a # do nothing
+            if param.kind is param.POSITIONAL_OR_KEYWORD:
+                to_conv = args.pop(0)
+                new_args.append(converter(to_conv))
+            elif param.kind is param.VAR_POSITIONAL:
+                for a in args:
+                    new_args.append(converter(a))
+            else:
+                for k, v in kwargs.items():
+                    nk, nv = converter(k, v)
+                    new_kwargs[nk] = nv
+        return func(*new_args, **new_kwargs)
+    return wrapper
+
 
 
 def clansearch(k, v):
-    valid = ('name', 'score', 'minMembers', 'maxMembers')
+    valid = (
+        'name', 'score', 'minMembers', 
+        'maxMembers', 'keys', 'exclude'
+        )
     k = _to_camel_case(k)
     if k not in valid:
         raise ValueError(f'Invalid search parameter passed: {k}')
+    return k, v
+
+def keys(k, v):
+    if k not in ('keys', 'exclude'):
+        raise ValueError(f'Invalid url parameter passed: {k}')
     return k, v
     
 def crtag(tag):
