@@ -73,7 +73,7 @@ def clansearch(k, v):
 def keys(k, v):
     if k not in ('keys', 'exclude'):
         raise ValueError(f'Invalid url parameter passed: {k}')
-    return k, v
+    return k, ','.join(v) if isinstance(v, (list, tuple)) else v
     
 def crtag(tag):
     tag = tag.strip('#').upper().replace('O', '0')

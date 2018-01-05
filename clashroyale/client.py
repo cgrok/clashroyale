@@ -134,7 +134,7 @@ class Client:
             raise Unauthorized(resp, data) 
         if code == 404: # Tag not found
             raise NotFoundError(resp, data)
-        if code > 500: # Something wrong with the api servers :(
+        if code >= 500: # Something wrong with the api servers :(
             raise ServerError(resp, data)
 
     async def _arequest(self, url, **params):

@@ -48,3 +48,6 @@ full_player = member.get_profile() # member.get_player() is also an alias
 clans = client.get_clans('2CCCP', '2U2GGQJ') # indefinite amount of arguments
 for clan in clans:
     print(clan.members[0])
+
+filtered = client.get_clan('2cccp', keys=['name', 'tag']) # Filtering with keys= and exclude=
+print(filtered.raw_data)

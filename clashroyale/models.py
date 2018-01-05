@@ -107,10 +107,10 @@ class BaseAttrDict:
         return f'<{_type}: {self}>'
 
     def __str__(self):
-        try:
+        if self.name and self.tag:
             return f'{self.name} (#{self.tag})'
-        except AttributeError:
-            return super().__str__()
+        else:
+            return str(self.raw_data)
     
 class FullClan:
     def get_clan(self):
