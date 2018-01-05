@@ -3,7 +3,7 @@ from setuptools import setup
 setup(
     name='clashroyale',
     packages=['clashroyale'],  
-    version='v3.1.6',
+    version='v3.1.7',
     description='An async wrapper for cr-api.com',
     author='kyb3r',
     license='MIT',
