@@ -185,6 +185,10 @@ class Tournament(BaseAttrDict, Refreshable):
     '''Represents a clash royale tournament.'''
     pass
 
+class AuthStats(BaseAttrDict, Refreshable):
+    '''Represents client request statistics'''
+    pass
+
 class rlist(list, Refreshable):
     def __init__(self, client, data, cached, ts):
         self.client = client
