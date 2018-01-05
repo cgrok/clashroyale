@@ -51,3 +51,5 @@ for clan in clans:
 
 filtered = client.get_clan('2cccp', keys=['name', 'tag']) # Filtering with keys= and exclude=
 print(filtered.raw_data)
+
+print(client.get_player('2P0LYQ', keys='battles').raw_data.keys())
