@@ -64,8 +64,6 @@ class Client:
     camel_case: Optional(bool)
         Whether or not to access model data keys in snake_case or camelCase, 
         this defaults to False (use snake_case)
-    
-
     '''
 
     def __init__(self, token, session=None, is_async=False, **options):
@@ -94,7 +92,8 @@ class Client:
         if (datetime.utcnow() - last_updated).total_seconds() < self.cache_reset:
             ret = (cached_data['data'], True, last_updated)
             if self.is_async:
-                return self._wrap_coro(ret)
+                return self._wrap_coro(ret) # return a coroutine 
+                                            # so self.request can be awaitable
             return ret
         return None
 
@@ -152,7 +151,7 @@ class Client:
             cache = self._resolve_cache(url, **params)
             if cache is not None:
                 return cache
-        if self.is_async:
+        if self.is_async: # Return a coroutine
             return self._arequest(url, **params)
         try:
             resp = self.session.get(url, timeout=self.timeout, headers=self.headers, params=params)
@@ -184,9 +183,9 @@ class Client:
         return self._convert_model(data, cached, ts, model)
 
     def _get_model(self, url, model=None, **params):
-        if self.is_async:
+        if self.is_async: # Return a coroutine
             return self._aget_model(url, model, **params)
-
+        # Otherwise, do everything synchronously.
         try:
             data, cached, ts = self.request(url, **params)
         except Exception as e:
@@ -199,7 +198,7 @@ class Client:
 
         return self._convert_model(data, cached, ts, model)
 
-    @typecasted()
+    @typecasted() # Convert to a proper tag
     def get_tournament(self, tag: crtag):
         url = API.TOURNAMENT + '/' + tag
         return self._get_model(url, Tournament)
@@ -211,14 +210,14 @@ class Client:
 
     get_players = get_player
     
-    @typecasted()
+    @typecasted() 
     def get_clan(self, *tags: crtag):
         url = API.CLAN + '/' + ','.join(tags)
         return self._get_model(url, Clan)
 
     get_clans = get_clan
 
-    @typecasted()
+    @typecasted() # Validate clan search parameters.
     def search_clans(self, **params: clansearch):
         return self._get_model(API.SEARCH, ClanInfo, **params)
 
@@ -231,12 +230,12 @@ class Client:
     def get_endpoints(self):
         return self._get_model(API.ENDPOINTS)
 
-    def get_top_clans(self, country_key=None):
-        url = API.TOP + '/clans/' + (country_key or '')
+    def get_top_clans(self, country_key=''):
+        url = API.TOP + '/clans/' + country_key
         return self._get_model(url, ClanInfo)
 
-    def get_top_players(self, country_key=None):
-        url = API.TOP + '/players/' + (country_key or '')
+    def get_top_players(self, country_key=''):
+        url = API.TOP + '/players/' + country_key
         return self._get_model(url, PlayerInfo)
 
     def get_popular_clans(self):
