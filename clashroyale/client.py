@@ -74,7 +74,7 @@ class Client:
         self.session = session or (aiohttp.ClientSession() if is_async else requests.Session())
         self.camel_case = options.get('camel_case', False)
         self.headers = {
-            'auth': token,
+            'Authorization': f'Bearer {token}',
             'user-agent': 'python-clashroyale-client (kyb3r)'
             }
         self.cache_fp = options.get('cache_fp')
@@ -228,7 +228,7 @@ class Client:
     def search_clans(self, **params: clansearch):
         return self._get_model(API.SEARCH, ClanInfo, **params)
 
-    @typecasted
+    @typecasted # checks if the keys=&exclude= parameters are passed only
     def get_constants(self, **params: keys):
         return self._get_model(API.CONSTANTS, Constants, **params)
     
@@ -241,20 +241,23 @@ class Client:
     def get_top_players(self, country_key='', **params: keys):
         url = API.TOP + '/players/' + country_key
         return self._get_model(url, PlayerInfo, **params)
-
+    
+    @typecasted
     def get_popular_clans(self, **params: keys):
         url = API.POPULAR + '/clans'
         return self._get_model(url, Clan, **params)
-
+    
+    @typecasted
     def get_popular_players(self, **params: keys):
         url = API.POPULAR + '/players'
         return self._get_model(url, PlayerInfo, **params)
-
+    
+    @typecasted
     def get_popular_tournaments(self, **params: keys):
         url = API.POPULAR + '/tournaments'
         return self._get_model(url, Tournament, **params)
-
+    
+    @typecasted
     def get_auth_stats(self, **params: keys):
         url = API.AUTH + '/stats'
         return self._get_model(url, AuthStats, **params)
-
