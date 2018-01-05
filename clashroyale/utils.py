@@ -60,7 +60,6 @@ def typecasted(func):
     return wrapper
 
 
-
 def clansearch(k, v):
     valid = (
         'name', 'score', 'minMembers', 

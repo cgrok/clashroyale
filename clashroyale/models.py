@@ -175,7 +175,7 @@ class Clan(BaseAttrDict, Refreshable):
     '''
     def from_data(self, data, cached, ts):
         super().from_data(data, cached, ts)
-        self.members = [Member(self, m) for m in data['members']]
+        self.members = [Member(self, m) for m in data.get('members', [])]
 
 class Constants(BaseAttrDict, Refreshable):
     '''Clash Royale constants storage'''

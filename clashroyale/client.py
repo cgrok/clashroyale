@@ -206,21 +206,21 @@ class Client:
         return self._get_model(API.ENDPOINTS)
     
     @typecasted # Convert to a proper tag
-    def get_tournament(self, tag: crtag):
+    def get_tournament(self, tag: crtag, **params: keys):
         url = API.TOURNAMENT + '/' + tag
-        return self._get_model(url, Tournament)
+        return self._get_model(url, Tournament, **params)
     
     @typecasted
-    def get_player(self, *tags: crtag):
+    def get_player(self, *tags: crtag, **params: keys):
         url = API.PLAYER + '/' + ','.join(tags)
-        return self._get_model(url, Player)
+        return self._get_model(url, Player, **params)
 
     get_players = get_player
     
     @typecasted
-    def get_clan(self, *tags: crtag):
+    def get_clan(self, *tags: crtag, **params: keys):
         url = API.CLAN + '/' + ','.join(tags)
-        return self._get_model(url, Clan)
+        return self._get_model(url, Clan, **params)
 
     get_clans = get_clan
 
