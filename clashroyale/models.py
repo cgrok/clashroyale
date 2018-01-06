@@ -104,14 +104,19 @@ class BaseAttrDict:
 
     def __repr__(self):
         _type = self.__class__.__name__
-        return f'<{_type}: {self}>'
-
-    def __str__(self):
         if self.name and self.tag:
-            return f'{self.name} (#{self.tag})'
+            fmt = f'{self.name} (#{self.tag})'
         else:
-            return str(self.raw_data)
-    
+            fmt = ''
+            count = 0
+            for k, v in self.raw_data.items():
+                fmt += f'{k}={v}, '
+                count += 1
+                if count == 2:
+                    break
+            
+        return f"<{_type}: {fmt.strip(', ')}>"  
+
 class FullClan:
     def get_clan(self):
         '''(a)sync function to return clan.'''
