@@ -47,8 +47,9 @@ def typecasted(func):
             if converter is inspect._empty:
                 converter = lambda a: a # do nothing
             if param.kind is param.POSITIONAL_OR_KEYWORD:
-                to_conv = args.pop(0)
-                new_args.append(converter(to_conv))
+                if args:
+                    to_conv = args.pop(0)
+                    new_args.append(converter(to_conv))
             elif param.kind is param.VAR_POSITIONAL:
                 for a in args:
                     new_args.append(converter(a))
