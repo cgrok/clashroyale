@@ -108,7 +108,7 @@ class API:
     TOURNAMENT = BASE + '/tournaments'
     ENDPOINTS = BASE + '/endpoints'
     VERSION = BASE + '/version'
-    AUTH = BASE + '/auth
+    AUTH = BASE + '/auth'
 
 
 class SqliteDict(MutableMapping):
