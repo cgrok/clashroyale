@@ -104,18 +104,7 @@ class BaseAttrDict:
 
     def __repr__(self):
         _type = self.__class__.__name__
-        if self.name and self.tag:
-            fmt = f'{self.name} (#{self.tag})'
-        else:
-            fmt = ''
-            count = 0
-            for k, v in self.raw_data.items():
-                fmt += f'{k}={v}, '
-                count += 1
-                if count == 2:
-                    break
-            
-        return f"<{_type}: {fmt.strip(', ')}>"  
+        return f"<{_type}: {self.raw_data}>"  
 
 class FullClan:
     def get_clan(self):
