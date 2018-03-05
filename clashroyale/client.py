@@ -24,18 +24,18 @@ SOFTWARE.
 
 import asyncio
 import json
-from urllib.parse import urlencode
 from datetime import datetime
-fromts = datetime.fromtimestamp
+from urllib.parse import urlencode
 
 import aiohttp
 import requests
 
-from .models import (Player, Clan, PlayerInfo, ClanInfo, Constants, 
-                    Tournament, AuthStats, rlist)
-from .errors import NotFoundError, ServerError, NotResponding, Unauthorized
-from .utils import API, typecasted, crtag, clansearch, keys, SqliteDict
+from .errors import NotFoundError, NotResponding, ServerError, Unauthorized
+from .models import (AuthStats, Clan, ClanInfo, Constants, Player, PlayerInfo,
+                     Tournament, rlist)
+from .utils import API, SqliteDict, clansearch, crtag, keys, typecasted
 
+fromts = datetime.fromtimestamp
 
 
 class Client:
@@ -93,7 +93,7 @@ class Client:
         if (datetime.utcnow() - last_updated).total_seconds() < self.cache_reset:
             ret = (cached_data['data'], True, last_updated)
             if self.is_async:
-                return self._wrap_coro(ret) # return a coroutine 
+                return self._wrap_coro(ret) # return a coroutine
                                             # so self.request can be awaitable
             return ret
         return None
@@ -109,13 +109,13 @@ class Client:
 
     async def __aexit__(self, exc_type, exc_value, traceback):
         self.session.close()
-    
+
     def __repr__(self):
         return f'<ClashRoyaleClient async={self.is_async}>'
 
     def close(self):
         self.session.close()
-    
+
     def _raise_for_status(self, resp, text):
         try:
             data = json.loads(text)
@@ -131,7 +131,7 @@ class Client:
                 self.cache[str(resp.url)] = cached_data
             return data, False, datetime.utcnow() # value, cached, last_updated
         if code == 401: # Unauthorized request - Invalid token
-            raise Unauthorized(resp, data) 
+            raise Unauthorized(resp, data)
         if code == 404: # Tag not found
             raise NotFoundError(resp, data)
         if code >= 500: # Something wrong with the api servers :(
@@ -143,7 +143,7 @@ class Client:
                 return self._raise_for_status(resp, await resp.text())
         except asyncio.TimeoutError:
             raise NotResponding()
-    
+
     async def _wrap_coro(self, arg):
         return arg
     
@@ -231,32 +231,32 @@ class Client:
     @typecasted # checks if the keys=&exclude= parameters are passed only
     def get_constants(self, **params: keys):
         return self._get_model(API.CONSTANTS, Constants, **params)
-    
+
     @typecasted
     def get_top_clans(self, country_key='', **params: keys):
         url = API.TOP + '/clans/' + country_key
         return self._get_model(url, ClanInfo, **params)
-    
+
     @typecasted
     def get_top_players(self, country_key='', **params: keys):
         url = API.TOP + '/players/' + country_key
         return self._get_model(url, PlayerInfo, **params)
-    
+
     @typecasted
     def get_popular_clans(self, **params: keys):
         url = API.POPULAR + '/clans'
         return self._get_model(url, Clan, **params)
-    
+
     @typecasted
     def get_popular_players(self, **params: keys):
         url = API.POPULAR + '/players'
         return self._get_model(url, PlayerInfo, **params)
-    
+
     @typecasted
     def get_popular_tournaments(self, **params: keys):
         url = API.POPULAR + '/tournaments'
         return self._get_model(url, Tournament, **params)
-    
+
     @typecasted
     def get_auth_stats(self, **params: keys):
         url = API.AUTH + '/stats'

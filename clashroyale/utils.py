@@ -99,7 +99,7 @@ def _to_camel_case(snake):
     return parts[0] + "".join(x.title() for x in parts[1:])
 
 class API:
-    BASE = 'http://api.cr-api.com'
+    BASE = 'http://api.royaleapi.com'
     PLAYER = BASE + '/players'
     CLAN = BASE + '/clans'
     SEARCH = CLAN + '/search'
