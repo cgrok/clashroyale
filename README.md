@@ -1,5 +1,7 @@
+![pypi](https://pypi.python.org/pypi/clashroyale) 
+
 # clashroyale
-This library is currently an (a)sync wrapper for https://cr-api.com with great functionality.
+This library is currently an (a)sync wrapper for https://royaleapi.com with great functionality.
 
 ## Installation
 ```
