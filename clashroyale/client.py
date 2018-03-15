@@ -30,12 +30,12 @@ from urllib.parse import urlencode
 import aiohttp
 import requests
 
-from .errors import NotFoundError, NotResponding, ServerError, Unauthorized
-from .models import (AuthStats, Clan, ClanInfo, Constants, Player, PlayerInfo,
-                     Tournament, rlist)
-from .utils import API, SqliteDict, clansearch, crtag, keys, typecasted
+from .errors import NotFoundError, NotResponding, ServerError, Unauthorized, NotTrackedError
+from .models import (AuthStats, Clan, ClanInfo, ClanHistory, Battle, Cycle, Constants,
+                     Player, PlayerInfo, Tournament, Deck, rlist)
+from .utils import API, SqliteDict, clansearch, tournamentsearch, crtag, keys, typecasted
 
-fromts = datetime.fromtimestamp
+from_timestamp = datetime.fromtimestamp
 
 
 class Client:
@@ -89,7 +89,7 @@ class Client:
         cached_data = self.cache.get(bucket)
         if not cached_data:
             return None
-        last_updated = fromts(cached_data['c_timestamp'])
+        last_updated = from_timestamp(cached_data['c_timestamp'])
         if (datetime.utcnow() - last_updated).total_seconds() < self.cache_reset:
             ret = (cached_data['data'], True, last_updated)
             if self.is_async:
@@ -102,13 +102,13 @@ class Client:
         return self
 
     def __exit__(self, exc_type, exc_value, traceback):
-        self.session.close()
+        self.close()
 
     async def __aenter__(self):
         return self
 
     async def __aexit__(self, exc_type, exc_value, traceback):
-        self.session.close()
+        self.close()
 
     def __repr__(self):
         return f'<ClashRoyaleClient async={self.is_async}>'
@@ -119,7 +119,7 @@ class Client:
     def _raise_for_status(self, resp, text):
         try:
             data = json.loads(text)
-        except:
+        except json.JSONDecodeError:
             data = text
         code = getattr(resp, 'status', None) or getattr(resp, 'status_code')
         if 300 > code >= 200: # Request was successful
@@ -132,8 +132,10 @@ class Client:
             return data, False, datetime.utcnow() # value, cached, last_updated
         if code == 401: # Unauthorized request - Invalid token
             raise Unauthorized(resp, data)
-        if code == 404: # Tag not found
+        if code in (400, 404): # Tag not found
             raise NotFoundError(resp, data)
+        if code == 417:
+            raise NotTrackedError(resp, data)
         if code >= 500: # Something wrong with the api servers :(
             raise ServerError(resp, data)
 
@@ -146,7 +148,7 @@ class Client:
 
     async def _wrap_coro(self, arg):
         return arg
-    
+
     def request(self, url, refresh=False, **params):
         if self.using_cache and refresh is False: # Refresh=True forces a request instead of using cache
             cache = self._resolve_cache(url, **params)
@@ -218,6 +220,16 @@ class Client:
     get_players = get_player
 
     @typecasted
+    def get_player_battles(self, *tags: crtag, **params: keys):
+        url = API.PLAYER + '/' + ','.join(tags) + '/battles'
+        return self._get_model(url, Battle, **params)
+
+    @typecasted
+    def get_player_chests(self, *tags: crtag, **params: keys):
+        url = API.PLAYER + '/' + ','.join(tags) + '/chests'
+        return self._get_model(url, Cycle, **params)
+
+    @typecasted
     def get_clan(self, *tags: crtag, **params: keys):
         url = API.CLAN + '/' + ','.join(tags)
         return self._get_model(url, Clan, **params)
@@ -226,7 +238,27 @@ class Client:
 
     @typecasted # Validate clan search parameters.
     def search_clans(self, **params: clansearch):
-        return self._get_model(API.SEARCH, ClanInfo, **params)
+        url = API.CLAN + '/search'
+        return self._get_model(url, ClanInfo, **params)
+
+    def get_tracking_clans(self): # Returns a list of tracking clans
+        url = API.CLAN + '/' + '/tracking'
+        return self._get_model(url)
+
+    @typecasted
+    def get_clan_tracking(self, *tags: crtag, **params: keys):
+        url = API.CLAN + '/' + ','.join(tags) + '/tracking'
+        return self._get_model(url, Clan, **params)
+
+    @typecasted
+    def get_clan_battles(self, *tags: crtag, **params: keys):
+        url = API.CLAN + '/' + ','.join(tags) + '/battles'
+        return self._get_model(url, Battle, **params)
+
+    @typecasted
+    def get_clan_history(self, *tags: crtag, **params: keys):
+        url = API.CLAN + '/' + ','.join(tags) + '/history'
+        return self._get_model(url, ClanHistory, **params)
 
     @typecasted # checks if the keys=&exclude= parameters are passed only
     def get_constants(self, **params: keys):
@@ -256,6 +288,26 @@ class Client:
     def get_popular_tournaments(self, **params: keys):
         url = API.POPULAR + '/tournaments'
         return self._get_model(url, Tournament, **params)
+
+    @typecasted
+    def get_popular_decks(self, **params: keys):
+        url = API.POPULAR + '/decks'
+        return self._get_model(url, Deck, **params)
+
+    @typecasted
+    def get_open_tournaments(self, **params: keys):
+        url = API.TOURNAMENT + '/open'
+        return self._get_model(url, Tournament, **params)
+
+    @typecasted
+    def get_known_tournaments(self, **params: keys):
+        url = API.TOURNAMENT + '/known'
+        return self._get_model(url, Tournament, **params)
+
+    @typecasted # Validate tournament search parameters.
+    def search_tournaments(self, **params: tournamentsearch):
+        url = API.TOURNAMENT + '/search'
+        return self._get_model(url, ClanInfo, **params)
 
     @typecasted
     def get_auth_stats(self, **params: keys):

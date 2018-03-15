@@ -23,6 +23,7 @@ SOFTWARE.
 '''
 
 class NotResponding(Exception):
+    '''Raised if the API request timed out'''
     def __init__(self):
         self.code = 504
         self.error = 'API request timed out, please be patient.'
@@ -54,4 +55,8 @@ class ServerError(RequestError):
 
 class Unauthorized(RequestError):
     '''Raised if you passed an invalid token.'''
+    pass
+
+class NotTrackedError(RequestError):
+    '''Raised if the requested clan is not tracked'''
     pass

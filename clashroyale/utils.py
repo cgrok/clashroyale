@@ -64,7 +64,17 @@ def typecasted(func):
 def clansearch(k, v):
     valid = (
         'name', 'score', 'minMembers', 
-        'maxMembers', 'keys', 'exclude'
+        'maxMembers', 'keys', 'exclude',
+        'max'
+        )
+    k = _to_camel_case(k)
+    if k not in valid:
+        raise ValueError(f'Invalid search parameter passed: {k}')
+    return k, v
+
+def tournamentsearch(k, v):
+    valid = (
+        'name'
         )
     k = _to_camel_case(k)
     if k not in valid:
@@ -72,10 +82,10 @@ def clansearch(k, v):
     return k, v
 
 def keys(k, v):
-    if k not in ('keys', 'exclude'):
+    if k not in ('keys', 'exclude', 'max'):
         raise ValueError(f'Invalid url parameter passed: {k}')
     return k, ','.join(v) if isinstance(v, (list, tuple)) else v
-    
+
 def crtag(tag):
     tag = tag.strip('#').upper().replace('O', '0')
     allowed = '0289PYLQGRJCUV'
@@ -99,10 +109,9 @@ def _to_camel_case(snake):
     return parts[0] + "".join(x.title() for x in parts[1:])
 
 class API:
-    BASE = 'http://api.royaleapi.com'
+    BASE = 'https://api.royaleapi.com'
     PLAYER = BASE + '/players'
     CLAN = BASE + '/clans'
-    SEARCH = CLAN + '/search'
     TOP = BASE + '/top'
     CONSTANTS = BASE + '/constants'
     POPULAR = BASE + '/popular'

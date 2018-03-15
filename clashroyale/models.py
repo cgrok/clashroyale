@@ -170,12 +170,28 @@ class Clan(Refreshable):
         super().from_data(data, cached, ts)
         self.members = [Member(self, m) for m in data.get('members', [])]
 
+class ClanHistory(Refreshable):
+    '''A history that RoyaleAPI saves'''
+    pass
+
+class Battle(BaseAttrDict):
+    '''Clash Royale Battle'''
+    pass
+
+class Cycle(BaseAttrDict):
+    '''Clash Royale chest cycle'''
+    pass
+
 class Constants(Refreshable):
     '''Clash Royale constants storage'''
     pass
 
 class Tournament(Refreshable):
     '''Represents a clash royale tournament.'''
+    pass
+
+class Deck(Refreshable):
+    '''Represents a clash royale deck.'''
     pass
 
 class AuthStats(Refreshable):

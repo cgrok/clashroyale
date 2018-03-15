@@ -12,3 +12,6 @@ Currently we dont have any documentation, read through the source / examples to 
 ## Misc
 
 If you have any clash royale related code you would like to share, we could incorporate it into this library since its name is very generic, i.e. it refers to the game as a whole.
+
+## Tests
+Follow the instructions in `test/config.yaml`
