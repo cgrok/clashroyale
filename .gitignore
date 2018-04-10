@@ -103,4 +103,4 @@ ENV/
 *.db
 
 .vscode
-*config.yaml
+test/config.yaml
