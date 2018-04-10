@@ -1,15 +1,15 @@
 from setuptools import setup
 
-with open('README.md') as f:
+with open('README.rst') as f:
     long_description = f.read()
 
 setup(
     name='clashroyale',
     packages=['clashroyale'],
-    version='v3.2.4',
+    version='v3.2.5',
     description='An (a)sync wrapper for royaleapi.com',
     long_description=long_description,
-    long_description_content_type='text/markdown',
+    long_description_content_type='text/x-rst',
     author='kyb3r',
     license='MIT',
     url='https://github.com/cgrok/clashroyale',
@@ -18,6 +18,7 @@ setup(
     classifiers=[
         'Development Status :: 5 - Production/Stable',
         'Intended Audience :: Developers',
+        'Topic :: Games/Entertainment :: Real Time Strategy',
         'License :: OSI Approved :: MIT License',
         'Programming Language :: Python :: 3.5',
         'Programming Language :: Python :: 3.6',
