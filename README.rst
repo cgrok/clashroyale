@@ -1,7 +1,7 @@
 clashroyale
 ===========
 
-.. figure:: https://img.shields.io/pypi/v/clashroyale.svg
+.. image:: https://img.shields.io/pypi/v/clashroyale.svg
    :alt: PyPi
 
 
