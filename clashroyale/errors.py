@@ -22,13 +22,6 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 '''
 
-class NotResponding(Exception):
-    '''Raised if the API request timed out'''
-    def __init__(self):
-        self.code = 504
-        self.error = 'API request timed out, please be patient.'
-        super().__init__(self.error)
-
 class RequestError(Exception):
     '''Base class for request errors'''
     def __init__(self, resp, data):
@@ -44,6 +37,13 @@ class RequestError(Exception):
             self.error = data
         self.fmt = '{0.reason} ({0.code}): {0.error}'.format(self)
         super().__init__(self.fmt)
+
+class NotResponding(RequestError):
+    '''Raised if the API request timed out'''
+    def __init__(self):
+        self.code = 504
+        self.error = 'API request timed out, please be patient.'
+        super().__init__(self.error)
 
 class NotFoundError(RequestError):
     '''Raised if the player/clan is not found.'''
