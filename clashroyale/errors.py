@@ -23,7 +23,11 @@ SOFTWARE.
 '''
 
 class RequestError(Exception):
-    '''Base class for request errors'''
+    '''Base class for all errors'''
+    pass
+
+class StatusError(RequestError):
+    '''Base class for all errors except NotResponding'''
     def __init__(self, resp, data):
         self.response = resp
         self.code = getattr(resp, 'status', None) or getattr(resp, 'status_code')
@@ -45,18 +49,18 @@ class NotResponding(RequestError):
         self.error = 'API request timed out, please be patient.'
         super().__init__(self.error)
 
-class NotFoundError(RequestError):
+class NotFoundError(StatusError):
     '''Raised if the player/clan is not found.'''
     pass
 
-class ServerError(RequestError):
+class ServerError(StatusError):
     '''Raised if the api service is having issues'''
     pass
 
-class Unauthorized(RequestError):
+class Unauthorized(StatusError):
     '''Raised if you passed an invalid token.'''
     pass
 
-class NotTrackedError(RequestError):
+class NotTrackedError(StatusError):
     '''Raised if the requested clan is not tracked'''
     pass
