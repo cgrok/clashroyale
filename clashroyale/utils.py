@@ -69,7 +69,7 @@ def clansearch(k, v):
         )
     k = _to_camel_case(k)
     if k not in valid:
-        raise ValueError(f'Invalid search parameter passed: {k}')
+        raise ValueError('Invalid search parameter passed: {}'.format(k))
     return k, v
 
 def tournamentsearch(k, v):
@@ -78,12 +78,12 @@ def tournamentsearch(k, v):
         )
     k = _to_camel_case(k)
     if k not in valid:
-        raise ValueError(f'Invalid search parameter passed: {k}')
+        raise ValueError('Invalid search parameter passed: {}'.format(k))
     return k, v
 
 def keys(k, v):
     if k not in ('keys', 'exclude', 'max'):
-        raise ValueError(f'Invalid url parameter passed: {k}')
+        raise ValueError('Invalid url parameter passed: {}'.format(k))
     return k, ','.join(v) if isinstance(v, (list, tuple)) else v
 
 def crtag(tag):
@@ -94,7 +94,7 @@ def crtag(tag):
         if c not in allowed:
             bad.append(c)
     if bad:
-        raise ValueError(f"Invalid tag characters passed: {', '.join(bad)}")
+        raise ValueError("Invalid tag characters passed: {}".format(', '.join(bad)))
     return tag
 
 first_cap_re = re.compile('(.)([A-Z][a-z]+)')
