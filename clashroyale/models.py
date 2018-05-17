@@ -100,11 +100,11 @@ class BaseAttrDict:
         try:
             return getattr(self._boxed_data, item)
         except AttributeError:
-            raise KeyError(f'No such key: {item}')
+            raise KeyError('No such key: {}'.format(item))
 
     def __repr__(self):
         _type = self.__class__.__name__
-        return f"<{_type}: {self.raw_data}>" 
+        return "<{}: {}>".format(_type, self.raw_data)
 
 class FullClan(BaseAttrDict):
     def get_clan(self):
@@ -137,7 +137,7 @@ class Refreshable(BaseAttrDict):
     @property
     def url(self):
         endpoint = self.__class__.__name__.lower()
-        return f'{API.BASE}/{endpoint}/{self.tag}'
+        return '{}/{}/{}'.format(API.BASE, endpoint, self.tag)
 
 class Player(Refreshable, FullClan):
     '''A clash royale player model.'''
@@ -211,4 +211,4 @@ class rlist(list, Refreshable):
 
     @property
     def url(self):
-        return f'{API.BASE}/endpoints'
+        return '{}/endpoints'.format(API.BASE)

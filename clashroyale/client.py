@@ -76,7 +76,7 @@ class Client:
         self.session = session or (aiohttp.ClientSession() if is_async else requests.Session())
         self.camel_case = options.get('camel_case', False)
         self.headers = {
-            'Authorization': f'Bearer {token}',
+            'Authorization': 'Bearer {}'.format(token),
             'user-agent': 'python-clashroyale-client (kyb3r)'
             }
         self.cache_fp = options.get('cache_fp')
@@ -114,7 +114,7 @@ class Client:
         self.close()
 
     def __repr__(self):
-        return f'<ClashRoyaleClient async={self.is_async}>'
+        return '<ClashRoyaleClient async={}>'.format(self.is_async)
 
     def close(self):
         self.session.close()
