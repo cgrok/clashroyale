@@ -6,9 +6,7 @@ import yaml
 
 
 with open('config.yaml') as f:
-    CONFIG = yaml.load(f)
-
-TOKEN = CONFIG.get('token')
+    TOKEN = yaml.load(f).get('token')
 
 class TestBlockingClient(unittest.TestCase):
     '''Tests all methods in the blocking client that
@@ -218,7 +216,7 @@ class TestBlockingClient(unittest.TestCase):
         - Popular tournaments endpoint
         '''
         tournaments = self.clashroyale_client.get_popular_tournaments()
-        self.assertTrue(isinstance(tournaments, dict))
+        self.assertTrue(isinstance(tournaments, list))
 
     ## DECKS METHODS ##
     def test_get_popular_decks(self):

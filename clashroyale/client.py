@@ -25,12 +25,14 @@ SOFTWARE.
 import asyncio
 import json
 from datetime import datetime
+from time import time
 from urllib.parse import urlencode
 
 import aiohttp
 import requests
 
-from .errors import NotFoundError, NotResponding, ServerError, Unauthorized, NotTrackedError
+from .errors import (NotFoundError, NotResponding, ServerError, Unauthorized, NotTrackedError,
+                     RatelimitError, RatelimitErrorDetected)
 from .models import (AuthStats, Clan, ClanInfo, ClanHistory, Battle, Cycle, Constants,
                      Player, PlayerInfo, Tournament, Deck, rlist)
 from .utils import API, SqliteDict, clansearch, tournamentsearch, crtag, keys, typecasted
@@ -80,6 +82,7 @@ class Client:
         self.cache_fp = options.get('cache_fp')
         self.using_cache = bool(self.cache_fp)
         self.cache_reset = options.get('cache_expires', 300)
+        self.ratelimit = [10, 10, 0]
         if self.using_cache:
             table = options.get('table_name', 'cache')
             self.cache = SqliteDict(self.cache_fp, table)
@@ -129,6 +132,12 @@ class Client:
                     'data': data
                 }
                 self.cache[str(resp.url)] = cached_data
+            if resp.headers.get('x-ratelimit-limit'):
+                self.ratelimit = [
+                    int(resp.headers['x-ratelimit-limit']),
+                    int(resp.headers['x-ratelimit-remaining']),
+                    int(resp.headers['x-ratelimit-reset'])
+                ]
             return data, False, datetime.utcnow() # value, cached, last_updated
         if code == 401: # Unauthorized request - Invalid token
             raise Unauthorized(resp, data)
@@ -136,6 +145,8 @@ class Client:
             raise NotFoundError(resp, data)
         if code == 417:
             raise NotTrackedError(resp, data)
+        if code == 429:
+            raise RatelimitError(resp, data)
         if code >= 500: # Something wrong with the api servers :(
             raise ServerError(resp, data)
 
@@ -154,6 +165,10 @@ class Client:
             cache = self._resolve_cache(url, **params)
             if cache is not None:
                 return cache
+        print(self.ratelimit)
+        if self.ratelimit[1] == 0 and time() < self.ratelimit[2]/1000:
+            if not url.endswith('/auth/stats'):
+                raise RatelimitErrorDetected(self.ratelimit[2]/1000 - time())
         if self.is_async: # Return a coroutine
             return self._arequest(url, **params)
         try:

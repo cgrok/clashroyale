@@ -64,3 +64,16 @@ class Unauthorized(StatusError):
 class NotTrackedError(StatusError):
     '''Raised if the requested clan is not tracked'''
     pass
+
+class RatelimitError(StatusError):
+    '''Raised if ratelimit is hit'''
+    pass
+
+class RatelimitErrorDetected(RequestError):
+    '''Raised when a ratelimit error is detected'''
+    def __init__(self, retry_when):
+        self.code = 429
+        self.retry_when = retry_when
+        self.reason = self.error = 'Too many requests detected, retry in ' + str(self.retry_when)
+        self.fmt = '{0.reason} ({0.code}): {0.error}'.format(self)
+        super().__init__(self.fmt)
