@@ -150,7 +150,7 @@ class Member(FullPlayer):
     '''A clan member model, 
     keeps a reference to the clan object it came from.
     '''
-    def __init__(self, clan, data, respons):
+    def __init__(self, clan, data, response):
         self.clan = clan
         super().__init__(clan.client, data, response)
 

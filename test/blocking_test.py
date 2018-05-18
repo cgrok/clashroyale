@@ -166,7 +166,7 @@ class TestBlockingClient(unittest.TestCase):
 
         tag = '29UQQ282'
         history = get_clan_tracking(tag)
-        self.assertFalse(history[0].available)
+        self.assertFalse(history.available)
 
     def test_get_tracking_clans(self):
         '''This test will test out:
