@@ -150,9 +150,9 @@ class Member(FullPlayer):
     '''A clan member model, 
     keeps a reference to the clan object it came from.
     '''
-    def __init__(self, clan, data):
+    def __init__(self, clan, data, respons):
         self.clan = clan
-        super().__init__(clan.client, data)
+        super().__init__(clan.client, data, response)
 
 class PlayerInfo(FullClan, FullPlayer):
     '''Brief player model, 
@@ -171,7 +171,7 @@ class Clan(Refreshable):
     '''
     def from_data(self, data, cached, ts):
         super().from_data(data, cached, ts)
-        self.members = [Member(self, m) for m in data.get('members', [])]
+        self.members = [Member(self, m, self.response) for m in data.get('members', [])]
 
 class ClanHistory(Refreshable):
     '''A history that RoyaleAPI saves'''
