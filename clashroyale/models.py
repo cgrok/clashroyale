@@ -68,9 +68,12 @@ class BaseAttrDict:
         the cache database.
     last_updated: datetime.datetime
         When the data which is currently being used was last updated.
+    response: requests.Response or aiohttp.ClientResponse or None
+        Response object containing headers and more information. Returns None if cached
     '''
-    def __init__(self, client, data, cached=False, ts=None):
+    def __init__(self, client, data, response, cached=False, ts=None):
         self.client = client
+        self.response = response
         self.from_data(data, cached, ts)
 
     def from_data(self, data, cached, ts):

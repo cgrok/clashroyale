@@ -2,6 +2,7 @@ import time
 import unittest
 
 import clashroyale
+import requests
 import yaml
 
 
@@ -20,7 +21,7 @@ class TestBlockingClient(unittest.TestCase):
 
     ## PAUSE IN BETWEEN TESTS ##
     def tearDown(self):
-        time.sleep(1)
+        time.sleep(2)
 
     ## MISC METHODS ##
     def test_get_auth_stats(self):
@@ -87,6 +88,14 @@ class TestBlockingClient(unittest.TestCase):
 
         self.assertTrue(isinstance(chests.super_magical, int) or\
                         chests.super_magical is None)
+
+    def test_get_response(self):
+        '''This test will test out:
+        - BaseAttrDict.response
+        '''
+        tag = '2P0LYQ'
+        chests = self.clashroyale_client.get_player_chests(tag)
+        self.assertTrue(isinstance(chests.response, requests.Response))
 
     def test_get_top_players(self):
         '''This test will test out:

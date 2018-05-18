@@ -94,7 +94,7 @@ class Client:
             return None
         last_updated = from_timestamp(cached_data['c_timestamp'])
         if (datetime.utcnow() - last_updated).total_seconds() < self.cache_reset:
-            ret = (cached_data['data'], True, last_updated)
+            ret = (cached_data['data'], True, last_updated, None)
             if self.is_async:
                 return self._wrap_coro(ret) # return a coroutine
                                             # so self.request can be awaitable
@@ -138,7 +138,7 @@ class Client:
                     int(resp.headers['x-ratelimit-remaining']),
                     int(resp.headers['x-ratelimit-reset'])
                 ]
-            return data, False, datetime.utcnow() # value, cached, last_updated
+            return data, False, datetime.utcnow(), resp # value, cached, last_updated
         if code == 401: # Unauthorized request - Invalid token
             raise Unauthorized(resp, data)
         if code in (400, 404): # Tag not found
@@ -165,31 +165,30 @@ class Client:
             cache = self._resolve_cache(url, **params)
             if cache is not None:
                 return cache
-        print(self.ratelimit)
         if self.ratelimit[1] == 0 and time() < self.ratelimit[2]/1000:
             if not url.endswith('/auth/stats'):
                 raise RatelimitErrorDetected(self.ratelimit[2]/1000 - time())
         if self.is_async: # Return a coroutine
             return self._arequest(url, **params)
         try:
-            resp = self.session.get(url, timeout=self.timeout, headers=self.headers, params=params)
-            return self._raise_for_status(resp, resp.text)
+            with self.session.get(url, timeout=self.timeout, headers=self.headers, params=params) as resp:
+                return self._raise_for_status(resp, resp.text)
         except requests.Timeout:
             raise NotResponding()
 
-    def _convert_model(self, data, cached, ts, model):
+    def _convert_model(self, data, cached, ts, model, resp):
         if isinstance(data, str):
             return data # version endpoint, not feasable to add refresh functionality.
         if isinstance(data, list): # Extra functionality
             if all(isinstance(x, str) for x in data): # Endpoints endpoint
                 return rlist(self, data, cached, ts) # Extra functionality
-            return [model(self, d, cached=cached, ts=ts) for d in data]
+            return [model(self, d, resp, cached=cached, ts=ts) for d in data]
         else:
-            return model(self, data, cached=cached, ts=ts)
+            return model(self, data, resp, cached=cached, ts=ts)
 
     async def _aget_model(self, url, model=None, **params):
         try:
-            data, cached, ts = await self.request(url, **params)
+            data, cached, ts, resp = await self.request(url, **params)
         except Exception as e:
             if self.using_cache:
                 cache = self._resolve_cache(url, **params)
@@ -198,14 +197,14 @@ class Client:
             if 'data' not in locals():
                 raise e
 
-        return self._convert_model(data, cached, ts, model)
+        return self._convert_model(data, cached, ts, model, resp)
 
     def _get_model(self, url, model=None, **params):
         if self.is_async: # Return a coroutine
             return self._aget_model(url, model, **params)
         # Otherwise, do everything synchronously.
         try:
-            data, cached, ts = self.request(url, **params)
+            data, cached, ts, resp = self.request(url, **params)
         except Exception as e:
             if self.using_cache:
                 cache = self._resolve_cache(url, **params)
@@ -214,7 +213,7 @@ class Client:
             if 'data' not in locals():
                 raise e
 
-        return self._convert_model(data, cached, ts, model)
+        return self._convert_model(data, cached, ts, model, resp)
 
     def get_version(self):
         return self._get_model(API.VERSION)
