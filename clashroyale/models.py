@@ -177,6 +177,14 @@ class ClanHistory(Refreshable):
     '''A history that RoyaleAPI saves'''
     pass
 
+class ClanWar(Refreshable):
+    '''Info about the current clan war'''
+    pass
+
+class ClanWarLog(Refreshable):
+    '''A log of the past clan wars'''
+    pass
+
 class Battle(BaseAttrDict):
     '''Clash Royale Battle'''
     pass

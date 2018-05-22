@@ -33,7 +33,7 @@ import requests
 
 from .errors import (NotFoundError, NotResponding, ServerError, Unauthorized, NotTrackedError,
                      RatelimitError, RatelimitErrorDetected)
-from .models import (AuthStats, Clan, ClanInfo, ClanHistory, Battle, Cycle, Constants,
+from .models import (AuthStats, Clan, ClanInfo, ClanHistory, ClanWar, ClanWarLog, Battle, Cycle, Constants,
                      Player, PlayerInfo, Tournament, Deck, rlist)
 from .utils import API, SqliteDict, clansearch, tournamentsearch, crtag, keys, typecasted
 
@@ -273,6 +273,16 @@ class Client:
     def get_clan_history(self, *tags: crtag, **params: keys):
         url = API.CLAN + '/' + ','.join(tags) + '/history'
         return self._get_model(url, ClanHistory, **params)
+
+    @typecasted
+    def get_clan_war(self, tag: crtag, **params: keys):
+        url = API.CLAN + '/' + tag + '/war'
+        return self._get_model(url, ClanWar, **params)
+
+    @typecasted
+    def get_clan_war_log(self, tag: crtag, **params: keys):
+        url = API.CLAN + '/' + tag + '/warlog'
+        return self._get_model(url, ClanWarLog, **params)
 
     @typecasted # checks if the keys=&exclude= parameters are passed only
     def get_constants(self, **params: keys):

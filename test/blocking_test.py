@@ -5,9 +5,12 @@ import clashroyale
 import requests
 import yaml
 
-
-with open('config.yaml') as f:
-    TOKEN = yaml.load(f).get('token')
+try:
+    with open('config.yaml') as f:
+        TOKEN = yaml.load(f).get('token')
+except FileNotFoundError:
+    with open('test/config.yaml') as f:
+        TOKEN = yaml.load(f).get('token')
 
 class TestBlockingClient(unittest.TestCase):
     '''Tests all methods in the blocking client that
@@ -131,11 +134,37 @@ class TestBlockingClient(unittest.TestCase):
     def test_get_clan_battles(self):
         '''This test will test out:
         - Normal clan battles fetching
+        - All battles fetching
+        - Clan war battles only fetching
         '''
 
         tag = '29UQQ282'
         battles = self.clashroyale_client.get_clan_battles(tag)
         self.assertTrue(isinstance(battles, list))
+        time.sleep(2)
+        battles = self.clashroyale_client.get_clan_battles(tag, type='all')
+        self.assertTrue(isinstance(battles, list))
+        time.sleep(2)
+        battles = self.clashroyale_client.get_clan_battles(tag, type='war')
+        self.assertTrue(isinstance(battles, list))
+
+    def test_get_clan_war(self):
+        '''This test will test out:
+        - Normal clan war fetching
+        '''
+
+        tag = '29UQQ282'
+        clan_war = self.clashroyale_client.get_clan_war(tag)
+        self.assertTrue(isinstance(clan_war, dict))
+
+    def test_get_clan_war_log(self):
+        '''This test will test out:
+        - Normal clan war log fetching
+        '''
+
+        tag = '29UQQ282'
+        log = self.clashroyale_client.get_clan_war_log(tag)
+        self.assertTrue(isinstance(log, list))
 
     def test_get_clan_history(self):
         '''This test will test out:
