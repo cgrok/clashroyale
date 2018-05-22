@@ -155,7 +155,7 @@ class TestBlockingClient(unittest.TestCase):
 
         tag = '29UQQ282'
         clan_war = self.clashroyale_client.get_clan_war(tag)
-        self.assertTrue(isinstance(clan_war, dict))
+        self.assertTrue(isinstance(clan_war.raw_data, dict))
 
     def test_get_clan_war_log(self):
         '''This test will test out:
