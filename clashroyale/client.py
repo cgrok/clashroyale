@@ -136,7 +136,7 @@ class Client:
                 self.ratelimit = [
                     int(resp.headers['x-ratelimit-limit']),
                     int(resp.headers['x-ratelimit-remaining']),
-                    int(resp.headers['x-ratelimit-reset'])
+                    int(resp.headers.get('x-ratelimit-reset', 0))
                 ]
             return data, False, datetime.utcnow(), resp # value, cached, last_updated
         if code == 401: # Unauthorized request - Invalid token
