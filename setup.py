@@ -6,7 +6,7 @@ with open('README.rst') as f:
 setup(
     name='clashroyale',
     packages=['clashroyale'],
-    version='v3.4.0',
+    version='v3.4.1',
     description='An (a)sync wrapper for royaleapi.com',
     long_description=long_description,
     long_description_content_type='text/x-rst',
