@@ -51,6 +51,10 @@ class Client:
     is_async: Optional[bool]
         Toggle for asynchronous/synchronous usage of the client.
         Defaults to False.
+    error_debug: Optional[bool]
+        Toggle for every method to raise ServerError to test error
+        handling.
+        Defaults to False.
     session: Optional[Session]
         The http (client)session to be used for requests. Can either be a 
         requests.Session or aiohttp.ClientSession.
@@ -72,6 +76,7 @@ class Client:
     def __init__(self, token, session=None, is_async=False, **options):
         self.token = token
         self.is_async = is_async
+        self.error_debug = options.get('error_debug', False)
         self.timeout = options.get('timeout', 10)
         self.session = session or (aiohttp.ClientSession() if is_async else requests.Session())
         self.camel_case = options.get('camel_case', False)
@@ -125,6 +130,8 @@ class Client:
         except json.JSONDecodeError:
             data = text
         code = getattr(resp, 'status', None) or getattr(resp, 'status_code')
+        if self.error_debug:
+            raise ServerError(resp, data)
         if 300 > code >= 200: # Request was successful
             if self.using_cache:
                 cached_data = {

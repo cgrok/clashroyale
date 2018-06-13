@@ -23,7 +23,7 @@ examples to get a feel on how to use the wrapper. If you would like to
 contribute to documentation, comment on the issue or
 create a pull request.
 
-`Current Docs <https://github.com/kyb3r/clashroyale/issues/1>`_
+`Current Docs <https://github.com/cgrok/clashroyale/issues/1>`_
 
 
 Misc

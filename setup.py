@@ -6,11 +6,10 @@ with open('README.rst') as f:
 setup(
     name='clashroyale',
     packages=['clashroyale'],
-    version='v3.4.1',
+    version='v3.4.2',
     description='An (a)sync wrapper for royaleapi.com',
     long_description=long_description,
     long_description_content_type='text/x-rst',
-    author='kyb3r',
     license='MIT',
     url='https://github.com/cgrok/clashroyale',
     keywords=['clashroyale', 'wrapper', 'cr', 'royaleapi'],
