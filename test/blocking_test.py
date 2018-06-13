@@ -19,7 +19,7 @@ class TestBlockingClient(unittest.TestCase):
     Powered by RoyaleAPI
     '''
     def __init__(self, *args, **kwargs):
-        self.clashroyale_client = clashroyale.Client(TOKEN, timeout=5)
+        self.clashroyale_client = clashroyale.Client(TOKEN, timeout=30)
         super().__init__(*args, **kwargs)
 
     ## PAUSE IN BETWEEN TESTS ##
@@ -191,7 +191,7 @@ class TestBlockingClient(unittest.TestCase):
 
         tag = '2U2GGQJ'
         history = get_clan_tracking(tag)
-        self.assertTrue(history[0].available)
+        self.assertTrue(history.available)
 
         tag = '29UQQ282'
         history = get_clan_tracking(tag)
