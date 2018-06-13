@@ -13,7 +13,7 @@ setup(
     license='MIT',
     url='https://github.com/cgrok/clashroyale',
     keywords=['clashroyale', 'wrapper', 'cr', 'royaleapi'],
-    install_requires=['aiohttp>=2.0.0,<2.3.0', 'python-box==3.1.1', 'requests==2.18.4', 'asynctest==0.12.0', 'yarl<1.2'],
+    install_requires=['aiohttp==3.3.2', 'python-box==3.1.1', 'requests==2.18.4'],
     classifiers=[
         'Development Status :: 5 - Production/Stable',
         'Intended Audience :: Developers',
