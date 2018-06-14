@@ -1,4 +1,4 @@
-'''
+"""
 MIT License
 
 Copyright (c) 2017 kyb3r
@@ -20,13 +20,15 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
-'''
+"""
 
 from box import Box, BoxList
+
 from .utils import API
 
+
 class BaseAttrDict:
-    '''This class is the base class for all models, its a
+    """This class is the base class for all models, its a
     wrapper around the `python-box`_ which allows access to data
     via dot notation, in this case, API data will be accessed
     using this class. This class shouldnt normally be used by the
@@ -70,7 +72,7 @@ class BaseAttrDict:
         When the data which is currently being used was last updated.
     response: requests.Response or aiohttp.ClientResponse or None
         Response object containing headers and more information. Returns None if cached
-    '''
+    """
     def __init__(self, client, data, response, cached=False, ts=None):
         self.client = client
         self.response = response
@@ -109,25 +111,29 @@ class BaseAttrDict:
         _type = self.__class__.__name__
         return "<{}: {}>".format(_type, self.raw_data)
 
+
 class FullClan(BaseAttrDict):
     def get_clan(self):
-        '''(a)sync function to return clan.'''
+        """(a)sync function to return clan."""
         if not self.clan.get('tag'):
             raise ValueError('This player does not have a clan.')
         return self.client.get_clan(self.clan.tag)
 
+
 class FullPlayer(BaseAttrDict):
-    def get_profile(self):
+    def get_player(self):
         return self.client.get_player(self.tag)
 
-    get_player = get_profile # consistancy
+    def get_profile(self):
+        raise DeprecationWarning('get_profile has been deprecated. Please use get_player')
+
 
 class Refreshable(BaseAttrDict):
-    '''Mixin class for re requesting data from
+    """Mixin class for re requesting data from
     the api for the specific model.
-    '''
+    """
     def refresh(self):
-        '''(a)sync refresh the data.'''
+        """(a)sync refresh the data."""
         if self.client.is_async:
             return self._arefresh()
         data, cached, ts = self.client.request(self.url, refresh=True)
@@ -142,72 +148,86 @@ class Refreshable(BaseAttrDict):
         endpoint = self.__class__.__name__.lower()
         return '{}/{}/{}'.format(API.BASE, endpoint, self.tag)
 
+
 class Player(Refreshable, FullClan):
-    '''A clash royale player model.'''
+    """A clash royale player model."""
     pass
 
+
 class Member(FullPlayer):
-    '''A clan member model, 
+    """A clan member model,
     keeps a reference to the clan object it came from.
-    '''
+    """
     def __init__(self, clan, data, response):
         self.clan = clan
         super().__init__(clan.client, data, response)
 
+
 class PlayerInfo(FullClan, FullPlayer):
-    '''Brief player model, 
+    """Brief player model,
     does not contain full data, non refreshable.
-    '''
+    """
     pass
+
 
 class ClanInfo(FullClan):
-    '''Brief clan model, 
+    """Brief clan model,
     does not contain full data, non refreshable.
-    '''
+    """
     pass
 
+
 class Clan(Refreshable):
-    '''A clash royale clan model, full data + refreshable.
-    '''
+    """A clash royale clan model, full data + refreshable."""
     def from_data(self, data, cached, ts):
         super().from_data(data, cached, ts)
         self.members = [Member(self, m, self.response) for m in data.get('members', [])]
 
+
 class ClanHistory(Refreshable):
-    '''A history that RoyaleAPI saves'''
+    """A history that RoyaleAPI saves"""
     pass
+
 
 class ClanWar(Refreshable):
-    '''Info about the current clan war'''
+    """Info about the current clan war"""
     pass
+
 
 class ClanWarLog(Refreshable):
-    '''A log of the past clan wars'''
+    """A log of the past clan wars"""
     pass
+
 
 class Battle(BaseAttrDict):
-    '''Clash Royale Battle'''
+    """Clash Royale Battle"""
     pass
+
 
 class Cycle(BaseAttrDict):
-    '''Clash Royale chest cycle'''
+    """Clash Royale chest cycle"""
     pass
+
 
 class Constants(Refreshable):
-    '''Clash Royale constants storage'''
+    """Clash Royale constants storage"""
     pass
+
 
 class Tournament(Refreshable):
-    '''Represents a clash royale tournament.'''
+    """Represents a clash royale tournament."""
     pass
+
 
 class Deck(Refreshable):
-    '''Represents a clash royale deck.'''
+    """Represents a clash royale deck."""
     pass
 
+
 class AuthStats(Refreshable):
-    '''Represents client request statistics'''
+    """Represents client request statistics"""
     pass
+
 
 class rlist(list, Refreshable):
     def __init__(self, client, data, cached, ts):

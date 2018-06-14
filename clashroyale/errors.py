@@ -22,9 +22,11 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 '''
 
+
 class RequestError(Exception):
     '''Base class for all errors'''
     pass
+
 
 class StatusError(RequestError):
     '''Base class for all errors except NotResponding'''
@@ -42,6 +44,7 @@ class StatusError(RequestError):
         self.fmt = '{0.reason} ({0.code}): {0.error}'.format(self)
         super().__init__(self.fmt)
 
+
 class NotResponding(RequestError):
     '''Raised if the API request timed out'''
     def __init__(self):
@@ -49,25 +52,31 @@ class NotResponding(RequestError):
         self.error = 'API request timed out, please be patient.'
         super().__init__(self.error)
 
+
 class NotFoundError(StatusError):
     '''Raised if the player/clan is not found.'''
     pass
+
 
 class ServerError(StatusError):
     '''Raised if the api service is having issues'''
     pass
 
+
 class Unauthorized(StatusError):
     '''Raised if you passed an invalid token.'''
     pass
+
 
 class NotTrackedError(StatusError):
     '''Raised if the requested clan is not tracked'''
     pass
 
+
 class RatelimitError(StatusError):
     '''Raised if ratelimit is hit'''
     pass
+
 
 class RatelimitErrorDetected(RequestError):
     '''Raised when a ratelimit error is detected'''

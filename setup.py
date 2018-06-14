@@ -1,12 +1,14 @@
 from setuptools import setup
 
+from clashroyale import __version__
+
 with open('README.rst') as f:
     long_description = f.read()
 
 setup(
     name='clashroyale',
     packages=['clashroyale'],
-    version='v3.4.2',
+    version=__version__,
     description='An (a)sync wrapper for royaleapi.com',
     long_description=long_description,
     long_description_content_type='text/x-rst',

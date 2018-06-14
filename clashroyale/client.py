@@ -56,20 +56,20 @@ class Client:
         handling.
         Defaults to False.
     session: Optional[Session]
-        The http (client)session to be used for requests. Can either be a 
+        The http (client)session to be used for requests. Can either be a
         requests.Session or aiohttp.ClientSession.
     timeout: Optional[int]
         A timeout for requests to the API, defaults to 10 seconds.
     cache_fp: Optional[str]
-        File path for the sqlite3 database to use for caching requests, 
+        File path for the sqlite3 database to use for caching requests,
         if this parameter is provided, the client will use its caching system.
     cache_expires: Optional[int]
-        The number of seconds to wait before the client will request 
+        The number of seconds to wait before the client will request
         from the api for a specific route, this defaults to 10 seconds.
     table_name: Optional[str]
         The table name to use for the cache database. Defaults to 'cache'
     camel_case: Optional(bool)
-        Whether or not to access model data keys in snake_case or camelCase, 
+        Whether or not to access model data keys in snake_case or camelCase,
         this defaults to False (use snake_case)
     '''
 
@@ -101,8 +101,7 @@ class Client:
         if (datetime.utcnow() - last_updated).total_seconds() < self.cache_reset:
             ret = (cached_data['data'], True, last_updated, None)
             if self.is_async:
-                return self._wrap_coro(ret) # return a coroutine
-                                            # so self.request can be awaitable
+                return self._wrap_coro(ret)
             return ret
         return None
 
@@ -132,7 +131,7 @@ class Client:
         code = getattr(resp, 'status', None) or getattr(resp, 'status_code')
         if self.error_debug:
             raise ServerError(resp, data)
-        if 300 > code >= 200: # Request was successful
+        if 300 > code >= 200:  # Request was successful
             if self.using_cache:
                 cached_data = {
                     'c_timestamp': datetime.utcnow().timestamp(),
@@ -145,16 +144,16 @@ class Client:
                     int(resp.headers['x-ratelimit-remaining']),
                     int(resp.headers.get('x-ratelimit-reset', 0))
                 ]
-            return data, False, datetime.utcnow(), resp # value, cached, last_updated
-        if code == 401: # Unauthorized request - Invalid token
+            return data, False, datetime.utcnow(), resp  # value, cached, last_updated
+        if code == 401:  # Unauthorized request - Invalid token
             raise Unauthorized(resp, data)
-        if code in (400, 404): # Tag not found
+        if code in (400, 404):  # Tag not found
             raise NotFoundError(resp, data)
         if code == 417:
             raise NotTrackedError(resp, data)
         if code == 429:
             raise RatelimitError(resp, data)
-        if code >= 500: # Something wrong with the api servers :(
+        if code >= 500:  # Something wrong with the api servers :(
             raise ServerError(resp, data)
 
     async def _arequest(self, url, **params):
@@ -168,14 +167,14 @@ class Client:
         return arg
 
     def request(self, url, refresh=False, **params):
-        if self.using_cache and refresh is False: # Refresh=True forces a request instead of using cache
+        if self.using_cache and refresh is False:  # refresh=True forces a request instead of using cache
             cache = self._resolve_cache(url, **params)
             if cache is not None:
                 return cache
         if self.ratelimit[1] == 0 and time() < self.ratelimit[2]/1000:
             if not url.endswith('/auth/stats'):
                 raise RatelimitErrorDetected(self.ratelimit[2]/1000 - time())
-        if self.is_async: # Return a coroutine
+        if self.is_async:  # return a coroutine
             return self._arequest(url, **params)
         try:
             with self.session.get(url, timeout=self.timeout, headers=self.headers, params=params) as resp:
@@ -185,10 +184,10 @@ class Client:
 
     def _convert_model(self, data, cached, ts, model, resp):
         if isinstance(data, str):
-            return data # version endpoint, not feasable to add refresh functionality.
-        if isinstance(data, list): # Extra functionality
-            if all(isinstance(x, str) for x in data): # Endpoints endpoint
-                return rlist(self, data, cached, ts) # Extra functionality
+            return data  # version endpoint, not feasable to add refresh functionality.
+        if isinstance(data, list):  # extra functionality
+            if all(isinstance(x, str) for x in data):  # endpoints endpoint
+                return rlist(self, data, cached, ts)  # extra functionality
             return [model(self, d, resp, cached=cached, ts=ts) for d in data]
         else:
             return model(self, data, resp, cached=cached, ts=ts)
@@ -207,7 +206,7 @@ class Client:
         return self._convert_model(data, cached, ts, model, resp)
 
     def _get_model(self, url, model=None, **params):
-        if self.is_async: # Return a coroutine
+        if self.is_async:  # return a coroutine
             return self._aget_model(url, model, **params)
         # Otherwise, do everything synchronously.
         try:
@@ -228,7 +227,7 @@ class Client:
     def get_endpoints(self):
         return self._get_model(API.ENDPOINTS)
 
-    @typecasted # Convert to a proper tag
+    @typecasted  # Convert to a proper tag
     def get_tournament(self, tag: crtag, **params: keys):
         url = API.TOURNAMENT + '/' + tag
         return self._get_model(url, Tournament, **params)
@@ -257,12 +256,12 @@ class Client:
 
     get_clans = get_clan
 
-    @typecasted # Validate clan search parameters.
+    @typecasted  # Validate clan search parameters.
     def search_clans(self, **params: clansearch):
         url = API.CLAN + '/search'
         return self._get_model(url, ClanInfo, **params)
 
-    def get_tracking_clans(self): # Returns a list of tracking clans
+    def get_tracking_clans(self):  # Returns a list of tracking clans
         url = API.CLAN + '/' + '/tracking'
         return self._get_model(url)
 
@@ -291,7 +290,7 @@ class Client:
         url = API.CLAN + '/' + tag + '/warlog'
         return self._get_model(url, ClanWarLog, **params)
 
-    @typecasted # checks if the keys=&exclude= parameters are passed only
+    @typecasted  # checks if the keys=&exclude= parameters are passed only
     def get_constants(self, **params: keys):
         return self._get_model(API.CONSTANTS, Constants, **params)
 
@@ -335,7 +334,7 @@ class Client:
         url = API.TOURNAMENT + '/known'
         return self._get_model(url, Tournament, **params)
 
-    @typecasted # Validate tournament search parameters.
+    @typecasted  # Validate tournament search parameters.
     def search_tournaments(self, **params: tournamentsearch):
         url = API.TOURNAMENT + '/search'
         return self._get_model(url, ClanInfo, **params)

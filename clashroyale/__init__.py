@@ -32,9 +32,7 @@ from .utils import API, SqliteDict, typecasted
 # METADATA #
 ############
 
-__version__ = 'v3.1.11'
+__version__ = 'v3.4.3'
 __title__ = 'clashroyale'
 __license__ = 'MIT'
-__author__ = 'kyb3r'
 __github__ = 'https://github.com/cgrok/clashroyale'
-

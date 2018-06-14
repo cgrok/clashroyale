@@ -23,29 +23,28 @@ SOFTWARE.
 '''
 
 import inspect
-import re
-from functools import wraps
-from collections import namedtuple
-from collections import MutableMapping
-import sqlite3 as sqlite
-from contextlib import contextmanager
-import threading
 import pickle
+import re
+import sqlite3 as sqlite
+import threading
+from collections import MutableMapping
+from contextlib import contextmanager
+from functools import wraps
 
 
-    
 def typecasted(func):
     '''Decorator that converts arguments via annotations.'''
     signature = inspect.signature(func).parameters.items()
+
     @wraps(func)
     def wrapper(*args, **kwargs):
         args = list(args)
         new_args = []
         new_kwargs = {}
-        for name, param in signature:
+        for _, param in signature:
             converter = param.annotation
             if converter is inspect._empty:
-                converter = lambda a: a # do nothing
+                converter = lambda a: a  # do nothing
             if param.kind is param.POSITIONAL_OR_KEYWORD:
                 if args:
                     to_conv = args.pop(0)
@@ -63,7 +62,7 @@ def typecasted(func):
 
 def clansearch(k, v):
     valid = (
-        'name', 'score', 'minMembers', 
+        'name', 'score', 'minMembers',
         'maxMembers', 'keys', 'exclude',
         'max'
         )
@@ -71,6 +70,7 @@ def clansearch(k, v):
     if k not in valid:
         raise ValueError('Invalid search parameter passed: {}'.format(k))
     return k, v
+
 
 def tournamentsearch(k, v):
     valid = (
@@ -81,10 +81,12 @@ def tournamentsearch(k, v):
         raise ValueError('Invalid search parameter passed: {}'.format(k))
     return k, v
 
+
 def keys(k, v):
     if k not in ('keys', 'exclude', 'max', 'page', 'type'):
         raise ValueError('Invalid url parameter passed: {}'.format(k))
     return k, ','.join(v) if isinstance(v, (list, tuple)) else v
+
 
 def crtag(tag):
     tag = tag.strip('#').upper().replace('O', '0')
@@ -97,16 +99,20 @@ def crtag(tag):
         raise ValueError("Invalid tag characters passed: {}".format(', '.join(bad)))
     return tag
 
+
 first_cap_re = re.compile('(.)([A-Z][a-z]+)')
 all_cap_re = re.compile('([a-z0-9])([A-Z])')
+
 
 def _to_snake_case(name):
     s1 = first_cap_re.sub(r'\1_\2', name)
     return all_cap_re.sub(r'\1_\2', s1).lower()
 
+
 def _to_camel_case(snake):
     parts = snake.split('_')
     return parts[0] + "".join(x.title() for x in parts[1:])
+
 
 class API:
     BASE = 'https://api.royaleapi.com'
