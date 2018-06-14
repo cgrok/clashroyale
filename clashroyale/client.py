@@ -1,4 +1,4 @@
-'''
+"""
 MIT License
 
 Copyright (c) 2017 kyb3r
@@ -20,7 +20,7 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
-'''
+"""
 
 import asyncio
 import json
@@ -41,7 +41,7 @@ from_timestamp = datetime.fromtimestamp
 
 
 class Client:
-    '''A client that requests data from cr-api.com. This class can
+    """A client that requests data from cr-api.com. This class can
     either be async or non async.
 
     Parameters
@@ -71,7 +71,7 @@ class Client:
     camel_case: Optional(bool)
         Whether or not to access model data keys in snake_case or camelCase,
         this defaults to False (use snake_case)
-    '''
+    """
 
     def __init__(self, token, session=None, is_async=False, **options):
         self.token = token

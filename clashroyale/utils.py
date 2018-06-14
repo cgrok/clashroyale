@@ -1,4 +1,4 @@
-'''
+"""
 MIT License
 
 Copyright (c) 2017 kyb3r
@@ -20,7 +20,7 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
-'''
+"""
 
 import inspect
 import pickle
@@ -33,7 +33,7 @@ from functools import wraps
 
 
 def typecasted(func):
-    '''Decorator that converts arguments via annotations.'''
+    """Decorator that converts arguments via annotations."""
     signature = inspect.signature(func).parameters.items()
 
     @wraps(func)

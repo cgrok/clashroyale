@@ -1,4 +1,4 @@
-'''
+"""
 MIT License
 
 Copyright (c) 2017 kyb3r
@@ -20,16 +20,16 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
-'''
+"""
 
 
 class RequestError(Exception):
-    '''Base class for all errors'''
+    """Base class for all errors"""
     pass
 
 
 class StatusError(RequestError):
-    '''Base class for all errors except NotResponding'''
+    """Base class for all errors except NotResponding"""
     def __init__(self, resp, data):
         self.response = resp
         self.code = getattr(resp, 'status', None) or getattr(resp, 'status_code')
@@ -46,7 +46,7 @@ class StatusError(RequestError):
 
 
 class NotResponding(RequestError):
-    '''Raised if the API request timed out'''
+    """Raised if the API request timed out"""
     def __init__(self):
         self.code = 504
         self.error = 'API request timed out, please be patient.'
@@ -54,32 +54,32 @@ class NotResponding(RequestError):
 
 
 class NotFoundError(StatusError):
-    '''Raised if the player/clan is not found.'''
+    """Raised if the player/clan is not found."""
     pass
 
 
 class ServerError(StatusError):
-    '''Raised if the api service is having issues'''
+    """Raised if the api service is having issues"""
     pass
 
 
 class Unauthorized(StatusError):
-    '''Raised if you passed an invalid token.'''
+    """Raised if you passed an invalid token."""
     pass
 
 
 class NotTrackedError(StatusError):
-    '''Raised if the requested clan is not tracked'''
+    """Raised if the requested clan is not tracked"""
     pass
 
 
 class RatelimitError(StatusError):
-    '''Raised if ratelimit is hit'''
+    """Raised if ratelimit is hit"""
     pass
 
 
 class RatelimitErrorDetected(RequestError):
-    '''Raised when a ratelimit error is detected'''
+    """Raised when a ratelimit error is detected"""
     def __init__(self, retry_when):
         self.code = 429
         self.retry_when = retry_when
