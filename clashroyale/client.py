@@ -31,8 +31,8 @@ from urllib.parse import urlencode
 import aiohttp
 import requests
 
-from .errors import (NotFoundError, NotResponding, ServerError, Unauthorized, NotTrackedError,
-                     RatelimitError, RatelimitErrorDetected)
+from .errors import (NotFoundError, NotResponding, ServerError, Unauthorized, NotTrackedError,\
+                     UnexpectedError, RatelimitError, RatelimitErrorDetected)
 from .models import (AuthStats, Clan, ClanInfo, ClanHistory, ClanWar, ClanWarLog, Battle, Cycle, Constants,
                      Player, PlayerInfo, Tournament, Deck, rlist)
 from .utils import API, SqliteDict, clansearch, tournamentsearch, crtag, keys, typecasted
@@ -155,6 +155,8 @@ class Client:
             raise RatelimitError(resp, data)
         if code >= 500:  # Something wrong with the api servers :(
             raise ServerError(resp, data)
+
+        raise UnexpectedError(resp, data)
 
     async def _arequest(self, url, **params):
         try:
@@ -332,6 +334,16 @@ class Client:
     @typecasted
     def get_known_tournaments(self, **params: keys):
         url = API.TOURNAMENT + '/known'
+        return self._get_model(url, Tournament, **params)
+
+    @typecasted
+    def get_1k_tournaments(self, **params: keys):
+        url = API.TOURNAMENT + '/1k'
+        return self._get_model(url, Tournament, **params)
+
+    @typecasted
+    def get_prep_tournaments(self, **params: keys):
+        url = API.TOURNAMENT + '/prep'
         return self._get_model(url, Tournament, **params)
 
     @typecasted  # Validate tournament search parameters.

@@ -83,7 +83,7 @@ def tournamentsearch(k, v):
 
 
 def keys(k, v):
-    if k not in ('keys', 'exclude', 'max', 'page', 'type'):
+    if k not in ('keys', 'exclude', 'max', 'page', 'type', '1k', 'open', 'prep'):
         raise ValueError('Invalid url parameter passed: {}'.format(k))
     return k, ','.join(v) if isinstance(v, (list, tuple)) else v
 

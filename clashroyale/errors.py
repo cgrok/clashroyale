@@ -78,6 +78,11 @@ class RatelimitError(StatusError):
     pass
 
 
+class UnexpectedError(StatusError):
+    """Raised if the error was not caught"""
+    pass
+
+
 class RatelimitErrorDetected(RequestError):
     """Raised when a ratelimit error is detected"""
     def __init__(self, retry_when):
