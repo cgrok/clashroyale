@@ -35,7 +35,7 @@ from .errors import (NotFoundError, NotResponding, ServerError, Unauthorized, No
                      UnexpectedError, RatelimitError, RatelimitErrorDetected)
 from .models import (AuthStats, Clan, ClanInfo, ClanHistory, ClanWar, ClanWarLog, Battle, Cycle, Constants,
                      Player, PlayerInfo, Tournament, Deck, rlist)
-from .utils import API, SqliteDict, clansearch, tournamentsearch, crtag, keys, typecasted
+from .utils import API, SqliteDict, clansearch, tournamentsearch, crtag, keys, tournamentfilter, typecasted
 
 from_timestamp = datetime.fromtimestamp
 
@@ -242,6 +242,12 @@ class Client:
     get_players = get_player
 
     @typecasted
+    def get_player_verify(self, tag: crtag, apikey: str, **params: keys):
+        url = API.PLAYER + '/' + tag + '/verify'
+        params.update({'token': apikey})
+        return self._get_model(url, Player, **params)
+
+    @typecasted
     def get_player_battles(self, *tags: crtag, **params: keys):
         url = API.PLAYER + '/' + ','.join(tags) + '/battles'
         return self._get_model(url, Battle, **params)
@@ -327,23 +333,33 @@ class Client:
         return self._get_model(url, Deck, **params)
 
     @typecasted
-    def get_open_tournaments(self, **params: keys):
+    def get_open_tournaments(self, **params: tournamentfilter):
         url = API.TOURNAMENT + '/open'
         return self._get_model(url, Tournament, **params)
 
     @typecasted
-    def get_known_tournaments(self, **params: keys):
+    def get_known_tournaments(self, **params: tournamentfilter):
         url = API.TOURNAMENT + '/known'
         return self._get_model(url, Tournament, **params)
 
     @typecasted
-    def get_1k_tournaments(self, **params: keys):
+    def get_1k_tournaments(self, **params: tournamentfilter):
         url = API.TOURNAMENT + '/1k'
         return self._get_model(url, Tournament, **params)
 
     @typecasted
-    def get_prep_tournaments(self, **params: keys):
+    def get_prep_tournaments(self, **params: tournamentfilter):
         url = API.TOURNAMENT + '/prep'
+        return self._get_model(url, Tournament, **params)
+
+    @typecasted
+    def get_joinable_tournaments(self, **params: tournamentfilter):
+        url = API.TOURNAMENT + '/joinable'
+        return self._get_model(url, Tournament, **params)
+
+    @typecasted
+    def get_full_tournaments(self, **params: tournamentfilter):
+        url = API.TOURNAMENT + '/full'
         return self._get_model(url, Tournament, **params)
 
     @typecasted  # Validate tournament search parameters.

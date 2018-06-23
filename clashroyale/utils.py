@@ -83,10 +83,15 @@ def tournamentsearch(k, v):
 
 
 def keys(k, v):
-    if k not in ('keys', 'exclude', 'max', 'page', 'type', '1k', 'open', 'prep'):
+    if k not in ('keys', 'exclude', 'max', 'page', 'type'):
         raise ValueError('Invalid url parameter passed: {}'.format(k))
     return k, ','.join(v) if isinstance(v, (list, tuple)) else v
 
+def tournamentfilter(k, v):
+    if k not in ('keys', 'exclude', 'max', 'page', 'type',
+                 '1k', 'open', 'full', 'prep', 'joinable'):
+        raise ValueError('Invalid url parameter passed: {}'.format(k))
+    return k, ','.join(v) if isinstance(v, (list, tuple)) else v
 
 def crtag(tag):
     tag = tag.strip('#').upper().replace('O', '0')
