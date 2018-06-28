@@ -26,6 +26,7 @@ from box import Box, BoxList
 
 from .utils import API
 
+API_ENDPOINTS = API('https://api.royaleapi.com')
 
 class BaseAttrDict:
     """This class is the base class for all models, its a
@@ -146,7 +147,7 @@ class Refreshable(BaseAttrDict):
     @property
     def url(self):
         endpoint = self.__class__.__name__.lower()
-        return '{}/{}/{}'.format(API.BASE, endpoint, self.tag)
+        return '{}/{}/{}'.format(API_ENDPOINTS.BASE, endpoint, self.tag)
 
 
 class Player(Refreshable, FullClan):
@@ -242,4 +243,4 @@ class rlist(list, Refreshable):
 
     @property
     def url(self):
-        return '{}/endpoints'.format(API.BASE)
+        return '{}/endpoints'.format(API_ENDPOINTS.BASE)

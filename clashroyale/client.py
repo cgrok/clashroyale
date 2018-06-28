@@ -60,6 +60,9 @@ class Client:
         requests.Session or aiohttp.ClientSession.
     timeout: Optional[int]
         A timeout for requests to the API, defaults to 10 seconds.
+    url: Optional[str]
+        A url to use instead of api.royaleapi.com (defaults to ``https://api.royaleapi.com``)    
+        Only use this if you know what you are doing.
     cache_fp: Optional[str]
         File path for the sqlite3 database to use for caching requests,
         if this parameter is provided, the client will use its caching system.
@@ -78,6 +81,7 @@ class Client:
         self.is_async = is_async
         self.error_debug = options.get('error_debug', False)
         self.timeout = options.get('timeout', 10)
+        self.api = API(options.get('url', 'https://api.royaleapi.com'))
         self.session = session or (aiohttp.ClientSession() if is_async else requests.Session())
         self.camel_case = options.get('camel_case', False)
         self.headers = {
@@ -208,6 +212,7 @@ class Client:
         return self._convert_model(data, cached, ts, model, resp)
 
     def _get_model(self, url, model=None, **params):
+        print(url)
         if self.is_async:  # return a coroutine
             return self._aget_model(url, model, **params)
         # Otherwise, do everything synchronously.
@@ -224,150 +229,145 @@ class Client:
         return self._convert_model(data, cached, ts, model, resp)
 
     def get_version(self):
-        return self._get_model(API.VERSION)
+        return self._get_model(self.api.VERSION)
 
     def get_endpoints(self):
-        return self._get_model(API.ENDPOINTS)
+        return self._get_model(self.api.ENDPOINTS)
 
     @typecasted  # Convert to a proper tag
     def get_tournament(self, tag: crtag, **params: keys):
-        url = API.TOURNAMENT + '/' + tag
+        url = self.api.TOURNAMENT + '/' + tag
         return self._get_model(url, Tournament, **params)
 
     @typecasted
     def get_player(self, *tags: crtag, **params: keys):
-        url = API.PLAYER + '/' + ','.join(tags)
+        url = self.api.PLAYER + '/' + ','.join(tags)
         return self._get_model(url, Player, **params)
 
     get_players = get_player
 
     @typecasted
     def get_player_verify(self, tag: crtag, apikey: str, **params: keys):
-        url = API.PLAYER + '/' + tag + '/verify'
+        url = self.api.PLAYER + '/' + tag + '/verify'
         params.update({'token': apikey})
         return self._get_model(url, Player, **params)
 
     @typecasted
     def get_player_battles(self, *tags: crtag, **params: keys):
-        url = API.PLAYER + '/' + ','.join(tags) + '/battles'
+        url = self.api.PLAYER + '/' + ','.join(tags) + '/battles'
         return self._get_model(url, Battle, **params)
 
     @typecasted
     def get_player_chests(self, *tags: crtag, **params: keys):
-        url = API.PLAYER + '/' + ','.join(tags) + '/chests'
+        url = self.api.PLAYER + '/' + ','.join(tags) + '/chests'
         return self._get_model(url, Cycle, **params)
 
     @typecasted
     def get_clan(self, *tags: crtag, **params: keys):
-        url = API.CLAN + '/' + ','.join(tags)
+        url = self.api.CLAN + '/' + ','.join(tags)
         return self._get_model(url, Clan, **params)
 
     get_clans = get_clan
 
     @typecasted  # Validate clan search parameters.
     def search_clans(self, **params: clansearch):
-        url = API.CLAN + '/search'
+        url = self.api.CLAN + '/search'
         return self._get_model(url, ClanInfo, **params)
 
     def get_tracking_clans(self):  # Returns a list of tracking clans
-        url = API.CLAN + '/' + '/tracking'
+        url = self.api.CLAN + '/tracking'
         return self._get_model(url)
 
     @typecasted
     def get_clan_tracking(self, *tags: crtag, **params: keys):
-        url = API.CLAN + '/' + ','.join(tags) + '/tracking'
+        url = self.api.CLAN + '/' + ','.join(tags) + '/tracking'
         return self._get_model(url, Clan, **params)
 
     @typecasted
     def get_clan_battles(self, *tags: crtag, **params: keys):
-        url = API.CLAN + '/' + ','.join(tags) + '/battles'
+        url = self.api.CLAN + '/' + ','.join(tags) + '/battles'
         return self._get_model(url, Battle, **params)
 
     @typecasted
     def get_clan_history(self, *tags: crtag, **params: keys):
-        url = API.CLAN + '/' + ','.join(tags) + '/history'
+        url = self.api.CLAN + '/' + ','.join(tags) + '/history'
         return self._get_model(url, ClanHistory, **params)
 
     @typecasted
     def get_clan_war(self, tag: crtag, **params: keys):
-        url = API.CLAN + '/' + tag + '/war'
+        url = self.api.CLAN + '/' + tag + '/war'
         return self._get_model(url, ClanWar, **params)
 
     @typecasted
     def get_clan_war_log(self, tag: crtag, **params: keys):
-        url = API.CLAN + '/' + tag + '/warlog'
+        url = self.api.CLAN + '/' + tag + '/warlog'
         return self._get_model(url, ClanWarLog, **params)
 
     @typecasted  # checks if the keys=&exclude= parameters are passed only
     def get_constants(self, **params: keys):
-        return self._get_model(API.CONSTANTS, Constants, **params)
+        return self._get_model(self.api.CONSTANTS, Constants, **params)
 
     @typecasted
     def get_top_clans(self, country_key='', **params: keys):
-        url = API.TOP + '/clans/' + country_key
+        url = self.api.TOP + '/clans/' + country_key
         return self._get_model(url, ClanInfo, **params)
 
     @typecasted
     def get_top_players(self, country_key='', **params: keys):
-        url = API.TOP + '/players/' + country_key
+        url = self.api.TOP + '/players/' + country_key
         return self._get_model(url, PlayerInfo, **params)
 
     @typecasted
     def get_popular_clans(self, **params: keys):
-        url = API.POPULAR + '/clans'
+        url = self.api.POPULAR + '/clans'
         return self._get_model(url, Clan, **params)
 
     @typecasted
     def get_popular_players(self, **params: keys):
-        url = API.POPULAR + '/players'
+        url = self.api.POPULAR + '/players'
         return self._get_model(url, PlayerInfo, **params)
 
     @typecasted
     def get_popular_tournaments(self, **params: keys):
-        url = API.POPULAR + '/tournaments'
+        url = self.api.POPULAR + '/tournaments'
         return self._get_model(url, Tournament, **params)
 
     @typecasted
     def get_popular_decks(self, **params: keys):
-        url = API.POPULAR + '/decks'
+        url = self.api.POPULAR + '/decks'
         return self._get_model(url, Deck, **params)
 
     @typecasted
     def get_open_tournaments(self, **params: tournamentfilter):
-        url = API.TOURNAMENT + '/open'
+        url = self.api.TOURNAMENT + '/open'
         return self._get_model(url, Tournament, **params)
 
     @typecasted
     def get_known_tournaments(self, **params: tournamentfilter):
-        url = API.TOURNAMENT + '/known'
+        url = self.api.TOURNAMENT + '/known'
         return self._get_model(url, Tournament, **params)
 
     @typecasted
     def get_1k_tournaments(self, **params: tournamentfilter):
-        url = API.TOURNAMENT + '/1k'
+        url = self.api.TOURNAMENT + '/1k'
         return self._get_model(url, Tournament, **params)
 
     @typecasted
     def get_prep_tournaments(self, **params: tournamentfilter):
-        url = API.TOURNAMENT + '/prep'
+        url = self.api.TOURNAMENT + '/prep'
         return self._get_model(url, Tournament, **params)
 
     @typecasted
     def get_joinable_tournaments(self, **params: tournamentfilter):
-        url = API.TOURNAMENT + '/joinable'
+        url = self.api.TOURNAMENT + '/joinable'
         return self._get_model(url, Tournament, **params)
 
     @typecasted
     def get_full_tournaments(self, **params: tournamentfilter):
-        url = API.TOURNAMENT + '/full'
+        url = self.api.TOURNAMENT + '/full'
         return self._get_model(url, Tournament, **params)
 
     @typecasted  # Validate tournament search parameters.
     def search_tournaments(self, **params: tournamentsearch):
-        url = API.TOURNAMENT + '/search'
+        url = self.api.TOURNAMENT + '/search'
         return self._get_model(url, ClanInfo, **params)
-
-    @typecasted
-    def get_auth_stats(self, **params: keys):
-        url = API.AUTH + '/stats'
-        return self._get_model(url, AuthStats, **params)

@@ -120,16 +120,17 @@ def _to_camel_case(snake):
 
 
 class API:
-    BASE = 'https://api.royaleapi.com'
-    PLAYER = BASE + '/players'
-    CLAN = BASE + '/clans'
-    TOP = BASE + '/top'
-    CONSTANTS = BASE + '/constants'
-    POPULAR = BASE + '/popular'
-    TOURNAMENT = BASE + '/tournaments'
-    ENDPOINTS = BASE + '/endpoints'
-    VERSION = BASE + '/version'
-    AUTH = BASE + '/auth'
+    def __init__(self, url):
+        self.BASE = url
+        self.PLAYER = self.BASE + '/players'
+        self.CLAN = self.BASE + '/clans'
+        self.TOP = self.BASE + '/top'
+        self.CONSTANTS = self.BASE + '/constants'
+        self.POPULAR = self.BASE + '/popular'
+        self.TOURNAMENT = self.BASE + '/tournaments'
+        self.ENDPOINTS = self.BASE + '/endpoints'
+        self.VERSION = self.BASE + '/version'
+        self.AUTH = self.BASE + '/auth'
 
 
 class SqliteDict(MutableMapping):
