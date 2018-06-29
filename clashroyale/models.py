@@ -125,9 +125,6 @@ class FullPlayer(BaseAttrDict):
     def get_player(self):
         return self.client.get_player(self.tag)
 
-    def get_profile(self):
-        raise DeprecationWarning('get_profile has been deprecated. Please use get_player')
-
 
 class Refreshable(BaseAttrDict):
     """Mixin class for re requesting data from

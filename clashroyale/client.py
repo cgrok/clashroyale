@@ -212,7 +212,6 @@ class Client:
         return self._convert_model(data, cached, ts, model, resp)
 
     def _get_model(self, url, model=None, **params):
-        print(url)
         if self.is_async:  # return a coroutine
             return self._aget_model(url, model, **params)
         # Otherwise, do everything synchronously.
