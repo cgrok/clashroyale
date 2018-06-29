@@ -7,10 +7,13 @@ import yaml
 
 try:
     with open('config.yaml') as f:
-        TOKEN = yaml.load(f).get('token')
+        data = yaml.load(f)
 except FileNotFoundError:
     with open('test/config.yaml') as f:
-        TOKEN = yaml.load(f).get('token')
+        data = yaml.load(f)
+
+TOKEN = data.get('token')
+URL = data.get('url')
 
 class TestBlockingClient(unittest.TestCase):
     """Tests all methods in the blocking client that
@@ -19,7 +22,7 @@ class TestBlockingClient(unittest.TestCase):
     Powered by RoyaleAPI
     """
     def __init__(self, *args, **kwargs):
-        self.clashroyale_client = clashroyale.Client(TOKEN, timeout=30)
+        self.clashroyale_client = clashroyale.Client(TOKEN, url=URL, timeout=30)
         super().__init__(*args, **kwargs)
 
     ## PAUSE IN BETWEEN TESTS ##
@@ -27,13 +30,6 @@ class TestBlockingClient(unittest.TestCase):
         time.sleep(2)
 
     ## MISC METHODS ##
-    def test_get_auth_stats(self):
-        """This test will test out:
-        - User ID is numeric
-        """
-        stats = self.clashroyale_client.get_auth_stats()
-        self.assertTrue(stats.id.isnumeric())
-
     def test_get_constants(self):
         """This test will test out:
         - Constants endpoint
