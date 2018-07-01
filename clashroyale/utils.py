@@ -65,7 +65,7 @@ def clansearch(k, v):
         'name', 'score', 'minMembers',
         'maxMembers', 'keys', 'exclude',
         'max'
-        )
+    )
     k = _to_camel_case(k)
     if k not in valid:
         raise ValueError('Invalid search parameter passed: {}'.format(k))
@@ -74,8 +74,9 @@ def clansearch(k, v):
 
 def tournamentsearch(k, v):
     valid = (
-        'name'
-        )
+        'name', 'keys', 'exclude',
+        'max'
+    )
     k = _to_camel_case(k)
     if k not in valid:
         raise ValueError('Invalid search parameter passed: {}'.format(k))
@@ -100,7 +101,7 @@ def crtag(tag):
     for c in tag:
         if c not in allowed:
             bad.append(c)
-    if bad:
+    if bad or len(tag) < 3:
         raise ValueError("Invalid tag characters passed: {}".format(', '.join(bad)))
     return tag
 

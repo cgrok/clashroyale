@@ -118,8 +118,8 @@ class TestBlockingClient(unittest.TestCase):
         - Invalid clan fetching
         """
         tag = '29UQQ282'
-        player = self.clashroyale_client.get_clan(tag)
-        self.assertEqual(player.tag, tag)
+        clan = self.clashroyale_client.get_clan(tag)
+        self.assertEqual(clan.tag, tag)
 
         invalid_tag = '293R8FV'
         self.assertRaises(ValueError, self.clashroyale_client.get_clan, invalid_tag)

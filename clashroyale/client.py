@@ -172,7 +172,7 @@ class Client:
     async def _wrap_coro(self, arg):
         return arg
 
-    def request(self, url, refresh=False, **params):
+    def request(self, url, timeout, refresh=False, **params):
         if self.using_cache and refresh is False:  # refresh=True forces a request instead of using cache
             cache = self._resolve_cache(url, **params)
             if cache is not None:
@@ -183,7 +183,7 @@ class Client:
         if self.is_async:  # return a coroutine
             return self._arequest(url, **params)
         try:
-            with self.session.get(url, timeout=self.timeout, headers=self.headers, params=params) as resp:
+            with self.session.get(url, timeout=timeout, headers=self.headers, params=params) as resp:
                 return self._raise_for_status(resp, resp.text)
         except requests.Timeout:
             raise NotResponding()
@@ -198,9 +198,9 @@ class Client:
         else:
             return model(self, data, resp, cached=cached, ts=ts)
 
-    async def _aget_model(self, url, model=None, **params):
+    async def _aget_model(self, url, timeout, model=None, **params):
         try:
-            data, cached, ts, resp = await self.request(url, **params)
+            data, cached, ts, resp = await self.request(url, timeout, **params)
         except Exception as e:
             if self.using_cache:
                 cache = self._resolve_cache(url, **params)
@@ -211,12 +211,13 @@ class Client:
 
         return self._convert_model(data, cached, ts, model, resp)
 
-    def _get_model(self, url, model=None, **params):
+    def _get_model(self, url, model=None, timeout=None, **params):
+        timeout = timeout or self.timeout
         if self.is_async:  # return a coroutine
-            return self._aget_model(url, model, **params)
+            return self._aget_model(url, timeout, model, **params)
         # Otherwise, do everything synchronously.
         try:
-            data, cached, ts, resp = self.request(url, **params)
+            data, cached, ts, resp = self.request(url, timeout, **params)
         except Exception as e:
             if self.using_cache:
                 cache = self._resolve_cache(url, **params)
@@ -234,139 +235,139 @@ class Client:
         return self._get_model(self.api.ENDPOINTS)
 
     @typecasted  # Convert to a proper tag
-    def get_tournament(self, tag: crtag, **params: keys):
+    def get_tournament(self, tag: crtag, timeout: int=None, **params: keys):
         url = self.api.TOURNAMENT + '/' + tag
-        return self._get_model(url, Tournament, **params)
+        return self._get_model(url, Tournament, timeout, **params)
 
     @typecasted
-    def get_player(self, *tags: crtag, **params: keys):
+    def get_player(self, *tags: crtag, timeout: int=None, **params: keys):
         url = self.api.PLAYER + '/' + ','.join(tags)
-        return self._get_model(url, Player, **params)
+        return self._get_model(url, Player, timeout, **params)
 
     get_players = get_player
 
     @typecasted
-    def get_player_verify(self, tag: crtag, apikey: str, **params: keys):
+    def get_player_verify(self, tag: crtag, apikey: str, timeout: int=None, **params: keys):
         url = self.api.PLAYER + '/' + tag + '/verify'
         params.update({'token': apikey})
-        return self._get_model(url, Player, **params)
+        return self._get_model(url, Player, timeout, **params)
 
     @typecasted
-    def get_player_battles(self, *tags: crtag, **params: keys):
+    def get_player_battles(self, *tags: crtag, timeout: int=None, **params: keys):
         url = self.api.PLAYER + '/' + ','.join(tags) + '/battles'
-        return self._get_model(url, Battle, **params)
+        return self._get_model(url, Battle, timeout, **params)
 
     @typecasted
-    def get_player_chests(self, *tags: crtag, **params: keys):
+    def get_player_chests(self, *tags: crtag, timeout: int=None, **params: keys):
         url = self.api.PLAYER + '/' + ','.join(tags) + '/chests'
-        return self._get_model(url, Cycle, **params)
+        return self._get_model(url, Cycle, timeout, **params)
 
     @typecasted
-    def get_clan(self, *tags: crtag, **params: keys):
+    def get_clan(self, *tags: crtag, timeout: int=None, **params: keys):
         url = self.api.CLAN + '/' + ','.join(tags)
-        return self._get_model(url, Clan, **params)
+        return self._get_model(url, Clan, timeout, **params)
 
     get_clans = get_clan
 
     @typecasted  # Validate clan search parameters.
-    def search_clans(self, **params: clansearch):
+    def search_clans(self, timeout: int=None, **params: clansearch):
         url = self.api.CLAN + '/search'
-        return self._get_model(url, ClanInfo, **params)
+        return self._get_model(url, ClanInfo, timeout, **params)
 
-    def get_tracking_clans(self):  # Returns a list of tracking clans
+    def get_tracking_clans(self, timeout: int=None):  # Returns a list of tracking clans
         url = self.api.CLAN + '/tracking'
         return self._get_model(url)
 
     @typecasted
-    def get_clan_tracking(self, *tags: crtag, **params: keys):
+    def get_clan_tracking(self, *tags: crtag, timeout: int=None, **params: keys):
         url = self.api.CLAN + '/' + ','.join(tags) + '/tracking'
-        return self._get_model(url, Clan, **params)
+        return self._get_model(url, Clan, timeout, **params)
 
     @typecasted
-    def get_clan_battles(self, *tags: crtag, **params: keys):
+    def get_clan_battles(self, *tags: crtag, timeout: int=None, **params: keys):
         url = self.api.CLAN + '/' + ','.join(tags) + '/battles'
-        return self._get_model(url, Battle, **params)
+        return self._get_model(url, Battle, timeout, **params)
 
     @typecasted
-    def get_clan_history(self, *tags: crtag, **params: keys):
+    def get_clan_history(self, *tags: crtag, timeout: int=None, **params: keys):
         url = self.api.CLAN + '/' + ','.join(tags) + '/history'
-        return self._get_model(url, ClanHistory, **params)
+        return self._get_model(url, ClanHistory, timeout, **params)
 
     @typecasted
-    def get_clan_war(self, tag: crtag, **params: keys):
+    def get_clan_war(self, tag: crtag, timeout: int=None, **params: keys):
         url = self.api.CLAN + '/' + tag + '/war'
-        return self._get_model(url, ClanWar, **params)
+        return self._get_model(url, ClanWar, timeout, **params)
 
     @typecasted
-    def get_clan_war_log(self, tag: crtag, **params: keys):
+    def get_clan_war_log(self, tag: crtag, timeout: int=None, **params: keys):
         url = self.api.CLAN + '/' + tag + '/warlog'
-        return self._get_model(url, ClanWarLog, **params)
+        return self._get_model(url, ClanWarLog, timeout, **params)
 
     @typecasted  # checks if the keys=&exclude= parameters are passed only
-    def get_constants(self, **params: keys):
-        return self._get_model(self.api.CONSTANTS, Constants, **params)
+    def get_constants(self, timeout: int=None, **params: keys):
+        return self._get_model(self.api.CONSTANTS, Constants, timeout, **params)
 
     @typecasted
-    def get_top_clans(self, country_key='', **params: keys):
+    def get_top_clans(self, country_key='', timeout: int=None, **params: keys):
         url = self.api.TOP + '/clans/' + country_key
-        return self._get_model(url, ClanInfo, **params)
+        return self._get_model(url, ClanInfo, timeout, **params)
 
     @typecasted
-    def get_top_players(self, country_key='', **params: keys):
+    def get_top_players(self, country_key='', timeout: int=None, **params: keys):
         url = self.api.TOP + '/players/' + country_key
-        return self._get_model(url, PlayerInfo, **params)
+        return self._get_model(url, PlayerInfo, timeout, **params)
 
     @typecasted
-    def get_popular_clans(self, **params: keys):
+    def get_popular_clans(self, timeout: int=None, **params: keys):
         url = self.api.POPULAR + '/clans'
-        return self._get_model(url, Clan, **params)
+        return self._get_model(url, Clan, timeout, **params)
 
     @typecasted
-    def get_popular_players(self, **params: keys):
+    def get_popular_players(self, timeout: int=None, **params: keys):
         url = self.api.POPULAR + '/players'
-        return self._get_model(url, PlayerInfo, **params)
+        return self._get_model(url, PlayerInfo, timeout, **params)
 
     @typecasted
-    def get_popular_tournaments(self, **params: keys):
+    def get_popular_tournaments(self, timeout: int=None, **params: keys):
         url = self.api.POPULAR + '/tournaments'
-        return self._get_model(url, Tournament, **params)
+        return self._get_model(url, Tournament, timeout, **params)
 
     @typecasted
-    def get_popular_decks(self, **params: keys):
+    def get_popular_decks(self, timeout: int=None, **params: keys):
         url = self.api.POPULAR + '/decks'
-        return self._get_model(url, Deck, **params)
+        return self._get_model(url, Deck, timeout, **params)
 
     @typecasted
-    def get_open_tournaments(self, **params: tournamentfilter):
+    def get_open_tournaments(self, timeout: int=None, **params: tournamentfilter):
         url = self.api.TOURNAMENT + '/open'
-        return self._get_model(url, Tournament, **params)
+        return self._get_model(url, Tournament, timeout, **params)
 
     @typecasted
-    def get_known_tournaments(self, **params: tournamentfilter):
+    def get_known_tournaments(self, timeout: int=None, **params: tournamentfilter):
         url = self.api.TOURNAMENT + '/known'
-        return self._get_model(url, Tournament, **params)
+        return self._get_model(url, Tournament, timeout, **params)
 
     @typecasted
-    def get_1k_tournaments(self, **params: tournamentfilter):
+    def get_1k_tournaments(self, timeout: int=None, **params: tournamentfilter):
         url = self.api.TOURNAMENT + '/1k'
-        return self._get_model(url, Tournament, **params)
+        return self._get_model(url, Tournament, timeout, **params)
 
     @typecasted
-    def get_prep_tournaments(self, **params: tournamentfilter):
+    def get_prep_tournaments(self, timeout: int=None, **params: tournamentfilter):
         url = self.api.TOURNAMENT + '/prep'
-        return self._get_model(url, Tournament, **params)
+        return self._get_model(url, Tournament, timeout, **params)
 
     @typecasted
-    def get_joinable_tournaments(self, **params: tournamentfilter):
+    def get_joinable_tournaments(self, timeout: int=None, **params: tournamentfilter):
         url = self.api.TOURNAMENT + '/joinable'
-        return self._get_model(url, Tournament, **params)
+        return self._get_model(url, Tournament, timeout, **params)
 
     @typecasted
-    def get_full_tournaments(self, **params: tournamentfilter):
+    def get_full_tournaments(self, timeout: int=None, **params: tournamentfilter):
         url = self.api.TOURNAMENT + '/full'
-        return self._get_model(url, Tournament, **params)
+        return self._get_model(url, Tournament, timeout, **params)
 
     @typecasted  # Validate tournament search parameters.
-    def search_tournaments(self, **params: tournamentsearch):
+    def search_tournaments(self, timeout: int=None, **params: tournamentsearch):
         url = self.api.TOURNAMENT + '/search'
-        return self._get_model(url, ClanInfo, **params)
+        return self._get_model(url, ClanInfo, timeout, **params)
