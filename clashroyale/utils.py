@@ -64,7 +64,7 @@ def clansearch(k, v):
     valid = (
         'name', 'score', 'minMembers',
         'maxMembers', 'keys', 'exclude',
-        'max'
+        'max', 'timeout'
     )
     k = _to_camel_case(k)
     if k not in valid:
@@ -75,7 +75,7 @@ def clansearch(k, v):
 def tournamentsearch(k, v):
     valid = (
         'name', 'keys', 'exclude',
-        'max'
+        'max', 'timeout'
     )
     k = _to_camel_case(k)
     if k not in valid:
@@ -84,7 +84,10 @@ def tournamentsearch(k, v):
 
 
 def keys(k, v):
-    if k not in ('keys', 'exclude', 'max', 'page', 'type'):
+    if k not in (
+        'keys', 'exclude', 'max',
+        'page', 'type', 'timeout'
+    ):
         raise ValueError('Invalid url parameter passed: {}'.format(k))
     return k, ','.join(v) if isinstance(v, (list, tuple)) else v
 
