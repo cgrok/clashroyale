@@ -1,13 +1,13 @@
-from setuptools import setup
+from setuptools import setup, find_packages
 
-version = '3.4.10'
+version = '3.4.11'
 
 with open('README.rst') as f:
     long_description = f.read()
 
 setup(
     name='clashroyale',
-    packages=['clashroyale'],
+    packages=find_packages(),
     version=version,
     description='An (a)sync wrapper for royaleapi.com',
     long_description=long_description,
@@ -15,6 +15,7 @@ setup(
     license='MIT',
     url='https://github.com/cgrok/clashroyale',
     keywords=['clashroyale', 'wrapper', 'cr', 'royaleapi'],
+    include_package_data=True,
     install_requires=['aiohttp==3.3.2', 'python-box==3.1.1', 'requests==2.18.4'],
     classifiers=[
         'Development Status :: 5 - Production/Stable',

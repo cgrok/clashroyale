@@ -31,9 +31,9 @@ from urllib.parse import urlencode
 import aiohttp
 import requests
 
-from .errors import (NotFoundError, NotResponding, ServerError, Unauthorized, NotTrackedError,\
+from ..errors import (NotFoundError, NotResponding, ServerError, Unauthorized, NotTrackedError,
                      UnexpectedError, RatelimitError, RatelimitErrorDetected)
-from .models import (AuthStats, Clan, ClanInfo, ClanHistory, ClanWar, ClanWarLog, Battle, Cycle, Constants,
+from .models import (Clan, ClanInfo, ClanHistory, ClanWar, ClanWarLog, Battle, Cycle, Constants,
                      Player, PlayerInfo, Tournament, Deck, rlist)
 from .utils import API, SqliteDict, clansearch, tournamentsearch, crtag, keys, tournamentfilter, typecasted
 
@@ -41,7 +41,7 @@ from_timestamp = datetime.fromtimestamp
 
 
 class Client:
-    """A client that requests data from cr-api.com. This class can
+    """A client that requests data from royaleapi.com. This class can
     either be async or non async.
 
     Parameters
@@ -122,10 +122,10 @@ class Client:
         self.close()
 
     def __repr__(self):
-        return '<ClashRoyaleClient async={}>'.format(self.is_async)
+        return '<RoyaleAPI Client async={}>'.format(self.is_async)
 
     def close(self):
-        self.session.close()
+       self.session.close()
 
     def _raise_for_status(self, resp, text):
         try:
@@ -148,7 +148,7 @@ class Client:
                     int(resp.headers['x-ratelimit-remaining']),
                     int(resp.headers.get('x-ratelimit-reset', 0))
                 ]
-            return data, False, datetime.utcnow(), resp  # value, cached, last_updated
+            return data, False, datetime.utcnow(), resp  # value, cached, last_updated, response
         if code == 401:  # Unauthorized request - Invalid token
             raise Unauthorized(resp, data)
         if code in (400, 404):  # Tag not found
@@ -193,7 +193,7 @@ class Client:
             return data  # version endpoint, not feasable to add refresh functionality.
         if isinstance(data, list):  # extra functionality
             if all(isinstance(x, str) for x in data):  # endpoints endpoint
-                return rlist(self, data, cached, ts)  # extra functionality
+                return rlist(self, data, cached, ts, resp)  # extra functionality
             return [model(self, d, resp, cached=cached, ts=ts) for d in data]
         else:
             return model(self, data, resp, cached=cached, ts=ts)

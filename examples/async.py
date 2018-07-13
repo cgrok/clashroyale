@@ -4,10 +4,10 @@ import os
 
 
 token = os.getenv('crtoken') # get your token somehow.
-
+token = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MTQyLCJpZGVuIjoiMTgwMzE0MzEwMjk4MzA0NTEyIiwibWQiOnt9LCJ0cyI6MTUyNzczNjMyNjk2NCwibG0iOjN9.yLMXzl6TpGrszhJGe-XHglWLjqoA4hsPj--20BYTjcA'
 # ASYNC FUNCTIONALITY
 async def main():
-    client = clashroyale.Client(token, is_async=True) # is_async=True argument
+    client = clashroyale.RoyaleAPI(token, is_async=True) # is_async=True argument
     # EVERYTHING IS THE SAME, BUT WITH await's
     profile = await client.get_player('CY8G8VVQ')
     print(repr(profile))
@@ -17,13 +17,13 @@ async def main():
     print(profile.stats.favorite_card.name)
     clan = await profile.get_clan() 
     print(clan)
-    print(clan.clan_chest) 
+    print(clan.member_count) 
     await clan.refresh() 
     member = clan.members[0] 
     assert member.clan is clan 
     assert member.rank == 1
-    full_player = await member.get_profile()
-    clans = await client.get_clans('2CCCP', '2U2GGQJ') # indefinite amount of arguments
+    full_player = await member.get_player()
+    clans = await client.get_clans('2CCCP', '2U2GGQJ') # 7 max amount of arguments
     for clan in clans:
         print(clan.members[0]) 
     client.close()

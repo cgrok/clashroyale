@@ -12,7 +12,7 @@ except FileNotFoundError:
     with open('test/config.yaml') as f:
         data = yaml.load(f)
 
-TOKEN = data.get('token')
+TOKEN = data.get('royaleapi')
 URL = data.get('url')
 
 class TestBlockingClient(unittest.TestCase):
@@ -22,7 +22,7 @@ class TestBlockingClient(unittest.TestCase):
     Powered by RoyaleAPI
     """
     def __init__(self, *args, **kwargs):
-        self.clashroyale_client = clashroyale.Client(TOKEN, url=URL, timeout=30)
+        self.clashroyale_client = clashroyale.RoyaleAPI(TOKEN, url=URL, timeout=30)
         super().__init__(*args, **kwargs)
 
     ## PAUSE IN BETWEEN TESTS ##

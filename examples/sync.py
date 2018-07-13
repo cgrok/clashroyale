@@ -4,7 +4,7 @@ import os
 # Basic functionality
 token = os.getenv('crtoken') # get your developer key somehow.
 
-client = clashroyale.Client(token)
+client = clashroyale.RoyaleAPI(token)
 
 profile = client.get_player('#8l9l9gl') # library cleans the tag (strips #)
 
@@ -34,14 +34,14 @@ profile.refresh()
 
 clan = profile.get_clan() # Request the clan object associated with the profile
 print(clan)
-print(clan.clan_chest) # dot notation
+print(clan.member_count) # dot notation with snake_case or camelCase
 clan.refresh() # Refresh clan data
 
 member = clan.members[0] # get the member object of the top member
 assert member.clan is clan # Keeps a reference to the clan
 assert member.rank == 1
 # This member object only contains a brief amount of data
-full_player = member.get_profile() # member.get_player() is also an alias
+full_player = member.get_player() 
 # This function requests the full player data using the members tag.
 
 # Getting multiple clans/profiles
@@ -53,5 +53,3 @@ filtered = client.get_clan('2cccp', keys=['name', 'tag']) # Filtering with keys=
 print(filtered.raw_data)
 
 print(client.get_player('2P0LYQ', keys='battles').raw_data.keys()) # battles
-
-print(client.get_auth_stats())

@@ -72,6 +72,7 @@ def clansearch(k, v):
     return k, v
 
 
+
 def tournamentsearch(k, v):
     valid = (
         'name', 'keys', 'exclude',
@@ -128,14 +129,11 @@ class API:
         self.BASE = url
         self.PLAYER = self.BASE + '/players'
         self.CLAN = self.BASE + '/clans'
+        self.TOURNAMENT = self.BASE + '/tournaments'
         self.TOP = self.BASE + '/top'
         self.CONSTANTS = self.BASE + '/constants'
-        self.POPULAR = self.BASE + '/popular'
-        self.TOURNAMENT = self.BASE + '/tournaments'
         self.ENDPOINTS = self.BASE + '/endpoints'
         self.VERSION = self.BASE + '/version'
-        self.AUTH = self.BASE + '/auth'
-
 
 class SqliteDict(MutableMapping):
     def __init__(self, filename, table_name='data', fast_save=False, **options):
