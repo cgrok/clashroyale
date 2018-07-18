@@ -309,7 +309,7 @@ class Client:
 
     @typecasted
     def get_location(self, location_id, timeout: int=None):
-        url = self.api.LOCATIONS + str(location_id)
+        url = self.api.LOCATIONS + '/' + str(location_id)
         return self._get_model(url, Location, timeout)
 
     @typecasted
@@ -323,7 +323,7 @@ class Client:
             del params['timeout']
         except KeyError:
             pass
-        url = self.api.LOCATIONS + str(location_id) + '/ranking/clans'
+        url = self.api.LOCATIONS +  '/' + str(location_id) + '/rankings/clans'
         return self._get_model(url, ClanInfo, timeout, **params)
 
     @typecasted
@@ -333,7 +333,7 @@ class Client:
             del params['timeout']
         except KeyError:
             pass
-        url = self.api.LOCATIONS + str(location_id) + '/ranking/clanwars'
+        url = self.api.LOCATIONS + str(location_id) + '/rankings/clanwars'
         return self._get_model(url, ClanInfo, timeout, **params)
 
     @typecasted
@@ -343,5 +343,5 @@ class Client:
             del params['timeout']
         except KeyError:
             pass
-        url = self.api.LOCATIONS + str(location_id) + '/ranking/players'
+        url = self.api.LOCATIONS +  '/' + str(location_id) + '/rankings/players'
         return self._get_model(url, ClanInfo, timeout, **params)
