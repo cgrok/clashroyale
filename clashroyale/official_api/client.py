@@ -226,7 +226,7 @@ class Client:
 
     @typecasted
     def get_player(self, tag: crtag, timeout=None):
-        url = self.api.PLAYER + '/' + ','.join(tags)
+        url = self.api.PLAYER + '/' + tag
         return self._get_model(url, Player, timeout)
 
     @typecasted
@@ -241,17 +241,17 @@ class Client:
 
     @typecasted
     def get_player_battles(self, tag: crtag, timeout: int=None):
-        url = self.api.PLAYER + '/' + ','.join(tags) + '/battlelog'
+        url = self.api.PLAYER + '/' + tag + '/battlelog'
         return self._get_model(url, Battle, timeout)
 
     @typecasted
     def get_player_chests(self, tag: crtag, timeout: int=None):
-        url = self.api.PLAYER + '/' + ','.join(tags) + '/upcomingchests'
+        url = self.api.PLAYER + '/' + tag + '/upcomingchests'
         return self._get_model(url, Cycle, timeout)
 
     @typecasted
     def get_clan(self, tag: crtag, timeout: int=None):
-        url = self.api.CLAN + '/' + ','.join(tags)
+        url = self.api.CLAN + '/' + tag
         return self._get_model(url, Clan, timeout)
 
     @typecasted  # Validate clan search parameters.
