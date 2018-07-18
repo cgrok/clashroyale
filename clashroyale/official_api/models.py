@@ -180,7 +180,7 @@ class Clan(Refreshable):
     """A clash royale clan model, full data + refreshable."""
     def from_data(self, data, cached, ts, response):
         super().from_data(data, cached, ts, response)
-        self.members = [Member(self, m, self.response) for m in data.get('members', [])]
+        self.members = [Member(self, m, self.response) for m in data.get('member_list', [])]
 
 
 class ClanWar(Refreshable):
