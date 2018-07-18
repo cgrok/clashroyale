@@ -1,7 +1,7 @@
 """
 MIT License
 
-Copyright (c) 2017 kyb3r
+Copyright (c) 2017 fourjr/kyb3r
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -31,23 +31,23 @@ from urllib.parse import urlencode
 import aiohttp
 import requests
 
-from .errors import (NotFoundError, NotResponding, ServerError, Unauthorized, NotTrackedError,\
-                     UnexpectedError, RatelimitError, RatelimitErrorDetected)
-from .models import (AuthStats, Clan, ClanInfo, ClanHistory, ClanWar, ClanWarLog, Battle, Cycle, Constants,
+from ..errors import (NotFoundError, NotResponding, ServerError, Unauthorized,
+                      UnexpectedError, RatelimitError)
+from .models import (Clan, ClanInfo, ClanWar, ClanWarLog, Battle, Cycle,
                      Player, PlayerInfo, Tournament, Deck, rlist)
-from .utils import API, SqliteDict, clansearch, tournamentsearch, crtag, keys, tournamentfilter, typecasted
+from .utils import API, SqliteDict, clansearch, tournamentsearch, crtag, keys, typecasted
 
 from_timestamp = datetime.fromtimestamp
 
 
 class Client:
-    """A client that requests data from cr-api.com. This class can
+    """A client that requests data from api.clashroyale.com. This class can
     either be async or non async.
 
     Parameters
     ----------
     token: str
-        The api authorization token to be used for requests.
+        The api authorization token to be used for requests. https://developer.clashroyale.com/
     is_async: Optional[bool]
         Toggle for asynchronous/synchronous usage of the client.
         Defaults to False.
@@ -61,7 +61,7 @@ class Client:
     timeout: Optional[int]
         A timeout for requests to the API, defaults to 10 seconds.
     url: Optional[str]
-        A url to use instead of api.royaleapi.com (defaults to ``https://api.royaleapi.com``)    
+        A url to use instead of api.clashroyale.com/v1 (defaults to ``https://api.clashroyale.com/v1``)    
         Only use this if you know what you are doing.
     cache_fp: Optional[str]
         File path for the sqlite3 database to use for caching requests,
@@ -81,17 +81,16 @@ class Client:
         self.is_async = is_async
         self.error_debug = options.get('error_debug', False)
         self.timeout = options.get('timeout', 10)
-        self.api = API(options.get('url', 'https://api.royaleapi.com'))
+        self.api = API(options.get('url', 'https://api.clashroyale.com/v1'))
         self.session = session or (aiohttp.ClientSession() if is_async else requests.Session())
         self.camel_case = options.get('camel_case', False)
         self.headers = {
             'Authorization': 'Bearer {}'.format(token),
-            'user-agent': 'python-clashroyale-client (kyb3r)'
+            'user-agent': 'python-clashroyale-client (kyb3r/fourjr)'
             }
         self.cache_fp = options.get('cache_fp')
         self.using_cache = bool(self.cache_fp)
         self.cache_reset = options.get('cache_expires', 300)
-        self.ratelimit = [10, 10, 0]
         if self.using_cache:
             table = options.get('table_name', 'cache')
             self.cache = SqliteDict(self.cache_fp, table)
@@ -122,7 +121,7 @@ class Client:
         self.close()
 
     def __repr__(self):
-        return '<ClashRoyaleClient async={}>'.format(self.is_async)
+        return '<OfficialAPI Client async={}>'.format(self.is_async)
 
     def close(self):
         self.session.close()
@@ -142,29 +141,25 @@ class Client:
                     'data': data
                 }
                 self.cache[str(resp.url)] = cached_data
-            if resp.headers.get('x-ratelimit-limit'):
-                self.ratelimit = [
-                    int(resp.headers['x-ratelimit-limit']),
-                    int(resp.headers['x-ratelimit-remaining']),
-                    int(resp.headers.get('x-ratelimit-reset', 0))
-                ]
-            return data, False, datetime.utcnow(), resp  # value, cached, last_updated
-        if code == 401:  # Unauthorized request - Invalid token
+            return data, False, datetime.utcnow(), resp  # value, cached, last_updated, response
+        if code in (401, 403):  # Unauthorized request - Invalid token
             raise Unauthorized(resp, data)
-        if code in (400, 404):  # Tag not found
+        if code == 404:  # Tag not found
             raise NotFoundError(resp, data)
-        if code == 417:
-            raise NotTrackedError(resp, data)
         if code == 429:
             raise RatelimitError(resp, data)
-        if code >= 500:  # Something wrong with the api servers :(
+        if code == 503: # Maintainence
             raise ServerError(resp, data)
 
         raise UnexpectedError(resp, data)
 
     async def _arequest(self, url, **params):
+        method = params.get('method', 'GET')
+        json_data = params.get('json', {})
         try:
-            async with self.session.get(url, timeout=self.timeout, headers=self.headers, params=params) as resp:
+            async with self.session.request(
+                method, url, timeout=self.timeout, headers=self.headers, params=params, json=json_data
+            ) as resp:
                 return self._raise_for_status(resp, await resp.text())
         except asyncio.TimeoutError:
             raise NotResponding()
@@ -177,13 +172,14 @@ class Client:
             cache = self._resolve_cache(url, **params)
             if cache is not None:
                 return cache
-        if self.ratelimit[1] == 0 and time() < self.ratelimit[2]/1000:
-            if not url.endswith('/auth/stats'):
-                raise RatelimitErrorDetected(self.ratelimit[2]/1000 - time())
+        method = params.get('method', 'GET')
+        json_data = params.get('json', {})
         if self.is_async:  # return a coroutine
             return self._arequest(url, **params)
         try:
-            with self.session.get(url, timeout=timeout, headers=self.headers, params=params) as resp:
+            with self.session.request(
+                method, url, timeout=timeout, headers=self.headers, params=params, json=json_data
+            ) as resp:
                 return self._raise_for_status(resp, resp.text)
         except requests.Timeout:
             raise NotResponding()
@@ -193,7 +189,7 @@ class Client:
             return data  # version endpoint, not feasable to add refresh functionality.
         if isinstance(data, list):  # extra functionality
             if all(isinstance(x, str) for x in data):  # endpoints endpoint
-                return rlist(self, data, cached, ts)  # extra functionality
+                return rlist(self, data, cached, ts, resp)  # extra functionality
             return [model(self, d, resp, cached=cached, ts=ts) for d in data]
         else:
             return model(self, data, resp, cached=cached, ts=ts)
@@ -228,76 +224,35 @@ class Client:
 
         return self._convert_model(data, cached, ts, model, resp)
 
-    def get_version(self):
-        return self._get_model(self.api.VERSION)
-
-    def get_endpoints(self):
-        return self._get_model(self.api.ENDPOINTS)
-
-    @typecasted  # Convert to a proper tag
-    def get_tournament(self, tag: crtag, **params: keys):
-        timeout = params.get('timeout')
-        try:
-            del params['timeout']
-        except KeyError:
-            pass
-        url = self.api.TOURNAMENT + '/' + tag
-        return self._get_model(url, Tournament, timeout, **params)
-
     @typecasted
-    def get_player(self, *tags: crtag, **params: keys):
-        timeout = params.get('timeout')
-        try:
-            del params['timeout']
-        except KeyError:
-            pass
+    def get_player(self, tag: crtag, timeout=None):
         url = self.api.PLAYER + '/' + ','.join(tags)
-        return self._get_model(url, Player, timeout, **params)
-
-    get_players = get_player
+        return self._get_model(url, Player, timeout)
 
     @typecasted
-    def get_player_verify(self, tag: crtag, apikey: str, **params: keys):
+    def get_player_verify(self, tag: crtag, apikey: str, timeout=None):
         timeout = params.get('timeout')
         try:
             del params['timeout']
         except KeyError:
             pass
-        url = self.api.PLAYER + '/' + tag + '/verify'
-        params.update({'token': apikey})
-        return self._get_model(url, Player, timeout, **params)
+        url = self.api.PLAYER + '/' + tag + '/verifytoken'
+        return self._get_model(url, Player, timeout, method='POST', json={'token': apikey})
 
     @typecasted
-    def get_player_battles(self, *tags: crtag, **params: keys):
-        timeout = params.get('timeout')
-        try:
-            del params['timeout']
-        except KeyError:
-            pass
-        url = self.api.PLAYER + '/' + ','.join(tags) + '/battles'
-        return self._get_model(url, Battle, timeout, **params)
+    def get_player_battles(self, tag: crtag, timeout: int=None):
+        url = self.api.PLAYER + '/' + ','.join(tags) + '/battlelog'
+        return self._get_model(url, Battle, timeout)
 
     @typecasted
-    def get_player_chests(self, *tags: crtag, **params: keys):
-        timeout = params.get('timeout')
-        try:
-            del params['timeout']
-        except KeyError:
-            pass
-        url = self.api.PLAYER + '/' + ','.join(tags) + '/chests'
-        return self._get_model(url, Cycle, timeout, **params)
+    def get_player_chests(self, tag: crtag, timeout: int=None):
+        url = self.api.PLAYER + '/' + ','.join(tags) + '/upcomingchests'
+        return self._get_model(url, Cycle, timeout)
 
     @typecasted
-    def get_clan(self, *tags: crtag, **params: keys):
-        timeout = params.get('timeout')
-        try:
-            del params['timeout']
-        except KeyError:
-            pass
+    def get_clan(self, tag: crtag, timeout: int=None):
         url = self.api.CLAN + '/' + ','.join(tags)
-        return self._get_model(url, Clan, timeout, **params)
-
-    get_clans = get_clan
+        return self._get_model(url, Clan, timeout)
 
     @typecasted  # Validate clan search parameters.
     def search_clans(self, **params: clansearch):
@@ -306,57 +261,23 @@ class Client:
             del params['timeout']
         except KeyError:
             pass
-        url = self.api.CLAN + '/search'
+        url = self.api.CLAN
         return self._get_model(url, ClanInfo, timeout, **params)
 
-    def get_tracking_clans(self):
-        timeout = params.get('timeout')
-        try:
-            del params['timeout']
-        except KeyError:
-            pass
-        url = self.api.CLAN + '/tracking'
-        return self._get_model(url)
+    @typecasted
+    def get_clan_war(self, tag: crtag, timeout: int=None):
+        url = self.api.CLAN + '/' + tag + '/currentwar'
+        return self._get_model(url, ClanWar, timeout)
 
     @typecasted
-    def get_clan_tracking(self, *tags: crtag, **params: keys):
+    def get_clan_members(self, tag: crtag, **params: keys):
         timeout = params.get('timeout')
         try:
             del params['timeout']
         except KeyError:
             pass
-        url = self.api.CLAN + '/' + ','.join(tags) + '/tracking'
-        return self._get_model(url, Clan, timeout, **params)
-
-    @typecasted
-    def get_clan_battles(self, *tags: crtag, **params: keys):
-        timeout = params.get('timeout')
-        try:
-            del params['timeout']
-        except KeyError:
-            pass
-        url = self.api.CLAN + '/' + ','.join(tags) + '/battles'
-        return self._get_model(url, Battle, timeout, **params)
-
-    @typecasted
-    def get_clan_history(self, *tags: crtag, **params: keys):
-        timeout = params.get('timeout')
-        try:
-            del params['timeout']
-        except KeyError:
-            pass
-        url = self.api.CLAN + '/' + ','.join(tags) + '/history'
-        return self._get_model(url, ClanHistory, timeout, **params)
-
-    @typecasted
-    def get_clan_war(self, tag: crtag, **params: keys):
-        timeout = params.get('timeout')
-        try:
-            del params['timeout']
-        except KeyError:
-            pass
-        url = self.api.CLAN + '/' + tag + '/war'
-        return self._get_model(url, ClanWar, timeout, **params)
+        url = self.api.CLAN + '/' + tag + '/members'
+        return self._get_model(url, ClanWarLog, timeout, **params)
 
     @typecasted
     def get_clan_war_log(self, tag: crtag, **params: keys):
@@ -369,133 +290,9 @@ class Client:
         return self._get_model(url, ClanWarLog, timeout, **params)
 
     @typecasted
-    def get_constants(self, **params: keys):
-        timeout = params.get('timeout')
-        try:
-            del params['timeout']
-        except KeyError:
-            pass
-        return self._get_model(self.api.CONSTANTS, Constants, timeout, **params)
-
-    @typecasted
-    def get_top_clans(self, country_key='', **params: keys):
-        timeout = params.get('timeout')
-        try:
-            del params['timeout']
-        except KeyError:
-            pass
-        url = self.api.TOP + '/clans/' + country_key
-        return self._get_model(url, ClanInfo, timeout, **params)
-
-    @typecasted
-    def get_top_players(self, country_key='', **params: keys):
-        timeout = params.get('timeout')
-        try:
-            del params['timeout']
-        except KeyError:
-            pass
-        url = self.api.TOP + '/players/' + country_key
-        return self._get_model(url, PlayerInfo, timeout, **params)
-
-    @typecasted
-    def get_popular_clans(self, **params: keys):
-        timeout = params.get('timeout')
-        try:
-            del params['timeout']
-        except KeyError:
-            pass
-        url = self.api.POPULAR + '/clans'
-        return self._get_model(url, Clan, timeout, **params)
-
-    @typecasted
-    def get_popular_players(self, **params: keys):
-        timeout = params.get('timeout')
-        try:
-            del params['timeout']
-        except KeyError:
-            pass
-        url = self.api.POPULAR + '/players'
-        return self._get_model(url, PlayerInfo, timeout, **params)
-
-    @typecasted
-    def get_popular_tournaments(self, **params: keys):
-        timeout = params.get('timeout')
-        try:
-            del params['timeout']
-        except KeyError:
-            pass
-        url = self.api.POPULAR + '/tournaments'
-        return self._get_model(url, Tournament, timeout, **params)
-
-    @typecasted
-    def get_popular_decks(self, **params: keys):
-        timeout = params.get('timeout')
-        try:
-            del params['timeout']
-        except KeyError:
-            pass
-        url = self.api.POPULAR + '/decks'
-        return self._get_model(url, Deck, timeout, **params)
-
-    @typecasted
-    def get_open_tournaments(self, **params: tournamentfilter):
-        timeout = params.get('timeout')
-        try:
-            del params['timeout']
-        except KeyError:
-            pass
-        url = self.api.TOURNAMENT + '/open'
-        return self._get_model(url, Tournament, timeout, **params)
-
-    @typecasted
-    def get_known_tournaments(self, **params: tournamentfilter):
-        timeout = params.get('timeout')
-        try:
-            del params['timeout']
-        except KeyError:
-            pass
-        url = self.api.TOURNAMENT + '/known'
-        return self._get_model(url, Tournament, timeout, **params)
-
-    @typecasted
-    def get_1k_tournaments(self, **params: tournamentfilter):
-        timeout = params.get('timeout')
-        try:
-            del params['timeout']
-        except KeyError:
-            pass
-        url = self.api.TOURNAMENT + '/1k'
-        return self._get_model(url, Tournament, timeout, **params)
-
-    @typecasted
-    def get_prep_tournaments(self, **params: tournamentfilter):
-        timeout = params.get('timeout')
-        try:
-            del params['timeout']
-        except KeyError:
-            pass
-        url = self.api.TOURNAMENT + '/prep'
-        return self._get_model(url, Tournament, timeout, **params)
-
-    @typecasted
-    def get_joinable_tournaments(self, **params: tournamentfilter):
-        timeout = params.get('timeout')
-        try:
-            del params['timeout']
-        except KeyError:
-            pass
-        url = self.api.TOURNAMENT + '/joinable'
-        return self._get_model(url, Tournament, timeout, **params)
-
-    @typecasted
-    def get_full_tournaments(self, **params: tournamentfilter):
-        timeout = params.get('timeout')
-        try:
-            del params['timeout']
-        except KeyError:
-            pass
-        url = self.api.TOURNAMENT + '/full'
-        return self._get_model(url, Tournament, timeout, **params)
+    def get_tournament(self, tag: crtag, timeout=0):
+        url = self.api.TOURNAMENT + '/' + tag
+        return self._get_model(url, Tournament, timeout)
 
     @typecasted
     def search_tournaments(self, **params: tournamentsearch):
@@ -504,5 +301,47 @@ class Client:
             del params['timeout']
         except KeyError:
             pass
-        url = self.api.TOURNAMENT + '/search'
+        return self._get_model(self.api.TOURNAMENT, ClanInfo, timeout, **params)
+
+    @typecasted
+    def get_cards(self, timeout: int=None):
+        return self._get_model(self.api.CARDS, Cards, timeout)
+
+    @typecasted
+    def get_location(self, location_id, timeout: int=None):
+        url = self.api.LOCATIONS + str(location_id)
+        return self._get_model(url, Location, timeout)
+
+    @typecasted
+    def get_all_locations(self, timeout: int=None):
+        return self._get_model(self.API.LOCATIONS, Locations, timeout)
+
+    @typecasted
+    def get_top_clans(self, location_id='global', **params: keys):
+        timeout = params.get('timeout')
+        try:
+            del params['timeout']
+        except KeyError:
+            pass
+        url = self.api.LOCATIONS + str(location_id) + '/ranking/clans'
+        return self._get_model(url, ClanInfo, timeout, **params)
+
+    @typecasted
+    def get_top_clanwar_clans(self, location_id='global', **params: keys):
+        timeout = params.get('timeout')
+        try:
+            del params['timeout']
+        except KeyError:
+            pass
+        url = self.api.LOCATIONS + str(location_id) + '/ranking/clanwars'
+        return self._get_model(url, ClanInfo, timeout, **params)
+
+    @typecasted
+    def get_top_players(self, location_id='global', **params: keys):
+        timeout = params.get('timeout')
+        try:
+            del params['timeout']
+        except KeyError:
+            pass
+        url = self.api.LOCATIONS + str(location_id) + '/ranking/players'
         return self._get_model(url, ClanInfo, timeout, **params)

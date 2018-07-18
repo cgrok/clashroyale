@@ -26,7 +26,7 @@ from box import Box, BoxList
 
 from .utils import API
 
-API_ENDPOINTS = API('https://api.royaleapi.com')
+API_ENDPOINTS = API('https://api.clashroyale.com/v1')
 
 class BaseAttrDict:
     """This class is the base class for all models, its a
@@ -77,12 +77,13 @@ class BaseAttrDict:
     def __init__(self, client, data, response, cached=False, ts=None):
         self.client = client
         self.response = response
-        self.from_data(data, cached, ts)
+        self.from_data(data, cached, ts, response)
 
-    def from_data(self, data, cached, ts):
+    def from_data(self, data, cached, ts, response):
         self.cached = cached
         self.last_updated = ts
         self.raw_data = data
+        self.response = response
         if isinstance(data, list):
             self._boxed_data = BoxList(
                 data, camel_killer_box=not self.client.camel_case
@@ -134,12 +135,12 @@ class Refreshable(BaseAttrDict):
         """(a)sync refresh the data."""
         if self.client.is_async:
             return self._arefresh()
-        data, cached, ts = self.client.request(self.url, refresh=True)
-        return self.from_data(data, cached, ts)
+        data, cached, ts, response = self.client.request(self.url, timeout=None, refresh=True)
+        return self.from_data(data, cached, ts, response)
 
     async def _arefresh(self):
-        data, cached, ts = await self.client.request(self.url, refresh=True)
-        return self.from_data(data, cached, ts)
+        data, cached, ts, response = await self.client.request(self.url, timeout=None, refresh=True)
+        return self.from_data(data, cached, ts, response)
 
     @property
     def url(self):
@@ -177,14 +178,9 @@ class ClanInfo(FullClan):
 
 class Clan(Refreshable):
     """A clash royale clan model, full data + refreshable."""
-    def from_data(self, data, cached, ts):
-        super().from_data(data, cached, ts)
+    def from_data(self, data, cached, ts, response):
+        super().from_data(data, cached, ts, response)
         self.members = [Member(self, m, self.response) for m in data.get('members', [])]
-
-
-class ClanHistory(Refreshable):
-    """A history that RoyaleAPI saves"""
-    pass
 
 
 class ClanWar(Refreshable):
@@ -207,11 +203,6 @@ class Cycle(BaseAttrDict):
     pass
 
 
-class Constants(Refreshable):
-    """Clash Royale constants storage"""
-    pass
-
-
 class Tournament(Refreshable):
     """Represents a clash royale tournament."""
     pass
@@ -222,17 +213,21 @@ class Deck(Refreshable):
     pass
 
 
-class AuthStats(Refreshable):
-    """Represents client request statistics"""
+class Cards(Refreshable):
+    """Represents card data"""
     pass
 
+class Location(Refreshable):
+    """Represents location data"""
+    pass
+    
 
 class rlist(list, Refreshable):
-    def __init__(self, client, data, cached, ts):
+    def __init__(self, client, data, cached, ts, response):
         self.client = client
-        self.from_data(data, cached, ts)
+        self.from_data(data, cached, ts, response)
 
-    def from_data(self, data, cached, ts):
+    def from_data(self, data, cached, ts, response):
         self.cached = cached
         self.last_updated = ts
         super().__init__(data)

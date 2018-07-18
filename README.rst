@@ -5,7 +5,8 @@ clashroyale
    :alt: PyPi
 
 
-This library is currently an (a)sync wrapper for https://royaleapi.com with
+This library is currently an (a)sync wrapper for
+https://royaleapi.com and the official Clash Royale API with
 great functionality.
 
 Installation
@@ -26,8 +27,8 @@ How to use
 3. Get a RoyaleAPI Developer Key, instructions `here`_
 4. Initiate a client
 
-   -  Blocking - ``client = clashroyale.Client(THEDEVKEY)``
-   -  Async - ``client = clashroyale.Client(THEDEVKEY, is_async=True)``
+   -  Blocking - ``client = clashroyale.RoyaleAPI(THEDEVKEY)``
+   -  Async - ``client = clashroyale.RoyaleAPI(THEDEVKEY, is_async=True)``
 
 5. Now you can call the `methods`_ to access the API!
 
@@ -80,7 +81,7 @@ Access
 
    import clashroyale
 
-   client = clashroyale.Client(SECRETDEVKEY)
+   client = clashroyale.RoyaleAPI(SECRETDEVKEY)
 
    chests = client.get_player_chests('2P0LYQ')
    print(type(chests.upcoming))

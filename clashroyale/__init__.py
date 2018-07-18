@@ -22,17 +22,22 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 
-from .client import Client
+from .royaleapi import Client as RoyaleAPI
+from .official_api import Client as OfficialAPI
 from .errors import *
-from .models import *
-from .utils import API, SqliteDict, typecasted
-
 
 ############
 # METADATA #
 ############
 
-__version__ = 'v3.4.10'
+__version__ = 'v3.5.0'
 __title__ = 'clashroyale'
 __license__ = 'MIT'
 __github__ = 'https://github.com/cgrok/clashroyale'
+
+
+## DEPRECATED ##
+class Client:
+    """Deprecated Client"""
+    def __init__(self, *args, **kwargs):
+        raise DeprecationWarning('This method has been deprecated. Use clashroyale.RoyaleAPI instead')
