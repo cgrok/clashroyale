@@ -131,6 +131,7 @@ class API:
         self.CLAN = self.BASE + '/clans'
         self.TOURNAMENT = self.BASE + '/tournaments'
         self.TOP = self.BASE + '/top'
+        self.POPULAR = self.BASE + '/popular'
         self.CONSTANTS = self.BASE + '/constants'
         self.ENDPOINTS = self.BASE + '/endpoints'
         self.VERSION = self.BASE + '/version'
