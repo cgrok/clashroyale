@@ -1,10 +1,5 @@
 from setuptools import setup, find_packages
 
-version = '3.5.0'
-
-with open('README.rst') as f:
-    long_description = f.read()
-
 setup(
     name='clashroyale',
     packages=find_packages(),

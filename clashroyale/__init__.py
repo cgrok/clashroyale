@@ -1,7 +1,7 @@
 """
 MIT License
 
-Copyright (c) 2017 kyb3r
+Copyright (c) 2017 cgrok
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -34,10 +34,3 @@ __version__ = 'v3.5.0'
 __title__ = 'clashroyale'
 __license__ = 'MIT'
 __github__ = 'https://github.com/cgrok/clashroyale'
-
-
-## DEPRECATED ##
-class Client:
-    """Deprecated Client"""
-    def __init__(self, *args, **kwargs):
-        raise DeprecationWarning('This method has been deprecated. Use clashroyale.RoyaleAPI instead')
