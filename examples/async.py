@@ -4,7 +4,7 @@ import os
 
 
 token = os.getenv('crtoken') # get your token somehow.
-token = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MTQyLCJpZGVuIjoiMTgwMzE0MzEwMjk4MzA0NTEyIiwibWQiOnt9LCJ0cyI6MTUyNzczNjMyNjk2NCwibG0iOjN9.yLMXzl6TpGrszhJGe-XHglWLjqoA4hsPj--20BYTjcA'
+
 # ASYNC FUNCTIONALITY
 async def main():
     client = clashroyale.RoyaleAPI(token, is_async=True) # is_async=True argument
