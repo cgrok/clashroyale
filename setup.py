@@ -6,7 +6,7 @@ with open('README.rst') as f:
 setup(
     name='clashroyale',
     packages=find_packages(),
-    version='v3.5.0',
+    version='v3.5.1',
     description='An (a)sync wrapper for royaleapi.com',
     long_description=long_description,
     long_description_content_type='text/x-rst',
@@ -14,7 +14,7 @@ setup(
     url='https://github.com/cgrok/clashroyale',
     keywords=['clashroyale', 'wrapper', 'cr', 'royaleapi'],
     include_package_data=True,
-    install_requires=['aiohttp==3.3.2', 'python-box==3.1.1', 'requests==2.18.4'],
+    install_requires=['aiohttp', 'python-box', 'requests'],
     classifiers=[
         'Development Status :: 5 - Production/Stable',
         'Intended Audience :: Developers',
@@ -22,6 +22,7 @@ setup(
         'License :: OSI Approved :: MIT License',
         'Programming Language :: Python :: 3.5',
         'Programming Language :: Python :: 3.6',
+        'Programming Language :: Python :: 3.7'
     ],
     python_requires='>=3.5'
 )
