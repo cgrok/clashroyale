@@ -15,6 +15,7 @@ except FileNotFoundError:
 TOKEN = data.get('royaleapi')
 URL = data.get('url')
 
+
 class TestBlockingClient(unittest.TestCase):
     """Tests all methods in the blocking client that
     uses the `requests` module in `clashroyale`
@@ -25,11 +26,11 @@ class TestBlockingClient(unittest.TestCase):
         self.clashroyale_client = clashroyale.RoyaleAPI(TOKEN, url=URL, timeout=30)
         super().__init__(*args, **kwargs)
 
-    ## PAUSE IN BETWEEN TESTS ##
+    # PAUSE IN BETWEEN TESTS #
     def tearDown(self):
         time.sleep(2)
 
-    ## MISC METHODS ##
+    # MISC METHODS #
     def test_get_constants(self):
         """This test will test out:
         - Constants endpoint
@@ -48,7 +49,7 @@ class TestBlockingClient(unittest.TestCase):
         """
         self.assertTrue(self.clashroyale_client.get_version(), str)
 
-    ## PLAYER METHODS ##
+    # PLAYER METHODS #
     def test_get_player(self):
         """This test will test out:
         - Normal profile fetching
@@ -85,7 +86,7 @@ class TestBlockingClient(unittest.TestCase):
         chests = self.clashroyale_client.get_player_chests(tag)
         self.assertTrue(isinstance(chests.upcoming, list))
 
-        self.assertTrue(isinstance(chests.super_magical, int) or\
+        self.assertTrue(isinstance(chests.super_magical, int) or
                         chests.super_magical is None)
 
     def test_get_response(self):
@@ -110,7 +111,7 @@ class TestBlockingClient(unittest.TestCase):
         players = self.clashroyale_client.get_popular_players()
         self.assertTrue(isinstance(players, list))
 
-    ## ClAN METHODS ##
+    # ClAN METHODS #
     def test_get_clan(self):
         """This test will test out:
         - Normal clan fetching
@@ -214,7 +215,7 @@ class TestBlockingClient(unittest.TestCase):
         clans = self.clashroyale_client.get_popular_clans()
         self.assertTrue(isinstance(clans, list))
 
-    ## TOURNAMENT METHODS ##
+    # TOURNAMENT METHODS #
     def test_get_tournament(self):
         """This test will test out:
         - Normal tournament fetching
@@ -252,13 +253,14 @@ class TestBlockingClient(unittest.TestCase):
         tournaments = self.clashroyale_client.get_popular_tournaments()
         self.assertTrue(isinstance(tournaments, list))
 
-    ## DECKS METHODS ##
+    # DECKS METHODS #
     def test_get_popular_decks(self):
         """This test will test out:
         - Popular decks endpoint
         """
         decks = self.clashroyale_client.get_popular_decks()
         self.assertTrue(isinstance(decks, list))
+
 
 if __name__ == '__main__':
     unittest.main()

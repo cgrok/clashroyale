@@ -60,11 +60,11 @@ def typecasted(func):
     return wrapper
 
 
-
 BASE = (
     'limit', 'after', 'before',
     'timeout'
 )
+
 
 def clansearch(k, v):
     valid = (
@@ -75,7 +75,6 @@ def clansearch(k, v):
     if k not in valid:
         raise ValueError('Invalid search parameter passed: {}'.format(k))
     return k, v
-
 
 
 def tournamentsearch(k, v):

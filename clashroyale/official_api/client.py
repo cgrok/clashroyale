@@ -25,7 +25,6 @@ SOFTWARE.
 import asyncio
 import json
 from datetime import datetime
-from time import time
 from urllib.parse import urlencode
 
 import aiohttp
@@ -33,8 +32,8 @@ import requests
 
 from ..errors import (NotFoundError, NotResponding, ServerError, Unauthorized,
                       UnexpectedError, RatelimitError)
-from .models import (Clan, ClanInfo, ClanWar, ClanWarLog, Battle, Cycle,
-                     Player, PlayerInfo, Tournament, Deck, rlist)
+from .models import (Cards, Clan, ClanInfo, ClanWar, ClanWarLog, Battle, Cycle,
+                     Player, Location, Tournament, rlist)
 from .utils import API, SqliteDict, clansearch, tournamentsearch, crtag, keys, typecasted
 
 from_timestamp = datetime.fromtimestamp
@@ -61,7 +60,7 @@ class Client:
     timeout: Optional[int]
         A timeout for requests to the API, defaults to 10 seconds.
     url: Optional[str]
-        A url to use instead of api.clashroyale.com/v1 (defaults to ``https://api.clashroyale.com/v1``)    
+        A url to use instead of api.clashroyale.com/v1 (defaults to ``https://api.clashroyale.com/v1``)
         Only use this if you know what you are doing.
     cache_fp: Optional[str]
         File path for the sqlite3 database to use for caching requests,
@@ -86,8 +85,8 @@ class Client:
         self.camel_case = options.get('camel_case', False)
         self.headers = {
             'Authorization': 'Bearer {}'.format(token),
-            'user-agent': 'python-clashroyale-client (kyb3r/fourjr)'
-            }
+            'User-Agent': 'python-clashroyale-client (kyb3r/fourjr)'
+        }
         self.cache_fp = options.get('cache_fp')
         self.using_cache = bool(self.cache_fp)
         self.cache_reset = options.get('cache_expires', 300)
@@ -148,7 +147,7 @@ class Client:
             raise NotFoundError(resp, data)
         if code == 429:
             raise RatelimitError(resp, data)
-        if code == 503: # Maintainence
+        if code == 503:  # Maintainence
             raise ServerError(resp, data)
 
         raise UnexpectedError(resp, data)
@@ -231,11 +230,6 @@ class Client:
 
     @typecasted
     def get_player_verify(self, tag: crtag, apikey: str, timeout=None):
-        timeout = params.get('timeout')
-        try:
-            del params['timeout']
-        except KeyError:
-            pass
         url = self.api.PLAYER + '/' + tag + '/verifytoken'
         return self._get_model(url, Player, timeout, method='POST', json={'token': apikey})
 
@@ -314,7 +308,7 @@ class Client:
 
     @typecasted
     def get_all_locations(self, timeout: int=None):
-        return self._get_model(self.API.LOCATIONS, Locations, timeout)
+        return self._get_model(self.API.LOCATIONS, Location, timeout)
 
     @typecasted
     def get_top_clans(self, location_id='global', **params: keys):
@@ -323,7 +317,7 @@ class Client:
             del params['timeout']
         except KeyError:
             pass
-        url = self.api.LOCATIONS +  '/' + str(location_id) + '/rankings/clans'
+        url = self.api.LOCATIONS + '/' + str(location_id) + '/rankings/clans'
         return self._get_model(url, ClanInfo, timeout, **params)
 
     @typecasted
@@ -343,5 +337,5 @@ class Client:
             del params['timeout']
         except KeyError:
             pass
-        url = self.api.LOCATIONS +  '/' + str(location_id) + '/rankings/players'
+        url = self.api.LOCATIONS + '/' + str(location_id) + '/rankings/players'
         return self._get_model(url, ClanInfo, timeout, **params)

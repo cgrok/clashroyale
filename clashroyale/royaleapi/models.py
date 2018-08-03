@@ -28,6 +28,7 @@ from .utils import API
 
 API_ENDPOINTS = API('https://api.royaleapi.com')
 
+
 class BaseAttrDict:
     """This class is the base class for all models, its a
     wrapper around the `python-box`_ which allows access to data
@@ -87,11 +88,11 @@ class BaseAttrDict:
         if isinstance(data, list):
             self._boxed_data = BoxList(
                 data, camel_killer_box=not self.client.camel_case
-                )
+            )
         else:
             self._boxed_data = Box(
                 data, camel_killer_box=not self.client.camel_case
-                )
+            )
         return self
 
     def __getattr__(self, attr):

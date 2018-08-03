@@ -72,7 +72,6 @@ def clansearch(k, v):
     return k, v
 
 
-
 def tournamentsearch(k, v):
     valid = (
         'name', 'keys', 'exclude',
@@ -92,11 +91,13 @@ def keys(k, v):
         raise ValueError('Invalid url parameter passed: {}'.format(k))
     return k, ','.join(v) if isinstance(v, (list, tuple)) else v
 
+
 def tournamentfilter(k, v):
     if k not in ('keys', 'exclude', 'max', 'page', 'type',
                  '1k', 'open', 'full', 'prep', 'joinable'):
         raise ValueError('Invalid url parameter passed: {}'.format(k))
     return k, ','.join(v) if isinstance(v, (list, tuple)) else v
+
 
 def crtag(tag):
     tag = tag.strip('#').upper().replace('O', '0')
@@ -135,6 +136,7 @@ class API:
         self.CONSTANTS = self.BASE + '/constants'
         self.ENDPOINTS = self.BASE + '/endpoints'
         self.VERSION = self.BASE + '/version'
+
 
 class SqliteDict(MutableMapping):
     def __init__(self, filename, table_name='data', fast_save=False, **options):

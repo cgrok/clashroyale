@@ -28,6 +28,7 @@ from .utils import API
 
 API_ENDPOINTS = API('https://api.clashroyale.com/v1')
 
+
 class BaseAttrDict:
     """This class is the base class for all models, its a
     wrapper around the `python-box`_ which allows access to data
@@ -87,11 +88,11 @@ class BaseAttrDict:
         if isinstance(data, list):
             self._boxed_data = BoxList(
                 data, camel_killer_box=not self.client.camel_case
-                )
+            )
         else:
             self._boxed_data = Box(
                 data, camel_killer_box=not self.client.camel_case
-                )
+            )
         return self
 
     def __getattr__(self, attr):
@@ -217,10 +218,11 @@ class Cards(Refreshable):
     """Represents card data"""
     pass
 
+
 class Location(Refreshable):
     """Represents location data"""
     pass
-    
+
 
 class rlist(list, Refreshable):
     def __init__(self, client, data, cached, ts, response):

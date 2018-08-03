@@ -32,7 +32,7 @@ import aiohttp
 import requests
 
 from ..errors import (NotFoundError, NotResponding, ServerError, Unauthorized, NotTrackedError,
-                     UnexpectedError, RatelimitError, RatelimitErrorDetected)
+                      UnexpectedError, RatelimitError, RatelimitErrorDetected)
 from .models import (Clan, ClanInfo, ClanHistory, ClanWar, ClanWarLog, Battle, Cycle, Constants,
                      Player, PlayerInfo, Tournament, Deck, rlist)
 from .utils import API, SqliteDict, clansearch, tournamentsearch, crtag, keys, tournamentfilter, typecasted
@@ -61,7 +61,7 @@ class Client:
     timeout: Optional[int]
         A timeout for requests to the API, defaults to 10 seconds.
     url: Optional[str]
-        A url to use instead of api.royaleapi.com (defaults to ``https://api.royaleapi.com``)    
+        A url to use instead of api.royaleapi.com (defaults to ``https://api.royaleapi.com``)
         Only use this if you know what you are doing.
     cache_fp: Optional[str]
         File path for the sqlite3 database to use for caching requests,
@@ -86,8 +86,8 @@ class Client:
         self.camel_case = options.get('camel_case', False)
         self.headers = {
             'Authorization': 'Bearer {}'.format(token),
-            'user-agent': 'python-clashroyale-client (kyb3r)'
-            }
+            'User-Agent': 'python-clashroyale-client (kyb3r)'
+        }
         self.cache_fp = options.get('cache_fp')
         self.using_cache = bool(self.cache_fp)
         self.cache_reset = options.get('cache_expires', 300)
@@ -125,7 +125,7 @@ class Client:
         return '<RoyaleAPI Client async={}>'.format(self.is_async)
 
     def close(self):
-       self.session.close()
+        self.session.close()
 
     def _raise_for_status(self, resp, text):
         try:
@@ -177,9 +177,9 @@ class Client:
             cache = self._resolve_cache(url, **params)
             if cache is not None:
                 return cache
-        if self.ratelimit[1] == 0 and time() < self.ratelimit[2]/1000:
+        if self.ratelimit[1] == 0 and time() < self.ratelimit[2] / 1000:
             if not url.endswith('/auth/stats'):
-                raise RatelimitErrorDetected(self.ratelimit[2]/1000 - time())
+                raise RatelimitErrorDetected(self.ratelimit[2] / 1000 - time())
         if self.is_async:  # return a coroutine
             return self._arequest(url, **params)
         try:
@@ -316,7 +316,7 @@ class Client:
         except KeyError:
             pass
         url = self.api.CLAN + '/tracking'
-        return self._get_model(url)
+        return self._get_model(url, Clan, timeout, params)
 
     @typecasted
     def get_clan_tracking(self, *tags: crtag, **params: keys):
