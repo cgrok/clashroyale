@@ -157,7 +157,7 @@ class Client:
         json_data = params.get('json', {})
         try:
             async with self.session.request(
-                method, url, timeout=self.timeout, headers=self.headers, params=params, json=json_data
+                method, url, timeout=self.timeout, headers=self.headers, params=params, data=json_data
             ) as resp:
                 return self._raise_for_status(resp, await resp.text())
         except asyncio.TimeoutError:
