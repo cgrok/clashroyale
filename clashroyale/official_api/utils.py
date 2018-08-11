@@ -71,7 +71,7 @@ def clansearch(k, v):
         'name', 'keys', 'exclude',
         'max', 'timeout'
     )
-    k = _to_camel_case(k)
+    k = to_camel_case(k)
     if k not in valid:
         raise ValueError('Invalid search parameter passed: {}'.format(k))
     return k, v
@@ -82,7 +82,7 @@ def tournamentsearch(k, v):
         'name'
     )
     valid += BASE
-    k = _to_camel_case(k)
+    k = to_camel_case(k)
     if k not in valid:
         raise ValueError('Invalid search parameter passed: {}'.format(k))
     return k, v
@@ -112,16 +112,18 @@ def crtag(tag):
     return tag
 
 
-first_cap_re = re.compile('(.)([A-Z][a-z]+)')
-all_cap_re = re.compile('([a-z0-9])([A-Z])')
+first_cap_re = re.compile(r'(.)([A-Z][a-z]+)')
+all_cap_re = re.compile(r'([a-z0-9])([A-Z])')
+
+# UTILITY FUNCTIONS #
 
 
-def _to_snake_case(name):
+def to_snake_case(name):
     s1 = first_cap_re.sub(r'\1_\2', name)
     return all_cap_re.sub(r'\1_\2', s1).lower()
 
 
-def _to_camel_case(snake):
+def to_camel_case(snake):
     parts = snake.split('_')
     return parts[0] + "".join(x.title() for x in parts[1:])
 

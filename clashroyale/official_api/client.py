@@ -32,8 +32,8 @@ import requests
 
 from ..errors import (NotFoundError, NotResponding, ServerError, Unauthorized,
                       UnexpectedError, RatelimitError)
-from .models import (Cards, Clan, ClanInfo, ClanWar, ClanWarLog, Battle, Cycle,
-                     Player, Location, Tournament, rlist)
+from .models import (BaseAttrDict, Cards, Clan, ClanInfo, ClanWar, ClanWarLog,
+                     Battle, Cycle, Player, Location, Tournament, Constants, rlist)
 from .utils import API, SqliteDict, clansearch, tournamentsearch, crtag, keys, typecasted
 
 from_timestamp = datetime.fromtimestamp
@@ -70,9 +70,12 @@ class Client:
         from the api for a specific route, this defaults to 10 seconds.
     table_name: Optional[str]
         The table name to use for the cache database. Defaults to 'cache'
-    camel_case: Optional(bool)
+    camel_case: Optional[bool]
         Whether or not to access model data keys in snake_case or camelCase,
         this defaults to False (use snake_case)
+    constants: Optional[dict]
+        Constants to use instead of the ones updated when the package is re-installed.
+        To extract a ``dict`` from a ``BaseAttrDict``, do ``BaseAttrDict.to_dict()``
     """
 
     def __init__(self, token, session=None, is_async=False, **options):
@@ -93,6 +96,11 @@ class Client:
         if self.using_cache:
             table = options.get('table_name', 'cache')
             self.cache = SqliteDict(self.cache_fp, table)
+
+        if not options.get('constants'):
+            with open('../contants.json', encoding='utf8') as f:
+                constants = json.load(f)
+        self.constants = Constants(constants, self, None)
 
     def _resolve_cache(self, url, **params):
         bucket = url + (('?' + urlencode(params)) if params else '')
@@ -339,3 +347,77 @@ class Client:
             pass
         url = self.api.LOCATIONS + '/' + str(location_id) + '/rankings/players'
         return self._get_model(url, ClanInfo, timeout, **params)
+
+    # Utility Functions
+    def get_clan_image(self, obj: BaseAttrDict):
+        """Get the clan badge image URL
+
+        Parameters
+        ---------
+        obj: BaseAttrDict
+            An object that has the clan badge ID either in ``.clan.badge_id`` or ``.badge_id``
+            Can be ``Clan`` or ``Profile`` for example.
+        """
+
+        try:
+            badge_id = obj.clan.badge_id
+        except AttributeError:
+            try:
+                badge_id = obj.badge_id
+            except AttributeError:
+                return 'https://i.imgur.com/Y3uXsgj.png'
+
+        if badge_id is None:
+            return 'https://i.imgur.com/Y3uXsgj.png'
+
+        for i in self.constants.alliance_badges:
+            if i.id == badge_id:
+                return 'https://royaleapi.github.io/cr-api-assets/badges/' + i.name + '.png'
+
+    def get_arena_image(self, obj: BaseAttrDict):
+        """Get the arena image URL
+
+        Parameters
+        ---------
+        obj: BaseAttrDict
+            An object that has the arena ID in ``.arena.id``
+            Can be ``Profile`` for example.
+
+        Returns None or str
+        """
+        badge_id = obj.arena.id
+        for i in self.constants.arenas:
+            if i.id == badge_id:
+                return 'https://royaleapi.github.io/cr-api-assets/arenas/arena/{}.png'.format(i.arena_id)
+
+    def get_card_info(self, card_name: str):
+        """Returns card info from constants
+
+        Parameters
+        ---------
+        card_name: str
+            A card name
+
+        Returns None or Constants
+        """
+        for c in self.constants.cards:
+            if c.name == card_name:
+                return c
+
+    def get_deck_link(self, deck: BaseAttrDict):
+        """Form a deck link
+
+        Parameters
+        ---------
+        deck: BaseAttrDict
+            An object is a deck. Can be retrieved from ``Player.current_deck``
+
+        Returns str
+        """
+        deck_link = 'https://link.clashroyale.com/deck/en?deck='
+
+        for i in deck:
+            card = self.get_card_info(i.name)
+            deck_link += f'{card.id};'
+
+        return deck_link

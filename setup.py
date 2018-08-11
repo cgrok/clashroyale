@@ -1,3 +1,5 @@
+import json
+import urllib.request
 from setuptools import setup, find_packages
 
 with open('README.rst', encoding='utf8') as f:
@@ -26,3 +28,10 @@ setup(
     ],
     python_requires='>=3.5'
 )
+
+# Reload Constants #
+data = json.loads(urllib.request.urlopen('https://fourjr-webserver.herokuapp.com/cr/constants').read())
+if data:
+    del data['info']
+    with open('clashroyale/constants.json', 'w') as f:
+        json.dump(data, f, indent=4)

@@ -224,6 +224,11 @@ class Location(Refreshable):
     pass
 
 
+class Constants(BaseAttrDict):
+    """Clash Royale constants storage"""
+    pass
+
+
 class rlist(list, Refreshable):
     def __init__(self, client, data, cached, ts, response):
         self.client = client
@@ -232,6 +237,7 @@ class rlist(list, Refreshable):
     def from_data(self, data, cached, ts, response):
         self.cached = cached
         self.last_updated = ts
+        self.response = response
         super().__init__(data)
         return self
 
