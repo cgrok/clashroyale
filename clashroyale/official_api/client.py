@@ -97,10 +97,11 @@ class Client:
             table = options.get('table_name', 'cache')
             self.cache = SqliteDict(self.cache_fp, table)
 
-        if not options.get('constants'):
+        constants = options.get('constants')
+        if not constants:
             with open('../contants.json', encoding='utf8') as f:
                 constants = json.load(f)
-        self.constants = Constants(constants, self, None)
+        self.constants = Constants(self, constants, None)
 
     def _resolve_cache(self, url, **params):
         bucket = url + (('?' + urlencode(params)) if params else '')
@@ -357,6 +358,8 @@ class Client:
         obj: BaseAttrDict
             An object that has the clan badge ID either in ``.clan.badge_id`` or ``.badge_id``
             Can be ``Clan`` or ``Profile`` for example.
+
+        Returns str
         """
 
         try:
@@ -388,7 +391,7 @@ class Client:
         badge_id = obj.arena.id
         for i in self.constants.arenas:
             if i.id == badge_id:
-                return 'https://royaleapi.github.io/cr-api-assets/arenas/arena/{}.png'.format(i.arena_id)
+                return 'https://royaleapi.github.io/cr-api-assets/arenas/arena{}.png'.format(i.arena_id)
 
     def get_card_info(self, card_name: str):
         """Returns card info from constants
