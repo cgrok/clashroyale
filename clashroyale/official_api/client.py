@@ -99,7 +99,7 @@ class Client:
 
         constants = options.get('constants')
         if not constants:
-            with open('../contants.json', encoding='utf8') as f:
+            with open(os.path.join(Path(__file__).parent.parent, 'constants.json', encoding='utf8') as f:
                 constants = json.load(f)
         self.constants = Constants(self, constants, None)
 
