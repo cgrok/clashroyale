@@ -24,7 +24,9 @@ SOFTWARE.
 
 import asyncio
 import json
+import os
 from datetime import datetime
+from pathlib import Path
 from urllib.parse import urlencode
 
 import aiohttp
@@ -99,7 +101,7 @@ class Client:
 
         constants = options.get('constants')
         if not constants:
-            with open(os.path.join(Path(__file__).parent.parent, 'constants.json', encoding='utf8') as f:
+            with open(os.path.join(Path(__file__).parent.parent, 'constants.json'), encoding='utf8') as f:
                 constants = json.load(f)
         self.constants = Constants(self, constants, None)
 
