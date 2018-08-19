@@ -338,7 +338,7 @@ class Client:
             del params['timeout']
         except KeyError:
             pass
-        url = self.api.LOCATIONS + str(location_id) + '/rankings/clanwars'
+        url = self.api.LOCATIONS + '/' + str(location_id) + '/rankings/clanwars'
         return self._get_model(url, ClanInfo, timeout, **params)
 
     @typecasted
