@@ -24,7 +24,6 @@ SOFTWARE.
 
 import asyncio
 import json
-import os
 from datetime import datetime
 from pathlib import Path
 from urllib.parse import urlencode
@@ -101,7 +100,7 @@ class Client:
 
         constants = options.get('constants')
         if not constants:
-            with open(os.path.join(Path(__file__).parent.parent, 'constants.json'), encoding='utf8') as f:
+            with open(Path(__file__).parent.parent.joinpath('constants.json'), encoding='utf8') as f:
                 constants = json.load(f)
         self.constants = Constants(self, constants, None)
 
@@ -409,6 +408,20 @@ class Client:
             if c.name == card_name:
                 return c
 
+    def get_rarity_info(self, rarity: str):
+        """Returns card info from constants
+
+        Parameters
+        ---------
+        rarity: str
+            A rarity name
+
+        Returns None or Constants
+        """
+        for c in self.constants.rarities:
+            if c.name == rarity:
+                return c
+
     def get_deck_link(self, deck: BaseAttrDict):
         """Form a deck link
 
@@ -447,3 +460,229 @@ class Client:
             return time.timestamp()
         else:
             return time
+
+    def convert_from_royaleapi(self, obj: dict, mode, reverse=False):
+        """Converts a RoyaleAPI response to an offical API Response
+
+        Parameters
+        ---------
+        obj: dict
+            A dictionary with the data that RoyaleAPI returns. If it is a BaseAttrDict,
+            use ``obj.raw_data`` before passing it in.
+        mode: BaseAttrDict
+            A class in models.py:
+            ``Player``
+        reverse: Optional[bool]
+            Does a reverse conversion.
+            Default: False
+
+        Returns an instance of a ``BaseAttrDict``
+        """
+        if mode == Player:
+            if not reverse:
+                official = {
+                    'tag': '#' + obj['tag'],
+                    'name': obj['name'],
+                    'trophies': obj['trophies'],
+                    'expLevel': obj['level'],
+                    'bestTrophies': obj['stats']['maxTrophies'],
+                    'wins': obj['games']['wins'],
+                    'losses': obj['games']['losses'],
+                    'battleCount': obj['games']['total'],
+                    'threeCrownWins': obj['stats']['threeCrownWins'],
+                    'challengeCardsWon': obj['stats']['challengeCardsWon'],
+                    'challengeMaxWins': obj['stats']['challengeMaxWins'],
+                    'tournamentCardsWon': obj['stats']['tournamentCardsWon'],
+                    'tournamentBattleCount': obj['games']['tournamentGames'],
+                    'role': obj['clan']['role'],
+                    'donations': obj['clan']['donations'],
+                    'donationsReceived': obj['clan']['donationsReceived'],
+                    'totalDonations': obj['stats']['totalDonations'],
+                    'warDayWins': obj['games']['warDayWins'],
+                    'clanCardsCollected': obj['stats']['clanCardsCollected'],
+                    'clan': {
+                        'tag': '#' + obj['clan']['tag'],
+                        'name': obj['clan']['name'],
+                        'badgeId': obj['clan']['badge']['id']
+                    },
+                    'arena': {
+                        'id': None,
+                        'name': obj['arena']['arena']
+                    },
+                    'currentFavouriteCard': {
+                        'name': obj['stats']['favoriteCard']['name'],
+                        'id': obj['stats']['favoriteCard']['id'],
+                        'maxLevel': obj['stats']['favoriteCard']['maxLevel'],
+                        'iconUrls': {
+                            'medium': obj['stats']['favoriteCard']['icon']
+                        }
+                    },
+                    'cards': [],
+                    'currentDeck': []
+                }
+
+                for c in obj['cards']:
+                    official['cards'].append({
+                        'name': c['name'],
+                        'level': c['level'],
+                        'maxLevel': c['maxLevel'],
+                        'count': c['count'],
+                        'iconUrls': {
+                            'medium': c['icon'],
+                        }
+                    })
+
+                for c in obj['currentDeck']:
+                    official['currentDeck'].append({
+                        'name': c['name'],
+                        'level': c['level'],
+                        'maxLevel': c['maxLevel'],
+                        'count': c['count'],
+                        'iconUrls': {
+                            'medium': c['icon'],
+                        }
+                    })
+
+                try:
+                    official['leagueStatistics'] = obj['leagueStatistics']
+                except KeyError:
+                    pass
+                official['achievements'] = obj['achievements']
+
+                return Player(self, official, None)
+            else:
+                for i in self.constants.arenas:
+                    if i.id == obj['arena']['id']:
+                        arena_name = i.subtitle
+                        arena_id = i.arena,
+                        arena_limit = i.trophy_limit
+
+                try:
+                    wins_percent = obj['wins'] / obj['battleCount'] * 100
+                    losses_percent = obj['losses'] / obj['battleCount'] * 100
+                    draws_percent = (obj['battleCount'] - obj['wins'] - obj['losses']) / obj['battleCount'] * 100
+                except ZeroDivisionError:
+                    wins_percent = losses_percent = draws_percent = 0
+
+                royaleapi = {
+                    'tag': obj['tag'].replace('#', ''),
+                    'name': obj['name'],
+                    'trophies': obj['trophies'],
+                    'rank': None,
+                    'arena': {
+                        'name': arena_name,
+                        'arena': obj['arena']['name'],
+                        'arenaID': arena_id,
+                        'trophyLimit': arena_limit,
+                    },
+                    'stats': {
+                        'clanCardsCollected': obj['clanCardsCollected'],
+                        'tournamentCardsWon': obj['tournamentCardsWon'],
+                        'maxTrophies': obj['bestTrophies'],
+                        'threeCrownWins': obj['threeCrownWins'],
+                        'cardsFound': len(obj['cards']),
+                        'favoriteCard': {}
+                    },
+                    'totalDonations': obj['totalDonations'],
+                    'challengeMaxWins': obj['challengeMaxWins'],
+                    'challengeCardsWon': obj['challengeCardsWon'],
+                    'level': obj['expLevel'],
+                    'games': {
+                        'total': obj['battleCount'],
+                        'tournamentGames': obj['tournamentBattleCount'],
+                        'wins': obj['wins'],
+                        'warDayWins': obj['warDayWins'],
+                        'winsPercent': wins_percent,
+                        'losses': obj['losses'],
+                        'lossesPercent': losses_percent,
+                        'draws': obj['battleCount'] - obj['wins'] - obj['losses'],
+                        'drawsPercent': draws_percent
+                    },
+                    'currentDeck': [],
+                    'cards': []
+                }
+                try:
+                    royaleapi['leagueStatistics'] = obj['leagueStatistics']
+                except KeyError:
+                    pass
+                royaleapi['achievements'] = obj['achievements']
+
+                for c in obj['cards']:
+                    info = self.get_card_info(c['name'])
+                    royaleapi['cards'].append({
+                        'name': c['name'],
+                        'level': c['level'],
+                        'maxLevel': c['maxLevel'],
+                        'count': c['count'],
+                        'rarity': info.rarity,
+                        'requiredForUpgrade': self.get_rarity_info(info.rarity).upgrade_material_count[c['level'] - 1],
+                        'leftToUpgrade': self.get_rarity_info(info.rarity).upgrade_material_count[c['level'] - 1] - c['count'],
+                        'icon': c['iconUrls']['medium'],
+                        'key': c['name'].lower().replace(' ', '-'),
+                        'elixir': info.elixir,
+                        'type': info.type,
+                        'arena': info.arena,
+                        'description': info.description,
+                        'id': info.id
+                    })
+                for c in obj['currentDeck']:
+                    info = self.get_card_info(c['name'])
+                    royaleapi['currentDeck'].append({
+                        'name': c['name'],
+                        'level': c['level'],
+                        'maxLevel': c['maxLevel'],
+                        'count': c['count'],
+                        'rarity': info.rarity,
+                        'requiredForUpgrade': self.get_rarity_info(info.rarity).upgrade_material_count[c['level'] - 1],
+                        'leftToUpgrade': self.get_rarity_info(info.rarity).upgrade_material_count[c['level'] - 1] - c['count'],
+                        'icon': c['iconUrls']['medium'],
+                        'key': c['name'].lower().replace(' ', '-'),
+                        'elixir': info.elixir,
+                        'type': info.type,
+                        'arena': info.arena,
+                        'description': info.description,
+                        'id': info.id
+                    })
+
+                try:
+                    info = self.get_card_info(obj['currentFavouriteCard']['name'])
+                    royaleapi['stats']['favoriteCard'] = {
+                        "name": obj['currentFavouriteCard']['name'],
+                        "id": obj['currentFavouriteCard']['id'],
+                        "maxLevel": obj['currentFavouriteCard']['maxLevel'],
+                        "icon": obj['currentFavouriteCard']['iconUrls']['medium'],
+                        "key": obj['currentFavouriteCard']['name'].lower().replace(' ', '-'),
+                        'elixir': info.elixir,
+                        'type': info.type,
+                        'arena': info.arena,
+                        'description': info.description
+                    }
+                except KeyError:
+                    royaleapi['stats']['favoriteCard'] = None
+
+                try:
+                    for i in self.constants.alliance_badges:
+                        if i.id == obj['clan']['badgeId']:
+                            badge_name = i.name
+                            badge_category = i.category
+                            badge_image = 'https://royaleapi.github.io/cr-api-assets/badges/' + i.name + '.png'
+                    royaleapi['clan'] = {
+                        'tag': obj['clan']['tag'].replace('#', ''),
+                        'name': obj['clan']['name'],
+                        'role': obj.get('role'),
+                        'donations': obj['donations'],
+                        'donationsReceived': obj['donationsReceived'],
+                        'donationsDelta': obj['donations'] - obj['donationsReceived'],
+                        'badge': {
+                            'name': badge_name,
+                            'category': badge_category,
+                            'id': obj['clan']['badgeId'],
+                            'image': badge_image
+                        },
+                    }
+                except KeyError:
+                    royaleapi['clan'] = None
+
+                return Player(self, royaleapi, None)
+        else:
+            raise NotImplementedError('Mode either invalid or not implemented yet.')
