@@ -436,7 +436,7 @@ class Client:
 
         for i in deck:
             card = self.get_card_info(i.name)
-            deck_link += f'{card.id};'
+            deck_link += '{0.id};'.format(card)
 
         return deck_link
 
