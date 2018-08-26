@@ -172,7 +172,7 @@ class Client:
     async def _wrap_coro(self, arg):
         return arg
 
-    def request(self, url, timeout, refresh=False, **params):
+    def request(self, url, timeout, refresh=False, *, params={}):
         if self.using_cache and refresh is False:  # refresh=True forces a request instead of using cache
             cache = self._resolve_cache(url, **params)
             if cache is not None:
@@ -198,9 +198,9 @@ class Client:
         else:
             return model(self, data, resp, cached=cached, ts=ts)
 
-    async def _aget_model(self, url, timeout, model=None, **params):
+    async def _aget_model(self, url, timeout, model=None, *, params={}):
         try:
-            data, cached, ts, resp = await self.request(url, timeout, **params)
+            data, cached, ts, resp = await self.request(url, timeout, params=params)
         except Exception as e:
             if self.using_cache:
                 cache = self._resolve_cache(url, **params)
@@ -211,16 +211,16 @@ class Client:
 
         return self._convert_model(data, cached, ts, model, resp)
 
-    def _get_model(self, url, model=None, timeout=None, **params):
+    def _get_model(self, url, model=None, timeout=None, *, params={}):
         timeout = timeout or self.timeout
         if self.is_async:  # return a coroutine
-            return self._aget_model(url, timeout, model, **params)
+            return self._aget_model(url, timeout, model, params=params)
         # Otherwise, do everything synchronously.
         try:
-            data, cached, ts, resp = self.request(url, timeout, **params)
+            data, cached, ts, resp = self.request(url, timeout, params=params)
         except Exception as e:
             if self.using_cache:
-                cache = self._resolve_cache(url, **params)
+                cache = self._resolve_cache(url, params=params)
                 if cache is not None:
                     data, cached, ts = cache
             if 'data' not in locals():
@@ -242,7 +242,7 @@ class Client:
         except KeyError:
             pass
         url = self.api.TOURNAMENT + '/' + tag
-        return self._get_model(url, Tournament, timeout, **params)
+        return self._get_model(url, Tournament, timeout, params=params)
 
     @typecasted
     def get_player(self, *tags: crtag, **params: keys):
@@ -252,7 +252,7 @@ class Client:
         except KeyError:
             pass
         url = self.api.PLAYER + '/' + ','.join(tags)
-        return self._get_model(url, Player, timeout, **params)
+        return self._get_model(url, Player, timeout, params=params)
 
     get_players = get_player
 
@@ -265,7 +265,7 @@ class Client:
             pass
         url = self.api.PLAYER + '/' + tag + '/verify'
         params.update({'token': apikey})
-        return self._get_model(url, Player, timeout, **params)
+        return self._get_model(url, Player, timeout, params=params)
 
     @typecasted
     def get_player_battles(self, *tags: crtag, **params: keys):
@@ -275,7 +275,7 @@ class Client:
         except KeyError:
             pass
         url = self.api.PLAYER + '/' + ','.join(tags) + '/battles'
-        return self._get_model(url, Battle, timeout, **params)
+        return self._get_model(url, Battle, timeout, params=params)
 
     @typecasted
     def get_player_chests(self, *tags: crtag, **params: keys):
@@ -285,7 +285,7 @@ class Client:
         except KeyError:
             pass
         url = self.api.PLAYER + '/' + ','.join(tags) + '/chests'
-        return self._get_model(url, Cycle, timeout, **params)
+        return self._get_model(url, Cycle, timeout, params=params)
 
     @typecasted
     def get_clan(self, *tags: crtag, **params: keys):
@@ -295,7 +295,7 @@ class Client:
         except KeyError:
             pass
         url = self.api.CLAN + '/' + ','.join(tags)
-        return self._get_model(url, Clan, timeout, **params)
+        return self._get_model(url, Clan, timeout, params=params)
 
     get_clans = get_clan
 
@@ -307,7 +307,7 @@ class Client:
         except KeyError:
             pass
         url = self.api.CLAN + '/search'
-        return self._get_model(url, ClanInfo, timeout, **params)
+        return self._get_model(url, ClanInfo, timeout, params=params)
 
     def get_tracking_clans(self, **params: clansearch):
         timeout = params.get('timeout')
@@ -316,7 +316,7 @@ class Client:
         except KeyError:
             pass
         url = self.api.CLAN + '/tracking'
-        return self._get_model(url, Clan, timeout, params)
+        return self._get_model(url, Clan, timeout, params=params)
 
     @typecasted
     def get_clan_tracking(self, *tags: crtag, **params: keys):
@@ -326,7 +326,7 @@ class Client:
         except KeyError:
             pass
         url = self.api.CLAN + '/' + ','.join(tags) + '/tracking'
-        return self._get_model(url, Clan, timeout, **params)
+        return self._get_model(url, Clan, timeout, params=params)
 
     @typecasted
     def get_clan_battles(self, *tags: crtag, **params: keys):
@@ -336,7 +336,7 @@ class Client:
         except KeyError:
             pass
         url = self.api.CLAN + '/' + ','.join(tags) + '/battles'
-        return self._get_model(url, Battle, timeout, **params)
+        return self._get_model(url, Battle, timeout, params=params)
 
     @typecasted
     def get_clan_history(self, *tags: crtag, **params: keys):
@@ -346,7 +346,7 @@ class Client:
         except KeyError:
             pass
         url = self.api.CLAN + '/' + ','.join(tags) + '/history'
-        return self._get_model(url, ClanHistory, timeout, **params)
+        return self._get_model(url, ClanHistory, timeout, params=params)
 
     @typecasted
     def get_clan_war(self, tag: crtag, **params: keys):
@@ -356,7 +356,7 @@ class Client:
         except KeyError:
             pass
         url = self.api.CLAN + '/' + tag + '/war'
-        return self._get_model(url, ClanWar, timeout, **params)
+        return self._get_model(url, ClanWar, timeout, params=params)
 
     @typecasted
     def get_clan_war_log(self, tag: crtag, **params: keys):
@@ -366,7 +366,7 @@ class Client:
         except KeyError:
             pass
         url = self.api.CLAN + '/' + tag + '/warlog'
-        return self._get_model(url, ClanWarLog, timeout, **params)
+        return self._get_model(url, ClanWarLog, timeout, params=params)
 
     @typecasted
     def get_constants(self, **params: keys):
@@ -375,7 +375,7 @@ class Client:
             del params['timeout']
         except KeyError:
             pass
-        return self._get_model(self.api.CONSTANTS, Constants, timeout, **params)
+        return self._get_model(self.api.CONSTANTS, Constants, timeout, params=params)
 
     @typecasted
     def get_top_clans(self, country_key='', **params: keys):
@@ -385,7 +385,7 @@ class Client:
         except KeyError:
             pass
         url = self.api.TOP + '/clans/' + country_key
-        return self._get_model(url, ClanInfo, timeout, **params)
+        return self._get_model(url, ClanInfo, timeout, params=params)
 
     @typecasted
     def get_top_players(self, country_key='', **params: keys):
@@ -395,7 +395,7 @@ class Client:
         except KeyError:
             pass
         url = self.api.TOP + '/players/' + country_key
-        return self._get_model(url, PlayerInfo, timeout, **params)
+        return self._get_model(url, PlayerInfo, timeout, params=params)
 
     @typecasted
     def get_popular_clans(self, **params: keys):
@@ -405,7 +405,7 @@ class Client:
         except KeyError:
             pass
         url = self.api.POPULAR + '/clans'
-        return self._get_model(url, Clan, timeout, **params)
+        return self._get_model(url, Clan, timeout, params=params)
 
     @typecasted
     def get_popular_players(self, **params: keys):
@@ -415,7 +415,7 @@ class Client:
         except KeyError:
             pass
         url = self.api.POPULAR + '/players'
-        return self._get_model(url, PlayerInfo, timeout, **params)
+        return self._get_model(url, PlayerInfo, timeout, params=params)
 
     @typecasted
     def get_popular_tournaments(self, **params: keys):
@@ -425,7 +425,7 @@ class Client:
         except KeyError:
             pass
         url = self.api.POPULAR + '/tournaments'
-        return self._get_model(url, Tournament, timeout, **params)
+        return self._get_model(url, Tournament, timeout, params=params)
 
     @typecasted
     def get_popular_decks(self, **params: keys):
@@ -435,7 +435,7 @@ class Client:
         except KeyError:
             pass
         url = self.api.POPULAR + '/decks'
-        return self._get_model(url, Deck, timeout, **params)
+        return self._get_model(url, Deck, timeout, params=params)
 
     @typecasted
     def get_open_tournaments(self, **params: tournamentfilter):
@@ -445,7 +445,7 @@ class Client:
         except KeyError:
             pass
         url = self.api.TOURNAMENT + '/open'
-        return self._get_model(url, Tournament, timeout, **params)
+        return self._get_model(url, Tournament, timeout, params=params)
 
     @typecasted
     def get_known_tournaments(self, **params: tournamentfilter):
@@ -455,7 +455,7 @@ class Client:
         except KeyError:
             pass
         url = self.api.TOURNAMENT + '/known'
-        return self._get_model(url, Tournament, timeout, **params)
+        return self._get_model(url, Tournament, timeout, params=params)
 
     @typecasted
     def get_1k_tournaments(self, **params: tournamentfilter):
@@ -465,7 +465,7 @@ class Client:
         except KeyError:
             pass
         url = self.api.TOURNAMENT + '/1k'
-        return self._get_model(url, Tournament, timeout, **params)
+        return self._get_model(url, Tournament, timeout, params=params)
 
     @typecasted
     def get_prep_tournaments(self, **params: tournamentfilter):
@@ -475,7 +475,7 @@ class Client:
         except KeyError:
             pass
         url = self.api.TOURNAMENT + '/prep'
-        return self._get_model(url, Tournament, timeout, **params)
+        return self._get_model(url, Tournament, timeout, params=params)
 
     @typecasted
     def get_joinable_tournaments(self, **params: tournamentfilter):
@@ -485,7 +485,7 @@ class Client:
         except KeyError:
             pass
         url = self.api.TOURNAMENT + '/joinable'
-        return self._get_model(url, Tournament, timeout, **params)
+        return self._get_model(url, Tournament, timeout, params=params)
 
     @typecasted
     def get_full_tournaments(self, **params: tournamentfilter):
@@ -495,7 +495,7 @@ class Client:
         except KeyError:
             pass
         url = self.api.TOURNAMENT + '/full'
-        return self._get_model(url, Tournament, timeout, **params)
+        return self._get_model(url, Tournament, timeout, params=params)
 
     @typecasted
     def search_tournaments(self, **params: tournamentsearch):
@@ -505,4 +505,4 @@ class Client:
         except KeyError:
             pass
         url = self.api.TOURNAMENT + '/search'
-        return self._get_model(url, ClanInfo, timeout, **params)
+        return self._get_model(url, ClanInfo, timeout, params=params)
