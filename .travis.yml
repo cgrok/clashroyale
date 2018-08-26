@@ -12,7 +12,10 @@ matrix:
     dist: xenial
     sudo: true
 
-install: pip install .
+install:
+  - pip install test/requirements.txt
+  - pip install .
+
 script: pytest test
 notifications:
   email:
