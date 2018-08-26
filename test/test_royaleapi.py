@@ -105,7 +105,7 @@ class TestBlockingClient(unittest.TestCase):
         - Popular players endpoint
         """
         players = self.clashroyale_client.get_popular_players()
-        self.assertTrue(isinstance(players, list))
+        self.assertTrue(isinstance(players, list) or isinstance(players, clashroyale.royaleapi.BaseAttrDict))
 
     # ClAN METHODS #
     def test_get_clan(self):
@@ -209,7 +209,7 @@ class TestBlockingClient(unittest.TestCase):
         - Popular clans endpoint
         """
         clans = self.clashroyale_client.get_popular_clans()
-        self.assertTrue(isinstance(clans, list))
+        self.assertTrue(isinstance(clans, list) or isinstance(clans, clashroyale.royaleapi.BaseAttrDict))
 
     # TOURNAMENT METHODS #
     def test_get_tournament(self):
@@ -247,7 +247,7 @@ class TestBlockingClient(unittest.TestCase):
         - Popular tournaments endpoint
         """
         tournaments = self.clashroyale_client.get_popular_tournaments()
-        self.assertTrue(isinstance(tournaments, list))
+        self.assertTrue(isinstance(tournaments, list) or isinstance(tournaments, clashroyale.royaleapi.BaseAttrDict))
 
     # DECKS METHODS #
     def test_get_popular_decks(self):
@@ -255,7 +255,7 @@ class TestBlockingClient(unittest.TestCase):
         - Popular decks endpoint
         """
         decks = self.clashroyale_client.get_popular_decks()
-        self.assertTrue(isinstance(decks, list))
+        self.assertTrue(isinstance(decks, list) or isinstance(decks, clashroyale.royaleapi.BaseAttrDict))
 
 
 if __name__ == '__main__':
