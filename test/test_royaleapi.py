@@ -1,19 +1,15 @@
 import time
 import unittest
+import os
 
 import clashroyale
 import requests
-import yaml
+from dotenv import load_dotenv
 
-try:
-    with open('config.yaml') as f:
-        data = yaml.load(f)
-except FileNotFoundError:
-    with open('test/config.yaml') as f:
-        data = yaml.load(f)
+load_dotenv()
 
-TOKEN = data.get('royaleapi')
-URL = data.get('url')
+TOKEN = os.getenv('royaleapi')
+URL = os.getenv('url')
 
 
 class TestBlockingClient(unittest.TestCase):
