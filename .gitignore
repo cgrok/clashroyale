@@ -104,3 +104,5 @@ ENV/
 
 .vscode
 test/config.yaml
+
+.pytest_cache/
