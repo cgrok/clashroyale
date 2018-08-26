@@ -4,7 +4,6 @@ language: python
 python:
   - "3.5"
   - "3.6"
-  - "3.7"
 # Enable 3.7 without globally enabling sudo and dist: xenial for other build jobs
 matrix:
   include:
@@ -13,7 +12,7 @@ matrix:
     sudo: true
 
 install:
-  - pip install test/requirements.txt
+  - pip install -r test/requirements.txt
   - pip install .
 
 script: pytest test
