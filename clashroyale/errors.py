@@ -53,6 +53,16 @@ class NotResponding(RequestError):
         super().__init__(self.error)
 
 
+class NetworkError(RequestError):
+    """Raised if there is an issue with the network
+    (i.e. aiohttp.ServerDisconnectedError/requests.ConnectionError)
+    """
+    def __init__(self):
+        self.code = 503
+        self.error = 'Network down.'
+        super().__init__(self.error)
+
+
 class NotFoundError(StatusError):
     """Raised if the player/clan is not found."""
     pass

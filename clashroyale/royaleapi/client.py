@@ -31,7 +31,7 @@ from urllib.parse import urlencode
 import aiohttp
 import requests
 
-from ..errors import (NotFoundError, NotResponding, ServerError, Unauthorized, NotTrackedError,
+from ..errors import (NotFoundError, NotResponding, NetworkError, ServerError, Unauthorized, NotTrackedError,
                       UnexpectedError, RatelimitError, RatelimitErrorDetected)
 from .models import (Clan, ClanInfo, ClanHistory, ClanWar, ClanWarLog, Battle, Cycle, Constants,
                      Player, PlayerInfo, Tournament, Deck, rlist)
@@ -167,7 +167,9 @@ class Client:
             async with self.session.get(url, timeout=self.timeout, headers=self.headers, params=params) as resp:
                 return self._raise_for_status(resp, await resp.text())
         except asyncio.TimeoutError:
-            raise NotResponding()
+            raise NotResponding
+        except aiohttp.ServerDisconnectedError:
+            raise NetworkError
 
     async def _wrap_coro(self, arg):
         return arg
@@ -186,7 +188,9 @@ class Client:
             with self.session.get(url, timeout=timeout, headers=self.headers, params=params) as resp:
                 return self._raise_for_status(resp, resp.text)
         except requests.Timeout:
-            raise NotResponding()
+            raise NotResponding
+        except requests.ConnectionError:
+            raise NetworkError
 
     def _convert_model(self, data, cached, ts, model, resp):
         if isinstance(data, str):
