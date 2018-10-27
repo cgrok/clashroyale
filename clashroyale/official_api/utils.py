@@ -79,7 +79,7 @@ def clansearch(k, v):
 
 def tournamentsearch(k, v):
     valid = (
-        'name'
+        'name',
     )
     valid += BASE
     k = to_camel_case(k)
