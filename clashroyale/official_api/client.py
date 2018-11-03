@@ -396,7 +396,7 @@ class Client:
         badge_id = obj.arena.id
         for i in self.constants.arenas:
             if i.id == badge_id:
-                return 'https://royaleapi.github.io/cr-api-assets/arenas/arena{}.png'.format(i.arena_id)
+                return 'https://royaleapi.github.io/cr-api-assets/arenas/arena{}.png'.format(i.arena)
 
     def get_card_info(self, card_name: str):
         """Returns card info from constants

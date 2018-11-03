@@ -8,7 +8,7 @@ with open('README.rst', encoding='utf8') as f:
 setup(
     name='clashroyale',
     packages=find_packages(),
-    version='v3.5.17',
+    version='v3.5.18',
     description='An (a)sync wrapper for royaleapi.com',
     long_description=long_description,
     long_description_content_type='text/x-rst',
@@ -38,4 +38,4 @@ else:
     if data:
         del data['info']
         with open('clashroyale/constants.json', 'w') as f:
-            json.dump(data, f, indent=4)
+            json.dump(data, f)
