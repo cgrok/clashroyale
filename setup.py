@@ -8,7 +8,7 @@ with open('README.rst', encoding='utf8') as f:
 setup(
     name='clashroyale',
     packages=find_packages(),
-    version='v3.5.19',
+    version='v3.6.0',
     description='An (a)sync wrapper for royaleapi.com',
     long_description=long_description,
     long_description_content_type='text/x-rst',
@@ -34,7 +34,7 @@ setup(
 # Reload Constants #
 try:
     data = json.loads(urllib.request.urlopen('https://fourjr-webserver.herokuapp.com/cr/constants').read())
-except (TypeError, urllib.error.HTTPError):
+except (TypeError, urllib.error.HTTPError, urllib.error.URLError):
     pass
 else:
     if data:

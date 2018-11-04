@@ -48,35 +48,35 @@ class Client:
     ----------
     token: str
         The api authorization token to be used for requests. https://developer.clashroyale.com/
-    is_async: Optional[bool]
-        Toggle for asynchronous/synchronous usage of the client.
-        Defaults to False.
-    error_debug: Optional[bool]
+    is_async: Optional[bool] = False
+        Toggle for asynchronous/synchronous usage of the client
+    error_debug: Optional[bool] = False
         Toggle for every method to raise ServerError to test error
         handling.
-        Defaults to False.
-    session: Optional[Session]
+    session: Optional[Session] = None
         The http (client)session to be used for requests. Can either be a
         requests.Session or aiohttp.ClientSession.
-    timeout: Optional[int]
-        A timeout for requests to the API, defaults to 10 seconds.
-    url: Optional[str]
-        A url to use instead of api.clashroyale.com/v1 (defaults to ``https://api.clashroyale.com/v1``)
+    timeout: Optional[int] = 10
+        A timeout for requests to the API
+    url: Optional[str] = 'https://api.clashroyale.com/v1'
+        A url to use instead of api.clashroyale.com/v1
         Only use this if you know what you are doing.
-    cache_fp: Optional[str]
+    cache_fp: Optional[str] = None
         File path for the sqlite3 database to use for caching requests,
-        if this parameter is provided, the client will use its caching system.
-    cache_expires: Optional[int]
+        if this parameter is provided, the client will use its caching system
+    cache_expires: Optional[int] = 10
         The number of seconds to wait before the client will request
-        from the api for a specific route, this defaults to 10 seconds.
-    table_name: Optional[str]
-        The table name to use for the cache database. Defaults to 'cache'
-    camel_case: Optional[bool]
+        from the api for a specific route
+    table_name: Optional[str] = 'cache'
+        The table name to use for the cache database.
+    camel_case: Optional[bool] = False
         Whether or not to access model data keys in snake_case or camelCase,
-        this defaults to False (use snake_case)
-    constants: Optional[dict]
+        this defaults to use snake_case
+    constants: Optional[dict] = None
         Constants to use instead of the ones updated when the package is re-installed.
         To extract a ``dict`` from a ``BaseAttrDict``, do ``BaseAttrDict.to_dict()``
+    user_agent: Optional[str] = None
+        Appends to the default user-agent
     """
 
     def __init__(self, token, session=None, is_async=False, **options):
@@ -89,7 +89,7 @@ class Client:
         self.camel_case = options.get('camel_case', False)
         self.headers = {
             'Authorization': 'Bearer {}'.format(token),
-            'User-Agent': 'python-clashroyale-client (kyb3r/fourjr)'
+            'User-Agent': 'python-clashroyale-client (fourjr/kyb3r) ' + options.get('user_agent', '')
         }
         self.cache_fp = options.get('cache_fp')
         self.using_cache = bool(self.cache_fp)
@@ -178,7 +178,7 @@ class Client:
     async def _wrap_coro(self, arg):
         return arg
 
-    def request(self, url, timeout, refresh=False, **params):
+    def _request(self, url, timeout, refresh=False, **params):
         if self.using_cache and refresh is False:  # refresh=True forces a request instead of using cache
             cache = self._resolve_cache(url, **params)
             if cache is not None:
@@ -209,7 +209,7 @@ class Client:
 
     async def _aget_model(self, url, timeout, model=None, **params):
         try:
-            data, cached, ts, resp = await self.request(url, timeout, **params)
+            data, cached, ts, resp = await self._request(url, timeout, **params)
         except Exception as e:
             if self.using_cache:
                 cache = self._resolve_cache(url, **params)
@@ -226,7 +226,7 @@ class Client:
             return self._aget_model(url, timeout, model, **params)
         # Otherwise, do everything synchronously.
         try:
-            data, cached, ts, resp = self.request(url, timeout, **params)
+            data, cached, ts, resp = self._request(url, timeout, **params)
         except Exception as e:
             if self.using_cache:
                 cache = self._resolve_cache(url, **params)
@@ -239,31 +239,118 @@ class Client:
 
     @typecasted
     def get_player(self, tag: crtag, timeout=None):
+        """Get information about a player
+
+        Parameters
+        ----------
+        tag: str
+            A valid tournament tag. Minimum length: 3
+            Valid characters: 0289PYLQGRJCUV
+        timeout: Optional[int] = None
+            Custom timeout that overwrites Client.timeout
+        """
         url = self.api.PLAYER + '/' + tag
         return self._get_model(url, Player, timeout)
 
     @typecasted
     def get_player_verify(self, tag: crtag, apikey: str, timeout=None):
+        """Check the API Key of a player.
+        This endpoint has been **restricted** to
+        certain members of the community
+
+        Parameters
+        ----------
+        tag: str
+            A valid tournament tag. Minimum length: 3
+            Valid characters: 0289PYLQGRJCUV
+        apikey: str
+            The API Key in the player's settings
+        timeout: Optional[int] = None
+            Custom timeout that overwrites Client.timeout
+        """
         url = self.api.PLAYER + '/' + tag + '/verifytoken'
         return self._get_model(url, Player, timeout, method='POST', json={'token': apikey})
 
     @typecasted
     def get_player_battles(self, tag: crtag, timeout: int=None):
+        """Get a player's battle log
+
+        Parameters
+        ----------
+        tag: str
+            A valid tournament tag. Minimum length: 3
+            Valid characters: 0289PYLQGRJCUV
+        timeout: Optional[int] = None
+            Custom timeout that overwrites Client.timeout
+        """
         url = self.api.PLAYER + '/' + tag + '/battlelog'
         return self._get_model(url, Battle, timeout)
 
     @typecasted
     def get_player_chests(self, tag: crtag, timeout: int=None):
+        """Get information about a player's chest cycle
+
+        Parameters
+        ----------
+        tag: str
+            A valid tournament tag. Minimum length: 3
+            Valid characters: 0289PYLQGRJCUV
+        timeout: Optional[int] = None
+            Custom timeout that overwrites Client.timeout
+        """
         url = self.api.PLAYER + '/' + tag + '/upcomingchests'
         return self._get_model(url, Cycle, timeout)
 
     @typecasted
     def get_clan(self, tag: crtag, timeout: int=None):
+        """Get inforamtion about a clan
+
+        Parameters
+        ----------
+        tag: str
+            A valid tournament tag. Minimum length: 3
+            Valid characters: 0289PYLQGRJCUV
+        timeout: Optional[int] = None
+            Custom timeout that overwrites Client.timeout
+        """
         url = self.api.CLAN + '/' + tag
         return self._get_model(url, Clan, timeout)
 
     @typecasted  # Validate clan search parameters.
     def search_clans(self, **params: clansearch):
+        """Search for a clan. At least one
+        of the filters must be present
+
+        Parameters
+        ----------
+        name: Optional[str]
+            The name of a clan
+        locationId: Optional[int]
+            A location ID
+        minMembers: Optional[int]
+            The minimum member count
+            of a clan
+        maxMembers: Optional[int]
+            The maximum member count
+            of a clan
+        minScore: Optional[int]
+            The minimum trophy score of
+            a clan
+        **limit: Optional[int] = None
+            Limit the number of items returned in the response
+        **after: Optional[int] = None
+            Return only items that occur after this marker.
+            After marker can be found from the response,
+            inside the 'paging' property. Note that only after
+            or before can be specified for a request, not both
+        **before: Optional[int] = None
+            Return only items that occur before this marker.
+            Before marker can be found from the response,
+            inside the 'paging' property. Note that only after
+            or before can be specified for a request, not both
+        **timeout: Optional[int] = None
+            Custom timeout that overwrites Client.timeout
+        """
         timeout = params.get('timeout')
         try:
             del params['timeout']
@@ -274,11 +361,43 @@ class Client:
 
     @typecasted
     def get_clan_war(self, tag: crtag, timeout: int=None):
+        """Get inforamtion about a clan's current clan war
+
+        Parameters
+        ----------
+        tag: str
+            A valid tournament tag. Minimum length: 3
+            Valid characters: 0289PYLQGRJCUV
+        timeout: Optional[int] = None
+            Custom timeout that overwrites Client.timeout
+        """
         url = self.api.CLAN + '/' + tag + '/currentwar'
         return self._get_model(url, ClanWar, timeout)
 
     @typecasted
     def get_clan_members(self, tag: crtag, **params: keys):
+        """Get the clan's members
+
+        Parameters
+        ----------
+        tag: str
+            A valid tournament tag. Minimum length: 3
+            Valid characters: 0289PYLQGRJCUV
+        **limit: Optional[int] = None
+            Limit the number of items returned in the response
+        **after: Optional[int] = None
+            Return only items that occur after this marker.
+            After marker can be found from the response,
+            inside the 'paging' property. Note that only after
+            or before can be specified for a request, not both
+        **before: Optional[int] = None
+            Return only items that occur before this marker.
+            Before marker can be found from the response,
+            inside the 'paging' property. Note that only after
+            or before can be specified for a request, not both
+        **timeout: Optional[int] = None
+            Custom timeout that overwrites Client.timeout
+        """
         timeout = params.get('timeout')
         try:
             del params['timeout']
@@ -289,6 +408,28 @@ class Client:
 
     @typecasted
     def get_clan_war_log(self, tag: crtag, **params: keys):
+        """Get a clan's war log
+
+        Parameters
+        ----------
+        tag: str
+            A valid tournament tag. Minimum length: 3
+            Valid characters: 0289PYLQGRJCUV
+        **limit: Optional[int] = None
+            Limit the number of items returned in the response
+        **after: Optional[int] = None
+            Return only items that occur after this marker.
+            After marker can be found from the response,
+            inside the 'paging' property. Note that only after
+            or before can be specified for a request, not both
+        **before: Optional[int] = None
+            Return only items that occur before this marker.
+            Before marker can be found from the response,
+            inside the 'paging' property. Note that only after
+            or before can be specified for a request, not both
+        **timeout: Optional[int] = None
+            Custom timeout that overwrites Client.timeout
+        """
         timeout = params.get('timeout')
         try:
             del params['timeout']
@@ -299,11 +440,42 @@ class Client:
 
     @typecasted
     def get_tournament(self, tag: crtag, timeout=0):
+        """Get a tournament information
+
+        Parameters
+        ----------
+        tag: str
+            A valid tournament tag. Minimum length: 3
+            Valid characters: 0289PYLQGRJCUV
+        **timeout: Optional[int] = None
+            Custom timeout that overwrites Client.timeout
+        """
         url = self.api.TOURNAMENT + '/' + tag
         return self._get_model(url, Tournament, timeout)
 
     @typecasted
     def search_tournaments(self, **params: tournamentsearch):
+        """Search for a tournament by its name
+
+        Parameters
+        ----------
+        name: str
+            The name of a tournament
+        **limit: Optional[int] = None
+            Limit the number of items returned in the response
+        **after: Optional[int] = None
+            Return only items that occur after this marker.
+            After marker can be found from the response,
+            inside the 'paging' property. Note that only after
+            or before can be specified for a request, not both
+        **before: Optional[int] = None
+            Return only items that occur before this marker.
+            Before marker can be found from the response,
+            inside the 'paging' property. Note that only after
+            or before can be specified for a request, not both
+        **timeout: Optional[int] = None
+            Custom timeout that overwrites Client.timeout
+        """
         timeout = params.get('timeout')
         try:
             del params['timeout']
@@ -313,19 +485,67 @@ class Client:
 
     @typecasted
     def get_cards(self, timeout: int=None):
+        """Get a list of all the cards in the game
+
+        Parameters
+        ----------
+        timeout: Optional[int] = None
+            Custom timeout that overwrites Client.timeout
+        """
         return self._get_model(self.api.CARDS, Cards, timeout)
 
     @typecasted
     def get_location(self, location_id, timeout: int=None):
+        """Get a location information
+
+        Parameters
+        ----------
+        location_id: str = 'global'
+            A location ID or global
+            See https://github.com/RoyaleAPI/cr-api-data/blob/master/json/regions.json
+            for a list of acceptable location IDs
+        timeout: Optional[int] = None
+            Custom timeout that overwrites Client.timeout
+        """
         url = self.api.LOCATIONS + '/' + str(location_id)
         return self._get_model(url, Location, timeout)
 
     @typecasted
     def get_all_locations(self, timeout: int=None):
+        """Get a list of all locations
+
+        Parameters
+        ----------
+        timeout: Optional[int] = None
+            Custom timeout that overwrites Client.timeout
+        """
         return self._get_model(self.API.LOCATIONS, Location, timeout)
 
     @typecasted
     def get_top_clans(self, location_id='global', **params: keys):
+        """Get a list of top clans by trophy
+
+        Parameters
+        ----------
+        location_id: Optional[str] = 'global'
+            A location ID or global
+            See https://github.com/RoyaleAPI/cr-api-data/blob/master/json/regions.json
+            for a list of acceptable location IDs
+        **limit: Optional[int] = None
+            Limit the number of items returned in the response
+        **after: Optional[int] = None
+            Return only items that occur after this marker.
+            After marker can be found from the response,
+            inside the 'paging' property. Note that only after
+            or before can be specified for a request, not both
+        **before: Optional[int] = None
+            Return only items that occur before this marker.
+            Before marker can be found from the response,
+            inside the 'paging' property. Note that only after
+            or before can be specified for a request, not both
+        **timeout: Optional[int] = None
+            Custom timeout that overwrites Client.timeout
+        """
         timeout = params.get('timeout')
         try:
             del params['timeout']
@@ -336,6 +556,29 @@ class Client:
 
     @typecasted
     def get_top_clanwar_clans(self, location_id='global', **params: keys):
+        """Get a list of top clan war clans
+
+        Parameters
+        ----------
+        location_id: Optional[str] = 'global'
+            A location ID or global
+            See https://github.com/RoyaleAPI/cr-api-data/blob/master/json/regions.json
+            for a list of acceptable location IDs
+        **limit: Optional[int] = None
+            Limit the number of items returned in the response
+        **after: Optional[int] = None
+            Return only items that occur after this marker.
+            After marker can be found from the response,
+            inside the 'paging' property. Note that only after
+            or before can be specified for a request, not both
+        **before: Optional[int] = None
+            Return only items that occur before this marker.
+            Before marker can be found from the response,
+            inside the 'paging' property. Note that only after
+            or before can be specified for a request, not both
+        **timeout: Optional[int] = None
+            Custom timeout that overwrites Client.timeout
+        """
         timeout = params.get('timeout')
         try:
             del params['timeout']
@@ -346,6 +589,29 @@ class Client:
 
     @typecasted
     def get_top_players(self, location_id='global', **params: keys):
+        """Get a list of top players
+
+        Parameters
+        ----------
+        location_id: Optional[str] = 'global'
+            A location ID or global
+            See https://github.com/RoyaleAPI/cr-api-data/blob/master/json/regions.json
+            for a list of acceptable location IDs
+        **limit: Optional[int] = None
+            Limit the number of items returned in the response
+        **after: Optional[int] = None
+            Return only items that occur after this marker.
+            After marker can be found from the response,
+            inside the 'paging' property. Note that only after
+            or before can be specified for a request, not both
+        **before: Optional[int] = None
+            Return only items that occur before this marker.
+            Before marker can be found from the response,
+            inside the 'paging' property. Note that only after
+            or before can be specified for a request, not both
+        **timeout: Optional[int] = None
+            Custom timeout that overwrites Client.timeout
+        """
         timeout = params.get('timeout')
         try:
             del params['timeout']
@@ -453,9 +719,8 @@ class Client:
         timestamp: str
             A timstamp in the %Y%m%dT%H%M%S.%fZ format, usually returned by the API
             in the ``created_time`` field for example (eg. 20180718T145906.000Z)
-        unix: Optional[bool]
+        unix: Optional[bool] = True
             Whether to return a POSIX timestamp (seconds since epoch) or not
-            (default: True)
 
         Returns int or datetime.datetime
         """
@@ -464,229 +729,3 @@ class Client:
             return time.timestamp()
         else:
             return time
-
-    def convert_from_royaleapi(self, obj: dict, mode, reverse=False):
-        """Converts a RoyaleAPI response to an offical API Response
-
-        Parameters
-        ---------
-        obj: dict
-            A dictionary with the data that RoyaleAPI returns. If it is a BaseAttrDict,
-            use ``obj.raw_data`` before passing it in.
-        mode: BaseAttrDict
-            A class in models.py:
-            ``Player``
-        reverse: Optional[bool]
-            Does a reverse conversion.
-            Default: False
-
-        Returns an instance of a ``BaseAttrDict``
-        """
-        if mode == Player:
-            if not reverse:
-                official = {
-                    'tag': '#' + obj['tag'],
-                    'name': obj['name'],
-                    'trophies': obj['trophies'],
-                    'expLevel': obj['level'],
-                    'bestTrophies': obj['stats']['maxTrophies'],
-                    'wins': obj['games']['wins'],
-                    'losses': obj['games']['losses'],
-                    'battleCount': obj['games']['total'],
-                    'threeCrownWins': obj['stats']['threeCrownWins'],
-                    'challengeCardsWon': obj['stats']['challengeCardsWon'],
-                    'challengeMaxWins': obj['stats']['challengeMaxWins'],
-                    'tournamentCardsWon': obj['stats']['tournamentCardsWon'],
-                    'tournamentBattleCount': obj['games']['tournamentGames'],
-                    'role': obj['clan']['role'],
-                    'donations': obj['clan']['donations'],
-                    'donationsReceived': obj['clan']['donationsReceived'],
-                    'totalDonations': obj['stats']['totalDonations'],
-                    'warDayWins': obj['games']['warDayWins'],
-                    'clanCardsCollected': obj['stats']['clanCardsCollected'],
-                    'clan': {
-                        'tag': '#' + obj['clan']['tag'],
-                        'name': obj['clan']['name'],
-                        'badgeId': obj['clan']['badge']['id']
-                    },
-                    'arena': {
-                        'id': None,
-                        'name': obj['arena']['arena']
-                    },
-                    'currentFavouriteCard': {
-                        'name': obj['stats']['favoriteCard']['name'],
-                        'id': obj['stats']['favoriteCard']['id'],
-                        'maxLevel': obj['stats']['favoriteCard']['maxLevel'],
-                        'iconUrls': {
-                            'medium': obj['stats']['favoriteCard']['icon']
-                        }
-                    },
-                    'cards': [],
-                    'currentDeck': []
-                }
-
-                for c in obj['cards']:
-                    official['cards'].append({
-                        'name': c['name'],
-                        'level': c['level'],
-                        'maxLevel': c['maxLevel'],
-                        'count': c['count'],
-                        'iconUrls': {
-                            'medium': c['icon'],
-                        }
-                    })
-
-                for c in obj['currentDeck']:
-                    official['currentDeck'].append({
-                        'name': c['name'],
-                        'level': c['level'],
-                        'maxLevel': c['maxLevel'],
-                        'count': c['count'],
-                        'iconUrls': {
-                            'medium': c['icon'],
-                        }
-                    })
-
-                try:
-                    official['leagueStatistics'] = obj['leagueStatistics']
-                except KeyError:
-                    pass
-                official['achievements'] = obj['achievements']
-
-                return Player(self, official, None)
-            else:
-                for i in self.constants.arenas:
-                    if i.id == obj['arena']['id']:
-                        arena_name = i.subtitle
-                        arena_id = i.arena,
-                        arena_limit = i.trophy_limit
-
-                try:
-                    wins_percent = obj['wins'] / obj['battleCount'] * 100
-                    losses_percent = obj['losses'] / obj['battleCount'] * 100
-                    draws_percent = (obj['battleCount'] - obj['wins'] - obj['losses']) / obj['battleCount'] * 100
-                except ZeroDivisionError:
-                    wins_percent = losses_percent = draws_percent = 0
-
-                royaleapi = {
-                    'tag': obj['tag'].replace('#', ''),
-                    'name': obj['name'],
-                    'trophies': obj['trophies'],
-                    'rank': None,
-                    'arena': {
-                        'name': arena_name,
-                        'arena': obj['arena']['name'],
-                        'arenaID': arena_id,
-                        'trophyLimit': arena_limit,
-                    },
-                    'stats': {
-                        'clanCardsCollected': obj['clanCardsCollected'],
-                        'tournamentCardsWon': obj['tournamentCardsWon'],
-                        'maxTrophies': obj['bestTrophies'],
-                        'threeCrownWins': obj['threeCrownWins'],
-                        'cardsFound': len(obj['cards']),
-                        'favoriteCard': {}
-                    },
-                    'totalDonations': obj['totalDonations'],
-                    'challengeMaxWins': obj['challengeMaxWins'],
-                    'challengeCardsWon': obj['challengeCardsWon'],
-                    'level': obj['expLevel'],
-                    'games': {
-                        'total': obj['battleCount'],
-                        'tournamentGames': obj['tournamentBattleCount'],
-                        'wins': obj['wins'],
-                        'warDayWins': obj['warDayWins'],
-                        'winsPercent': wins_percent,
-                        'losses': obj['losses'],
-                        'lossesPercent': losses_percent,
-                        'draws': obj['battleCount'] - obj['wins'] - obj['losses'],
-                        'drawsPercent': draws_percent
-                    },
-                    'currentDeck': [],
-                    'cards': []
-                }
-                try:
-                    royaleapi['leagueStatistics'] = obj['leagueStatistics']
-                except KeyError:
-                    pass
-                royaleapi['achievements'] = obj['achievements']
-
-                for c in obj['cards']:
-                    info = self.get_card_info(c['name'])
-                    royaleapi['cards'].append({
-                        'name': c['name'],
-                        'level': c['level'],
-                        'maxLevel': c['maxLevel'],
-                        'count': c['count'],
-                        'rarity': info.rarity,
-                        'requiredForUpgrade': self.get_rarity_info(info.rarity).upgrade_material_count[c['level'] - 1],
-                        'leftToUpgrade': self.get_rarity_info(info.rarity).upgrade_material_count[c['level'] - 1] - c['count'],
-                        'icon': c['iconUrls']['medium'],
-                        'key': c['name'].lower().replace(' ', '-'),
-                        'elixir': info.elixir,
-                        'type': info.type,
-                        'arena': info.arena,
-                        'description': info.description,
-                        'id': info.id
-                    })
-                for c in obj['currentDeck']:
-                    info = self.get_card_info(c['name'])
-                    royaleapi['currentDeck'].append({
-                        'name': c['name'],
-                        'level': c['level'],
-                        'maxLevel': c['maxLevel'],
-                        'count': c['count'],
-                        'rarity': info.rarity,
-                        'requiredForUpgrade': self.get_rarity_info(info.rarity).upgrade_material_count[c['level'] - 1],
-                        'leftToUpgrade': self.get_rarity_info(info.rarity).upgrade_material_count[c['level'] - 1] - c['count'],
-                        'icon': c['iconUrls']['medium'],
-                        'key': c['name'].lower().replace(' ', '-'),
-                        'elixir': info.elixir,
-                        'type': info.type,
-                        'arena': info.arena,
-                        'description': info.description,
-                        'id': info.id
-                    })
-
-                try:
-                    info = self.get_card_info(obj['currentFavouriteCard']['name'])
-                    royaleapi['stats']['favoriteCard'] = {
-                        "name": obj['currentFavouriteCard']['name'],
-                        "id": obj['currentFavouriteCard']['id'],
-                        "maxLevel": obj['currentFavouriteCard']['maxLevel'],
-                        "icon": obj['currentFavouriteCard']['iconUrls']['medium'],
-                        "key": obj['currentFavouriteCard']['name'].lower().replace(' ', '-'),
-                        'elixir': info.elixir,
-                        'type': info.type,
-                        'arena': info.arena,
-                        'description': info.description
-                    }
-                except KeyError:
-                    royaleapi['stats']['favoriteCard'] = None
-
-                try:
-                    for i in self.constants.alliance_badges:
-                        if i.id == obj['clan']['badgeId']:
-                            badge_name = i.name
-                            badge_category = i.category
-                            badge_image = 'https://royaleapi.github.io/cr-api-assets/badges/' + i.name + '.png'
-                    royaleapi['clan'] = {
-                        'tag': obj['clan']['tag'].replace('#', ''),
-                        'name': obj['clan']['name'],
-                        'role': obj.get('role'),
-                        'donations': obj['donations'],
-                        'donationsReceived': obj['donationsReceived'],
-                        'donationsDelta': obj['donations'] - obj['donationsReceived'],
-                        'badge': {
-                            'name': badge_name,
-                            'category': badge_category,
-                            'id': obj['clan']['badgeId'],
-                            'image': badge_image
-                        },
-                    }
-                except KeyError:
-                    royaleapi['clan'] = None
-
-                return Player(self, royaleapi, None)
-        else:
-            raise NotImplementedError('Mode either invalid or not implemented yet.')

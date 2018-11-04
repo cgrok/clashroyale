@@ -60,12 +60,18 @@ def typecasted(func):
     return wrapper
 
 
+BASE = (
+    'keys', 'exclude', 'max',
+    'timeout', 'page'
+)
+
+
 def clansearch(k, v):
     valid = (
-        'name', 'score', 'minMembers',
-        'maxMembers', 'keys', 'exclude',
-        'max', 'timeout'
+        'name', 'score',
+        'minMembers', 'maxMembers'
     )
+    valid += BASE
     k = _to_camel_case(k)
     if k not in valid:
         raise ValueError('Invalid search parameter passed: {}'.format(k))
@@ -74,9 +80,9 @@ def clansearch(k, v):
 
 def tournamentsearch(k, v):
     valid = (
-        'name', 'keys', 'exclude',
-        'max', 'timeout'
+        'name',
     )
+    valid += BASE
     k = _to_camel_case(k)
     if k not in valid:
         raise ValueError('Invalid search parameter passed: {}'.format(k))
@@ -84,17 +90,19 @@ def tournamentsearch(k, v):
 
 
 def keys(k, v):
-    if k not in (
-        'keys', 'exclude', 'max',
-        'page', 'type', 'timeout'
-    ):
+    k = _to_camel_case(k)
+    if k not in BASE:
         raise ValueError('Invalid url parameter passed: {}'.format(k))
     return k, ','.join(v) if isinstance(v, (list, tuple)) else v
 
 
 def tournamentfilter(k, v):
-    if k not in ('keys', 'exclude', 'max', 'page', 'type',
-                 '1k', 'open', 'full', 'prep', 'joinable'):
+    valid = (
+        '1k', 'open', 'full', 'inprep', 'joinable'
+    )
+    valid += BASE
+    k = _to_camel_case(k)
+    if k not in valid:
         raise ValueError('Invalid url parameter passed: {}'.format(k))
     return k, ','.join(v) if isinstance(v, (list, tuple)) else v
 
@@ -106,8 +114,10 @@ def crtag(tag):
     for c in tag:
         if c not in allowed:
             bad.append(c)
-    if bad or len(tag) < 3:
-        raise ValueError("Invalid tag characters passed: {}".format(', '.join(bad)))
+    if bad:
+        raise ValueError('Invalid tag characters passed: {}'.format(', '.join(bad)))
+    if len(tag[3:]) < 3:
+        raise ValueError('Tag ({}) too short, length {}, expected 3'.format(tag[3:], len(tag[3:])))
     return tag
 
 

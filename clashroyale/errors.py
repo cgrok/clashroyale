@@ -55,7 +55,7 @@ class NotResponding(RequestError):
 
 class NetworkError(RequestError):
     """Raised if there is an issue with the network
-    (i.e. aiohttp.ServerDisconnectedError/requests.ConnectionError)
+    (i.e. aiohttp.ServerDisconnectedError or requests.ConnectionError)
     """
     def __init__(self):
         self.code = 503

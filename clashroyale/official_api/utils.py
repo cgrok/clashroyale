@@ -68,9 +68,10 @@ BASE = (
 
 def clansearch(k, v):
     valid = (
-        'name', 'keys', 'exclude',
-        'max', 'timeout'
+        'name', 'locationId', 'minMembers',
+        'maxMembers', 'minScore'
     )
+    valid += BASE
     k = to_camel_case(k)
     if k not in valid:
         raise ValueError('Invalid search parameter passed: {}'.format(k))

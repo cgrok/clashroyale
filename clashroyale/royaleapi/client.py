@@ -47,33 +47,34 @@ class Client:
     Parameters
     ----------
     token: str
-        The api authorization token to be used for requests.
-    is_async: Optional[bool]
-        Toggle for asynchronous/synchronous usage of the client.
-        Defaults to False.
-    error_debug: Optional[bool]
+        The api authorization token to be used for requests
+        https://docs.royaleapi.com/#/authentication
+    is_async: Optional[bool] = False
+        Toggle for asynchronous/synchronous usage of the client
+    error_debug: Optional[bool] = False
         Toggle for every method to raise ServerError to test error
-        handling.
-        Defaults to False.
-    session: Optional[Session]
+        handling
+    session: Optional[Session] = None
         The http (client)session to be used for requests. Can either be a
-        requests.Session or aiohttp.ClientSession.
-    timeout: Optional[int]
-        A timeout for requests to the API, defaults to 10 seconds.
-    url: Optional[str]
-        A url to use instead of api.royaleapi.com (defaults to ``https://api.royaleapi.com``)
-        Only use this if you know what you are doing.
+        requests.Session or aiohttp.ClientSession
+    timeout: Optional[int] = 10
+        A timeout for requests to the API
+    url: Optional[str] = https://api.royaleapi.com
+        A url to use instead of api.royaleapi.com
+        Only use this if you know what you are doing
     cache_fp: Optional[str]
         File path for the sqlite3 database to use for caching requests,
-        if this parameter is provided, the client will use its caching system.
-    cache_expires: Optional[int]
+        if this parameter is provided, the client will use its caching system
+    cache_expires: Optional[int] = 10
         The number of seconds to wait before the client will request
-        from the api for a specific route, this defaults to 10 seconds.
-    table_name: Optional[str]
-        The table name to use for the cache database. Defaults to 'cache'
-    camel_case: Optional(bool)
+        from the api for a specific route
+    table_name: Optional[str] = 'cache'
+        The table name to use for the cache database
+    camel_case: Optional[bool] = False
         Whether or not to access model data keys in snake_case or camelCase,
-        this defaults to False (use snake_case)
+        this defaults use snake_case
+    user_agent: Optional[str] = None
+        Appends to the default user-agent
     """
 
     def __init__(self, token, session=None, is_async=False, **options):
@@ -86,7 +87,7 @@ class Client:
         self.camel_case = options.get('camel_case', False)
         self.headers = {
             'Authorization': 'Bearer {}'.format(token),
-            'User-Agent': 'python-clashroyale-client (kyb3r)'
+            'User-Agent': 'python-clashroyale-client (fourjr/kyb3r) ' + options.get('user_agent', '')
         }
         self.cache_fp = options.get('cache_fp')
         self.using_cache = bool(self.cache_fp)
@@ -174,7 +175,7 @@ class Client:
     async def _wrap_coro(self, arg):
         return arg
 
-    def request(self, url, timeout, refresh=False, *, params={}):
+    def _request(self, url, timeout, refresh=False, *, params={}):
         if self.using_cache and refresh is False:  # refresh=True forces a request instead of using cache
             cache = self._resolve_cache(url, **params)
             if cache is not None:
@@ -204,7 +205,7 @@ class Client:
 
     async def _aget_model(self, url, timeout, model=None, *, params={}):
         try:
-            data, cached, ts, resp = await self.request(url, timeout, params=params)
+            data, cached, ts, resp = await self._request(url, timeout, params=params)
         except Exception as e:
             if self.using_cache:
                 cache = self._resolve_cache(url, **params)
@@ -221,7 +222,7 @@ class Client:
             return self._aget_model(url, timeout, model, params=params)
         # Otherwise, do everything synchronously.
         try:
-            data, cached, ts, resp = self.request(url, timeout, params=params)
+            data, cached, ts, resp = self._request(url, timeout, params=params)
         except Exception as e:
             if self.using_cache:
                 cache = self._resolve_cache(url, params=params)
@@ -233,23 +234,53 @@ class Client:
         return self._convert_model(data, cached, ts, model, resp)
 
     def get_version(self):
+        """Gets the version of RoyaleAPI. Returns a string"""
         return self._get_model(self.api.VERSION)
 
     def get_endpoints(self):
+        """Gets a list of endpoints available in RoyaleAPI"""
         return self._get_model(self.api.ENDPOINTS)
 
-    @typecasted  # Convert to a proper tag
-    def get_tournament(self, tag: crtag, **params: keys):
+    @typecasted
+    def get_constants(self, **params: keys):
+        """Get the CR Constants
+
+        Parameters
+        ----------
+        **keys: Optional[list] = None
+            Filter which keys should be included in the
+            response
+        **exclude: Optional[list] = None
+            Filter which keys should be excluded from the
+            response
+        **timeout: Optional[int] = None
+            Custom timeout that overwrites Client.timeout
+        """
         timeout = params.get('timeout')
         try:
             del params['timeout']
         except KeyError:
             pass
-        url = self.api.TOURNAMENT + '/' + tag
-        return self._get_model(url, Tournament, timeout, params=params)
+        return self._get_model(self.api.CONSTANTS, Constants, timeout, params=params)
 
     @typecasted
     def get_player(self, *tags: crtag, **params: keys):
+        """Get a player information
+
+        Parameters
+        ----------
+        *tags: str
+            Valid player tags. Minimum length: 3
+            Valid characters: 0289PYLQGRJCUV
+        **keys: Optional[list] = None
+            Filter which keys should be included in the
+            response
+        **exclude: Optional[list] = None
+            Filter which keys should be excluded from the
+            response
+        **timeout: Optional[int] = None
+            Custom timeout that overwrites Client.timeout
+        """
         timeout = params.get('timeout')
         try:
             del params['timeout']
@@ -258,10 +289,28 @@ class Client:
         url = self.api.PLAYER + '/' + ','.join(tags)
         return self._get_model(url, Player, timeout, params=params)
 
-    get_players = get_player
-
     @typecasted
     def get_player_verify(self, tag: crtag, apikey: str, **params: keys):
+        """Check the API Key of a player.
+        This endpoint has been **restricted** to
+        certain members of the community
+
+        Parameters
+        ----------
+        tag: str
+            A valid tournament tag. Minimum length: 3
+            Valid characters: 0289PYLQGRJCUV
+        apikey: str
+            The API Key in the player's settings
+        **keys: Optional[list] = None
+            Filter which keys should be included in the
+            response
+        **exclude: Optional[list] = None
+            Filter which keys should be excluded from the
+            response
+        timeout: Optional[int] = None
+            Custom timeout that overwrites Client.timeout
+        """
         timeout = params.get('timeout')
         try:
             del params['timeout']
@@ -273,6 +322,27 @@ class Client:
 
     @typecasted
     def get_player_battles(self, *tags: crtag, **params: keys):
+        """Get a player's battle log
+
+        Parameters
+        ----------
+        *tags: str
+            Valid player tags. Minimum length: 3
+            Valid characters: 0289PYLQGRJCUV
+        **keys: Optional[list] = None
+            Filter which keys should be included in the
+            response
+        **exclude: Optional[list] = None
+            Filter which keys should be excluded from the
+            response
+        **max: Optional[int] = None
+            Limit the number of items returned in the response
+        **page: Optional[int] = None
+            Works with max, the zero-based page of the
+            items
+        **timeout: Optional[int] = None
+            Custom timeout that overwrites Client.timeout
+        """
         timeout = params.get('timeout')
         try:
             del params['timeout']
@@ -283,6 +353,22 @@ class Client:
 
     @typecasted
     def get_player_chests(self, *tags: crtag, **params: keys):
+        """Get information about a player's chest cycle
+
+        Parameters
+        ----------
+        *tags: str
+            Valid player tags. Minimum length: 3
+            Valid characters: 0289PYLQGRJCUV
+        **keys: Optional[list] = None
+            Filter which keys should be included in the
+            response
+        **exclude: Optional[list] = None
+            Filter which keys should be excluded from the
+            response
+        **timeout: Optional[int] = None
+            Custom timeout that overwrites Client.timeout
+        """
         timeout = params.get('timeout')
         try:
             del params['timeout']
@@ -293,6 +379,22 @@ class Client:
 
     @typecasted
     def get_clan(self, *tags: crtag, **params: keys):
+        """Get a clan information
+
+        Parameters
+        ----------
+        *tags: str
+            Valid clan tags. Minimum length: 3
+            Valid characters: 0289PYLQGRJCUV
+        **keys: Optional[list] = None
+            Filter which keys should be included in the
+            response
+        **exclude: Optional[list] = None
+            Filter which keys should be excluded from the
+            response
+        **timeout: Optional[int] = None
+            Custom timeout that overwrites Client.timeout
+        """
         timeout = params.get('timeout')
         try:
             del params['timeout']
@@ -301,10 +403,38 @@ class Client:
         url = self.api.CLAN + '/' + ','.join(tags)
         return self._get_model(url, Clan, timeout, params=params)
 
-    get_clans = get_clan
-
     @typecasted  # Validate clan search parameters.
     def search_clans(self, **params: clansearch):
+        """Search for a clan. At least one
+        of the filters must be present
+
+        Parameters
+        ----------
+        name: Optional[str]
+            The name of a clan
+        minMembers: Optional[int]
+            The minimum member count
+            of a clan
+        maxMembers: Optional[int]
+            The maximum member count
+            of a clan
+        score: Optional[int]
+            The minimum trophy score of
+            a clan
+        **keys: Optional[list] = None
+            Filter which keys should be included in the
+            response
+        **exclude: Optional[list] = None
+            Filter which keys should be excluded from the
+            response
+        **max: Optional[int] = None
+            Limit the number of items returned in the response
+        **page: Optional[int] = None
+            Works with max, the zero-based page of the
+            items
+        **timeout: Optional[int] = None
+            Custom timeout that overwrites Client.timeout
+        """
         timeout = params.get('timeout')
         try:
             del params['timeout']
@@ -313,7 +443,27 @@ class Client:
         url = self.api.CLAN + '/search'
         return self._get_model(url, ClanInfo, timeout, params=params)
 
-    def get_tracking_clans(self, **params: clansearch):
+    def get_tracking_clans(self, **params: keys):
+        """Get a list of clans that are being
+        tracked by having either cr-api.com or
+        royaleapi.com in the description
+
+        Parameters
+        ----------
+        **keys: Optional[list] = None
+            Filter which keys should be included in the
+            response
+        **exclude: Optional[list] = None
+            Filter which keys should be excluded from the
+            response
+        **max: Optional[int] = None
+            Limit the number of items returned in the response
+        **page: Optional[int] = None
+            Works with max, the zero-based page of the
+            items
+        **timeout: Optional[int] = None
+            Custom timeout that overwrites Client.timeout
+        """
         timeout = params.get('timeout')
         try:
             del params['timeout']
@@ -324,6 +474,24 @@ class Client:
 
     @typecasted
     def get_clan_tracking(self, *tags: crtag, **params: keys):
+        """Returns if the clan is currently being tracked
+        by the API by having either cr-api.com or royaleapi.com
+        in the clan description
+
+        Parameters
+        ----------
+        *tags: str
+            Valid clan tags. Minimum length: 3
+            Valid characters: 0289PYLQGRJCUV
+        **keys: Optional[list] = None
+            Filter which keys should be included in the
+            response
+        **exclude: Optional[list] = None
+            Filter which keys should be excluded from the
+            response
+        **timeout: Optional[int] = None
+            Custom timeout that overwrites Client.timeout
+        """
         timeout = params.get('timeout')
         try:
             del params['timeout']
@@ -334,6 +502,27 @@ class Client:
 
     @typecasted
     def get_clan_battles(self, *tags: crtag, **params: keys):
+        """Get the battle log from everyone in the clan
+
+        Parameters
+        ----------
+        *tags: str
+            Valid player tags. Minimum length: 3
+            Valid characters: 0289PYLQGRJCUV
+        **keys: Optional[list] = None
+            Filter which keys should be included in the
+            response
+        **exclude: Optional[list] = None
+            Filter which keys should be excluded from the
+            response
+        **max: Optional[int] = None
+            Limit the number of items returned in the response
+        **page: Optional[int] = None
+            Works with max, the zero-based page of the
+            items
+        **timeout: Optional[int] = None
+            Custom timeout that overwrites Client.timeout
+        """
         timeout = params.get('timeout')
         try:
             del params['timeout']
@@ -344,6 +533,29 @@ class Client:
 
     @typecasted
     def get_clan_history(self, *tags: crtag, **params: keys):
+        """Get the clan history. Only works if the clan is being tracked
+        by having either cr-api.com or royaleapi.com in the clan's
+        description
+
+        Parameters
+        ----------
+        *tags: str
+            Valid clan tags. Minimum length: 3
+            Valid characters: 0289PYLQGRJCUV
+        **keys: Optional[list] = None
+            Filter which keys should be included in the
+            response
+        **exclude: Optional[list] = None
+            Filter which keys should be excluded from the
+            response
+        **max: Optional[int] = None
+            Limit the number of items returned in the response
+        **page: Optional[int] = None
+            Works with max, the zero-based page of the
+            items
+        **timeout: Optional[int] = None
+            Custom timeout that overwrites Client.timeout
+        """
         timeout = params.get('timeout')
         try:
             del params['timeout']
@@ -354,6 +566,22 @@ class Client:
 
     @typecasted
     def get_clan_war(self, tag: crtag, **params: keys):
+        """Get inforamtion about a clan's current clan war
+
+        Parameters
+        ----------
+        *tag: str
+            A valid clan tag. Minimum length: 3
+            Valid characters: 0289PYLQGRJCUV
+        **keys: Optional[list] = None
+            Filter which keys should be included in the
+            response
+        **exclude: Optional[list] = None
+            Filter which keys should be excluded from the
+            response
+        **timeout: Optional[int] = None
+            Custom timeout that overwrites Client.timeout
+        """
         timeout = params.get('timeout')
         try:
             del params['timeout']
@@ -364,6 +592,27 @@ class Client:
 
     @typecasted
     def get_clan_war_log(self, tag: crtag, **params: keys):
+        """Get a clan's war log
+
+        Parameters
+        ----------
+        *tags: str
+            Valid clan tags. Minimum length: 3
+            Valid characters: 0289PYLQGRJCUV
+        **keys: Optional[list] = None
+            Filter which keys should be included in the
+            response
+        **exclude: Optional[list] = None
+            Filter which keys should be excluded from the
+            response
+        **max: Optional[int] = None
+            Limit the number of items returned in the response
+        **page: Optional[int] = None
+            Works with max, the zero-based page of the
+            items
+        **timeout: Optional[int] = None
+            Custom timeout that overwrites Client.timeout
+        """
         timeout = params.get('timeout')
         try:
             del params['timeout']
@@ -373,16 +622,83 @@ class Client:
         return self._get_model(url, ClanWarLog, timeout, params=params)
 
     @typecasted
-    def get_constants(self, **params: keys):
+    def get_tournament(self, tag: crtag, **params: keys):
+        """Get a tournament information
+
+        Parameters
+        ----------
+        tag: str
+            A valid tournament tag. Minimum length: 3
+            Valid characters: 0289PYLQGRJCUV
+        **keys: Optional[list] = None
+            Filter which keys should be included in the
+            response
+        **exclude: Optional[list] = None
+            Filter which keys should be excluded from the
+            response
+        **timeout: Optional[int] = None
+            Custom timeout that overwrites Client.timeout
+        """
         timeout = params.get('timeout')
         try:
             del params['timeout']
         except KeyError:
             pass
-        return self._get_model(self.api.CONSTANTS, Constants, timeout, params=params)
+        url = self.api.TOURNAMENT + '/' + tag
+        return self._get_model(url, Tournament, timeout, params=params)
+
+    @typecasted
+    def search_tournaments(self, **params: tournamentsearch):
+        """Search for a tournament
+
+        Parameters
+        ----------
+        name: str
+            The name of the tournament
+        **keys: Optional[list] = None
+            Filter which keys should be included in the
+            response
+        **exclude: Optional[list] = None
+            Filter which keys should be excluded from the
+            response
+        **max: Optional[int] = None
+            Limit the number of items returned in the response
+        **page: Optional[int] = None
+            Works with max, the zero-based page of the
+            items
+        **timeout: Optional[int] = None
+            Custom timeout that overwrites Client.timeout
+        """
+        timeout = params.get('timeout')
+        try:
+            del params['timeout']
+        except KeyError:
+            pass
+        url = self.api.TOURNAMENT + '/search'
+        return self._get_model(url, ClanInfo, timeout, params=params)
 
     @typecasted
     def get_top_clans(self, country_key='', **params: keys):
+        """Get a list of top clans by trophy
+
+        location_id: Optional[str] = ''
+            A location ID or '' (global)
+            See https://github.com/RoyaleAPI/cr-api-data/blob/master/json/regions.json
+            for a list of acceptable location IDs
+        **keys: Optional[list] = None
+            Filter which keys should be included in the
+            response
+        **exclude: Optional[list] = None
+            Filter which keys should be excluded from the
+            response
+        **max: Optional[int] = None
+            Limit the number of items returned in the response
+        **page: Optional[int] = None
+            Works with max, the zero-based page of the
+            items
+        **timeout: Optional[int] = None
+            Custom timeout that overwrites Client.timeout
+        """
         timeout = params.get('timeout')
         try:
             del params['timeout']
@@ -393,6 +709,26 @@ class Client:
 
     @typecasted
     def get_top_players(self, country_key='', **params: keys):
+        """Get a list of top players
+
+        location_id: Optional[str] = ''
+            A location ID or '' (global)
+            See https://github.com/RoyaleAPI/cr-api-data/blob/master/json/regions.json
+            for a list of acceptable location IDs
+        **keys: Optional[list] = None
+            Filter which keys should be included in the
+            response
+        **exclude: Optional[list] = None
+            Filter which keys should be excluded from the
+            response
+        **max: Optional[int] = None
+            Limit the number of items returned in the response
+        **page: Optional[int] = None
+            Works with max, the zero-based page of the
+            items
+        **timeout: Optional[int] = None
+            Custom timeout that overwrites Client.timeout
+        """
         timeout = params.get('timeout')
         try:
             del params['timeout']
@@ -403,6 +739,22 @@ class Client:
 
     @typecasted
     def get_popular_clans(self, **params: keys):
+        """Get a list of most queried clans
+
+        **keys: Optional[list] = None
+            Filter which keys should be included in the
+            response
+        **exclude: Optional[list] = None
+            Filter which keys should be excluded from the
+            response
+        **max: Optional[int] = None
+            Limit the number of items returned in the response
+        **page: Optional[int] = None
+            Works with max, the zero-based page of the
+            items
+        **timeout: Optional[int] = None
+            Custom timeout that overwrites Client.timeout
+        """
         timeout = params.get('timeout')
         try:
             del params['timeout']
@@ -413,6 +765,22 @@ class Client:
 
     @typecasted
     def get_popular_players(self, **params: keys):
+        """Get a list of most queried players
+
+        **keys: Optional[list] = None
+            Filter which keys should be included in the
+            response
+        **exclude: Optional[list] = None
+            Filter which keys should be excluded from the
+            response
+        **max: Optional[int] = None
+            Limit the number of items returned in the response
+        **page: Optional[int] = None
+            Works with max, the zero-based page of the
+            items
+        **timeout: Optional[int] = None
+            Custom timeout that overwrites Client.timeout
+        """
         timeout = params.get('timeout')
         try:
             del params['timeout']
@@ -423,6 +791,22 @@ class Client:
 
     @typecasted
     def get_popular_tournaments(self, **params: keys):
+        """Get a list of most queried tournaments
+
+        **keys: Optional[list] = None
+            Filter which keys should be included in the
+            response
+        **exclude: Optional[list] = None
+            Filter which keys should be excluded from the
+            response
+        **max: Optional[int] = None
+            Limit the number of items returned in the response
+        **page: Optional[int] = None
+            Works with max, the zero-based page of the
+            items
+        **timeout: Optional[int] = None
+            Custom timeout that overwrites Client.timeout
+        """
         timeout = params.get('timeout')
         try:
             del params['timeout']
@@ -433,6 +817,22 @@ class Client:
 
     @typecasted
     def get_popular_decks(self, **params: keys):
+        """Get a list of most queried decks
+
+        **keys: Optional[list] = None
+            Filter which keys should be included in the
+            response
+        **exclude: Optional[list] = None
+            Filter which keys should be excluded from the
+            response
+        **max: Optional[int] = None
+            Limit the number of items returned in the response
+        **page: Optional[int] = None
+            Works with max, the zero-based page of the
+            items
+        **timeout: Optional[int] = None
+            Custom timeout that overwrites Client.timeout
+        """
         timeout = params.get('timeout')
         try:
             del params['timeout']
@@ -442,17 +842,23 @@ class Client:
         return self._get_model(url, Deck, timeout, params=params)
 
     @typecasted
-    def get_open_tournaments(self, **params: tournamentfilter):
-        timeout = params.get('timeout')
-        try:
-            del params['timeout']
-        except KeyError:
-            pass
-        url = self.api.TOURNAMENT + '/open'
-        return self._get_model(url, Tournament, timeout, params=params)
-
-    @typecasted
     def get_known_tournaments(self, **params: tournamentfilter):
+        """Get a list of queried tournaments
+
+        **keys: Optional[list] = None
+            Filter which keys should be included in the
+            response
+        **exclude: Optional[list] = None
+            Filter which keys should be excluded from the
+            response
+        **max: Optional[int] = None
+            Limit the number of items returned in the response
+        **page: Optional[int] = None
+            Works with max, the zero-based page of the
+            items
+        **timeout: Optional[int] = None
+            Custom timeout that overwrites Client.timeout
+        """
         timeout = params.get('timeout')
         try:
             del params['timeout']
@@ -462,7 +868,74 @@ class Client:
         return self._get_model(url, Tournament, timeout, params=params)
 
     @typecasted
+    def get_open_tournaments(self, **params: tournamentfilter):
+        """Get a list of open tournaments
+
+        **1k: Optional[int] = 0
+            Set to 1 to filter tournaments that have
+            at least 1000 max players
+        **full: Optional[int] = 0
+            Set to 1 to filter tournaments that are
+            full
+        **inprep: Optional[int] = 0
+            Set to 1 to filter tournaments that are
+            in preperation
+        **joinable: Optional[int] = 0
+            Set to 1 to filter tournaments that are
+            joinable
+        **keys: Optional[list] = None
+            Filter which keys should be included in the
+            response
+        **exclude: Optional[list] = None
+            Filter which keys should be excluded from the
+            response
+        **max: Optional[int] = None
+            Limit the number of items returned in the response
+        **page: Optional[int] = None
+            Works with max, the zero-based page of the
+            items
+        **timeout: Optional[int] = None
+            Custom timeout that overwrites Client.timeout
+        """
+        timeout = params.get('timeout')
+        try:
+            del params['timeout']
+        except KeyError:
+            pass
+        url = self.api.TOURNAMENT + '/open'
+        return self._get_model(url, Tournament, timeout, params=params)
+
+    @typecasted
     def get_1k_tournaments(self, **params: tournamentfilter):
+        """Get a list of tournaments that have at least 1000
+        max players
+
+        **open: Optional[int] = 0
+            Set to 1 to filter tournaments that are
+            open
+        **full: Optional[int] = 0
+            Set to 1 to filter tournaments that are
+            full
+        **inprep: Optional[int] = 0
+            Set to 1 to filter tournaments that are
+            in preperation
+        **joinable: Optional[int] = 0
+            Set to 1 to filter tournaments that are
+            joinable
+        **keys: Optional[list] = None
+            Filter which keys should be included in the
+            response
+        **exclude: Optional[list] = None
+            Filter which keys should be excluded from the
+            response
+        **max: Optional[int] = None
+            Limit the number of items returned in the response
+        **page: Optional[int] = None
+            Works with max, the zero-based page of the
+            items
+        **timeout: Optional[int] = None
+            Custom timeout that overwrites Client.timeout
+        """
         timeout = params.get('timeout')
         try:
             del params['timeout']
@@ -473,16 +946,72 @@ class Client:
 
     @typecasted
     def get_prep_tournaments(self, **params: tournamentfilter):
+        """Get a list of tournaments that are in preperation
+
+        **1k: Optional[int] = 0
+            Set to 1 to filter tournaments that have
+            at least 1000 max players
+        **open: Optional[int] = 0
+            Set to 1 to filter tournaments that are
+            open
+        **full: Optional[int] = 0
+            Set to 1 to filter tournaments that are
+            full
+        **joinable: Optional[int] = 0
+            Set to 1 to filter tournaments that are
+            joinable
+        **keys: Optional[list] = None
+            Filter which keys should be included in the
+            response
+        **exclude: Optional[list] = None
+            Filter which keys should be excluded from the
+            response
+        **max: Optional[int] = None
+            Limit the number of items returned in the response
+        **page: Optional[int] = None
+            Works with max, the zero-based page of the
+            items
+        **timeout: Optional[int] = None
+            Custom timeout that overwrites Client.timeout
+        """
         timeout = params.get('timeout')
         try:
             del params['timeout']
         except KeyError:
             pass
-        url = self.api.TOURNAMENT + '/prep'
+        url = self.api.TOURNAMENT + '/inprep'
         return self._get_model(url, Tournament, timeout, params=params)
 
     @typecasted
     def get_joinable_tournaments(self, **params: tournamentfilter):
+        """Get a list of tournaments that are joinable
+
+        **1k: Optional[int] = 0
+            Set to 1 to filter tournaments that have
+            at least 1000 max players
+        **open: Optional[int] = 0
+            Set to 1 to filter tournaments that are
+            open
+        **full: Optional[int] = 0
+            Set to 1 to filter tournaments that are
+            full
+        **inprep: Optional[int] = 0
+            Set to 1 to filter tournaments that are
+            in preperation
+        **keys: Optional[list] = None
+            Filter which keys should be included in the
+            response
+        **exclude: Optional[list] = None
+            Filter which keys should be excluded from the
+            response
+        **max: Optional[int] = None
+            Limit the number of items returned in the response
+        **page: Optional[int] = None
+            Works with max, the zero-based page of the
+            items
+        **timeout: Optional[int] = None
+            Custom timeout that overwrites Client.timeout
+        """
         timeout = params.get('timeout')
         try:
             del params['timeout']
@@ -493,6 +1022,34 @@ class Client:
 
     @typecasted
     def get_full_tournaments(self, **params: tournamentfilter):
+        """Get a list of tournaments that are full
+
+        **1k: Optional[int] = 0
+            Set to 1 to filter tournaments that have
+            at least 1000 max players
+        **open: Optional[int] = 0
+            Set to 1 to filter tournaments that are
+            open
+        **inprep: Optional[int] = 0
+            Set to 1 to filter tournaments that are
+            in preperation
+        **joinable: Optional[int] = 0
+            Set to 1 to filter tournaments that are
+            joinable
+        **keys: Optional[list] = None
+            Filter which keys should be included in the
+            response
+        **exclude: Optional[list] = None
+            Filter which keys should be excluded from the
+            response
+        **max: Optional[int] = None
+            Limit the number of items returned in the response
+        **page: Optional[int] = None
+            Works with max, the zero-based page of the
+            items
+        **timeout: Optional[int] = None
+            Custom timeout that overwrites Client.timeout
+        """
         timeout = params.get('timeout')
         try:
             del params['timeout']
@@ -500,13 +1057,3 @@ class Client:
             pass
         url = self.api.TOURNAMENT + '/full'
         return self._get_model(url, Tournament, timeout, params=params)
-
-    @typecasted
-    def search_tournaments(self, **params: tournamentsearch):
-        timeout = params.get('timeout')
-        try:
-            del params['timeout']
-        except KeyError:
-            pass
-        url = self.api.TOURNAMENT + '/search'
-        return self._get_model(url, ClanInfo, timeout, params=params)
