@@ -17,6 +17,12 @@ setup(
     keywords=['clashroyale', 'wrapper', 'cr', 'royaleapi'],
     include_package_data=True,
     install_requires=['aiohttp', 'python-box', 'requests'],
+    python_requires='>=3.5',
+    project_urls={
+        'Source': 'https://github.com/cgrok/clashroyale',
+        'Issue Tracker': 'https://github.com/cgrok/clashroyale/issues',
+        'Documentation': 'https://clashroyale.readthedocs.io/',
+    },
     classifiers=[
         'Development Status :: 5 - Production/Stable',
         'Intended Audience :: Developers',
@@ -27,8 +33,7 @@ setup(
         'Programming Language :: Python :: 3.7',
         'Programming Language :: Python :: Implementation :: CPython',
         'Natural Language :: English'
-    ],
-    python_requires='>=3.5'
+    ]
 )
 
 # Reload Constants #

@@ -509,6 +509,9 @@ class Client:
         *tags: str
             Valid player tags. Minimum length: 3
             Valid characters: 0289PYLQGRJCUV
+        **type: str
+            Filters what kind of battles. Pick from:
+            :all:, :war:, :clanMate:
         **keys: Optional[list] = None
             Filter which keys should be included in the
             response

@@ -62,7 +62,7 @@ def typecasted(func):
 
 BASE = (
     'keys', 'exclude', 'max',
-    'timeout', 'page'
+    'timeout', 'page', 'type'
 )
 
 
