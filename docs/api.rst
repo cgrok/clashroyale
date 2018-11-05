@@ -37,6 +37,8 @@ The following exceptions are thrown by the library.
 .. autoexception:: NetworkError
     :members:
 
+.. autoexception:: BadRequest
+
 .. autoexception:: NotFoundError
 
 .. autoexception:: ServerError

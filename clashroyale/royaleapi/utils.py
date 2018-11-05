@@ -27,7 +27,7 @@ import pickle
 import re
 import sqlite3 as sqlite
 import threading
-from collections import MutableMapping
+from collections.abc import MutableMapping
 from contextlib import contextmanager
 from functools import wraps
 

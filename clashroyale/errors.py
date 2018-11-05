@@ -62,9 +62,15 @@ class NetworkError(RequestError):
         self.error = 'Network down.'
         super().__init__(self.error)
 
+class BadRequest(StatusError):
+    """Raised when status code 400 is returned.
+    Typically when at least one search parameter
+    was not provided
+    """
+    pass
 
 class NotFoundError(StatusError):
-    """Raised if the player/clan is not found."""
+    """Raised if the player/clan is not found"""
     pass
 
 

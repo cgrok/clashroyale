@@ -31,8 +31,8 @@ from urllib.parse import urlencode
 import aiohttp
 import requests
 
-from ..errors import (NotFoundError, NotResponding, NetworkError, ServerError, Unauthorized,
-                      UnexpectedError, RatelimitError)
+from ..errors import (BadRequest, NotFoundError, NotResponding, NetworkError,
+                      ServerError, Unauthorized, UnexpectedError, RatelimitError)
 from .models import (BaseAttrDict, Cards, Clan, ClanInfo, ClanWar, ClanWarLog,
                      Battle, Cycle, Player, Location, Tournament, Constants, rlist)
 from .utils import API, SqliteDict, clansearch, tournamentsearch, crtag, keys, typecasted
@@ -151,6 +151,8 @@ class Client:
                 }
                 self.cache[str(resp.url)] = cached_data
             return data, False, datetime.utcnow(), resp  # value, cached, last_updated, response
+        if code == 400:
+            raise BadRequest(resp, data)
         if code in (401, 403):  # Unauthorized request - Invalid token
             raise Unauthorized(resp, data)
         if code == 404:  # Tag not found
@@ -316,8 +318,9 @@ class Client:
         url = self.api.CLAN + '/' + tag
         return self._get_model(url, Clan, timeout)
 
-    @typecasted  # Validate clan search parameters.
+    @typecasted
     def search_clans(self, **params: clansearch):
+        # TODO Support paginator in an async iterator
         """Search for a clan. At least one
         of the filters must be present
 
@@ -325,6 +328,7 @@ class Client:
         ----------
         name: Optional[str]
             The name of a clan
+            (has to be at least 3 characters long)
         locationId: Optional[int]
             A location ID
         minMembers: Optional[int]
@@ -454,7 +458,7 @@ class Client:
         return self._get_model(url, Tournament, timeout)
 
     @typecasted
-    def search_tournaments(self, **params: tournamentsearch):
+    def search_tournaments(self, name: str, **params: tournamentsearch):
         """Search for a tournament by its name
 
         Parameters
@@ -476,6 +480,7 @@ class Client:
         **timeout: Optional[int] = None
             Custom timeout that overwrites Client.timeout
         """
+        params['name'] = name
         timeout = params.get('timeout')
         try:
             del params['timeout']
@@ -484,7 +489,7 @@ class Client:
         return self._get_model(self.api.TOURNAMENT, ClanInfo, timeout, **params)
 
     @typecasted
-    def get_cards(self, timeout: int=None):
+    def get_all_cards(self, timeout: int=None):
         """Get a list of all the cards in the game
 
         Parameters
@@ -494,21 +499,9 @@ class Client:
         """
         return self._get_model(self.api.CARDS, Cards, timeout)
 
-    @typecasted
-    def get_location(self, location_id, timeout: int=None):
-        """Get a location information
-
-        Parameters
-        ----------
-        location_id: str = 'global'
-            A location ID or global
-            See https://github.com/RoyaleAPI/cr-api-data/blob/master/json/regions.json
-            for a list of acceptable location IDs
-        timeout: Optional[int] = None
-            Custom timeout that overwrites Client.timeout
-        """
-        url = self.api.LOCATIONS + '/' + str(location_id)
-        return self._get_model(url, Location, timeout)
+    def get_cards(self, timeout: int=None):
+        raise DeprecationWarning('Use Client.get_all_cards instead.')
+        return self.get_all_cards(timeout)
 
     @typecasted
     def get_all_locations(self, timeout: int=None):
@@ -519,7 +512,23 @@ class Client:
         timeout: Optional[int] = None
             Custom timeout that overwrites Client.timeout
         """
-        return self._get_model(self.API.LOCATIONS, Location, timeout)
+        return self._get_model(self.api.LOCATIONS, Location, timeout)
+
+    @typecasted
+    def get_location(self, location_id: int, timeout: int=None):
+        """Get a location information
+
+        Parameters
+        ----------
+        location_id: int
+            A location ID
+            See https://github.com/RoyaleAPI/cr-api-data/blob/master/json/regions.json
+            for a list of acceptable location IDs
+        timeout: Optional[int] = None
+            Custom timeout that overwrites Client.timeout
+        """
+        url = self.api.LOCATIONS + '/' + str(location_id)
+        return self._get_model(url, Location, timeout)
 
     @typecasted
     def get_top_clans(self, location_id='global', **params: keys):
@@ -726,6 +735,6 @@ class Client:
         """
         time = datetime.strptime(timestamp, '%Y%m%dT%H%M%S.%fZ')
         if unix:
-            return time.timestamp()
+            return int(time.timestamp())
         else:
             return time
