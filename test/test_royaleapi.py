@@ -4,9 +4,9 @@ import os
 
 import clashroyale
 import requests
-from dotenv import load_dotenv
+from dotenv import load_dotenv, find_dotenv
 
-load_dotenv()
+load_dotenv(find_dotenv())
 
 TOKEN = os.getenv('royaleapi')
 URL = os.getenv('url', 'https://api.royaleapi.com')
