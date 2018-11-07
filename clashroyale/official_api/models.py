@@ -136,17 +136,101 @@ class Refreshable(BaseAttrDict):
         """(a)sync refresh the data."""
         if self.client.is_async:
             return self._arefresh()
-        data, cached, ts, response = self.client.request(self.url, timeout=None, refresh=True)
+        data, cached, ts, response = self.client._request(self.response.url, timeout=None, refresh=True)
         return self.from_data(data, cached, ts, response)
 
     async def _arefresh(self):
-        data, cached, ts, response = await self.client.request(self.url, timeout=None, refresh=True)
+        data, cached, ts, response = await self.client._request(self.response.url, timeout=None, refresh=True)
         return self.from_data(data, cached, ts, response)
 
-    @property
-    def url(self):
-        endpoint = self.__class__.__name__.lower()
-        return '{}/{}/{}'.format(API_ENDPOINTS.BASE, endpoint, self.tag)
+
+class PaginatedAttrDict(BaseAttrDict):
+    """Mixin class to allow for the paginated
+    endpoints to be iterable
+    """
+    def __init__(self, client, data, response, model, cached=False, ts=None):
+        self.cursor = {'after': data['paging']['cursors'].get('after'), 'before': data['paging']['cursors'].get('before')}
+        self.client = client
+        self.response = response
+        self.model = model
+        self.raw_data = [self.model(self.client, d, response, cached=cached, ts=ts) for d in data['items']]
+
+    def __len__(self):
+        return len(self.raw_data)
+
+    def __getattr__(self, attr):
+        try:
+            return self.raw_data[attr]
+        except AttributeError:
+            try:
+                return super().__getattr__(attr)
+            except AttributeError:
+                return None
+
+    def __getitem__(self, item):
+        try:
+            return self.raw_data[item]
+        except AttributeError:
+            raise KeyError('No such key: {}'.format(item))
+
+    async def __aiter__(self):
+        while True:
+            index = 0
+            for _ in range(index, len(self.raw_data)):
+                yield self.raw_data[index]
+                index += 1
+            if not await self.update_data():
+                break
+
+    def __iter__(self):
+        while True:
+            index = 0
+            for _ in range(index, len(self.raw_data)):
+                yield self.raw_data[index]
+                index += 1
+            if not self.update_data():
+                break
+
+    async def _aupdate_data(self):
+        if self.cursor['after']:
+            data, cached, ts, response = await self.client._request(self.response.url, timeout=None, after=self.cursor['after'])
+            self.cursor = {'after': data['paging']['cursors'].get('after'), 'before': data['paging']['cursors'].get('before')}
+            self.raw_data += [self.model(self.client, d, response, cached=cached, ts=ts) for d in data['items']]
+            return True
+
+        return False
+
+    async def _aall_data(self):
+        while await self.update_data():
+            pass
+
+    def to_json(self):
+        return self.raw_data
+
+    def update_data(self):
+        """Adds the NEXT data in the raw_data dictionary.
+        Returns True if data is added.
+        Returns False if data is not added"""
+        if self.client.is_async:
+            return self._aupdate_data()
+
+        if self.cursor['after']:
+            data, cached, ts, response = self.client._request(self.response.url, timeout=None, after=self.cursor['after'])
+            self.cursor = {'after': data['paging']['cursors'].get('after'), 'before': data['paging']['cursors'].get('before')}
+            self.raw_data += [self.model(self.client, d, response, cached=cached, ts=ts) for d in data['items']]
+            return True
+
+        return False
+
+    def all_data(self):
+        """Loops through and adds all data to the raw_data
+
+        This has a chance to get 429 RatelimitError"""
+        if self.client.is_async:
+            return self._ato_list()
+
+        while self.update_data():
+            pass
 
 
 class Player(Refreshable, FullClan):

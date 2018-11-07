@@ -33,7 +33,7 @@ import requests
 
 from ..errors import (BadRequest, NotFoundError, NotResponding, NetworkError,
                       ServerError, Unauthorized, UnexpectedError, RatelimitError)
-from .models import (BaseAttrDict, Cards, Clan, ClanInfo, ClanWar, ClanWarLog,
+from .models import (BaseAttrDict, PaginatedAttrDict, Cards, Clan, ClanInfo, ClanWar, ClanWarLog,
                      Battle, Cycle, Player, Location, Tournament, Constants, rlist)
 from .utils import API, SqliteDict, clansearch, tournamentsearch, crtag, keys, typecasted
 
@@ -207,7 +207,12 @@ class Client:
                 return rlist(self, data, cached, ts, resp)  # extra functionality
             return [model(self, d, resp, cached=cached, ts=ts) for d in data]
         else:
-            return model(self, data, resp, cached=cached, ts=ts)
+            if 'items' in data:
+                if data.get('paging'):
+                    return PaginatedAttrDict(self, data, resp, model, cached=cached, ts=ts)
+                return self._convert_model(data['items'], cached, ts, model, resp)
+            else:
+                return model(self, data, resp, cached=cached, ts=ts)
 
     async def _aget_model(self, url, timeout, model=None, **params):
         try:
@@ -320,7 +325,6 @@ class Client:
 
     @typecasted
     def search_clans(self, **params: clansearch):
-        # TODO Support paginator in an async iterator
         """Search for a clan. At least one
         of the filters must be present
 
@@ -342,16 +346,6 @@ class Client:
             a clan
         **limit: Optional[int] = None
             Limit the number of items returned in the response
-        **after: Optional[int] = None
-            Return only items that occur after this marker.
-            After marker can be found from the response,
-            inside the 'paging' property. Note that only after
-            or before can be specified for a request, not both
-        **before: Optional[int] = None
-            Return only items that occur before this marker.
-            Before marker can be found from the response,
-            inside the 'paging' property. Note that only after
-            or before can be specified for a request, not both
         **timeout: Optional[int] = None
             Custom timeout that overwrites Client.timeout
         """

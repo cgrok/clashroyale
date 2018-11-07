@@ -8,7 +8,7 @@ with open('README.rst', encoding='utf8') as f:
 setup(
     name='clashroyale',
     packages=find_packages(),
-    version='3.6.1',
+    version='4.0.0',
     description='An (a)sync wrapper for royaleapi.com',
     long_description=long_description,
     long_description_content_type='text/x-rst',

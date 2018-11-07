@@ -44,11 +44,11 @@ class TestBlockingClient(unittest.TestCase):
         self.assertTrue(isinstance(player, list))
 
     def test_get_player_chests(self):
-        player = self.cr.get_player_chests(self.player_tags[0]).get('items')
+        player = self.cr.get_player_chests(self.player_tags[0])
         self.assertTrue(isinstance(player, list))
 
     def test_get_player_chests_timeout(self):
-        player = self.cr.get_player_chests(self.player_tags[1], timeout=100).get('items')
+        player = self.cr.get_player_chests(self.player_tags[1], timeout=100)
         self.assertTrue(isinstance(player, list))
 
     def test_get_clan(self):
@@ -66,7 +66,6 @@ class TestBlockingClient(unittest.TestCase):
         self.assertRaises(clashroyale.BadRequest, request)
 
     def test_search_clans(self):
-        # pagination is not tested here
         options = {
             'name': 'aaa',
             'locationId': self.location_id[1],
@@ -74,8 +73,13 @@ class TestBlockingClient(unittest.TestCase):
             'maxMembers': 30,
             'minScore': 1000
         }
-        clans = self.cr.search_clans(**options).get('items')
-        self.assertTrue(isinstance(clans, list))
+        clans = self.cr.search_clans(**options)
+        self.assertTrue(isinstance(clans, clashroyale.official_api.PaginatedAttrDict))
+
+    def test_search_clans_all_data(self):
+        clans = self.cr.search_clans(name='aaa', limit=3)
+        clans.all_data()
+        self.assertGreater(len(clans), 3)
 
     def test_get_clan_war(self):
         clan = self.cr.get_clan_war(self.clan_tags[0])
@@ -86,20 +90,20 @@ class TestBlockingClient(unittest.TestCase):
         self.assertTrue(isinstance(clan.state, str))
 
     def test_get_clan_members(self):
-        clan = self.cr.get_clan_members(self.clan_tags[0]).get('items')
-        self.assertTrue(isinstance(clan, list))
+        clan = self.cr.get_clan_members(self.clan_tags[0])
+        self.assertTrue(isinstance(clan, clashroyale.official_api.PaginatedAttrDict))
 
     def test_get_clan_members_timeout(self):
-        clan = self.cr.get_clan_members(self.clan_tags[1], timeout=100).get('items')
-        self.assertTrue(isinstance(clan, list))
+        clan = self.cr.get_clan_members(self.clan_tags[1], timeout=100)
+        self.assertTrue(isinstance(clan, clashroyale.official_api.PaginatedAttrDict))
 
     def test_get_clan_war_log(self):
-        clan = self.cr.get_clan_war_log(self.clan_tags[0]).get('items')
-        self.assertTrue(isinstance(clan, list))
+        clan = self.cr.get_clan_war_log(self.clan_tags[0])
+        self.assertTrue(isinstance(clan, clashroyale.official_api.PaginatedAttrDict))
 
     def test_get_clan_war_log_timeout(self):
-        clan = self.cr.get_clan_war_log(self.clan_tags[1], timeout=100).get('items')
-        self.assertTrue(isinstance(clan, list))
+        clan = self.cr.get_clan_war_log(self.clan_tags[1], timeout=100)
+        self.assertTrue(isinstance(clan, clashroyale.official_api.PaginatedAttrDict))
 
     def test_get_tournament(self):
         tournament = self.cr.get_tournament(self.tournament_tags[0])
@@ -110,16 +114,16 @@ class TestBlockingClient(unittest.TestCase):
         self.assertEqual(tournament.tag, self.tournament_tags[1])
 
     def test_search_tournaments(self):
-        tournament = self.cr.search_tournaments('aaa').get('items')
-        self.assertTrue(isinstance(tournament, list))
+        tournament = self.cr.search_tournaments('aaa')
+        self.assertTrue(isinstance(tournament, clashroyale.official_api.PaginatedAttrDict))
 
     def test_get_all_cards(self):
-        cards = self.cr.get_all_cards().get('items')
+        cards = self.cr.get_all_cards()
         self.assertTrue(isinstance(cards, list))
 
     def test_get_all_locations(self):
-        location = self.cr.get_all_locations().get('items')
-        self.assertTrue(isinstance(location, list))
+        location = self.cr.get_all_locations()
+        self.assertTrue(isinstance(location, clashroyale.official_api.PaginatedAttrDict))
 
     def test_get_location_exc(self):
         def request():
@@ -131,28 +135,28 @@ class TestBlockingClient(unittest.TestCase):
         self.assertEqual(location.id, self.location_id[1])
 
     def test_get_top_clans(self):
-        clan = self.cr.get_top_clans(self.location_id[0]).get('items')
-        self.assertTrue(isinstance(clan, list))
+        clan = self.cr.get_top_clans(self.location_id[0])
+        self.assertTrue(isinstance(clan, clashroyale.official_api.PaginatedAttrDict))
 
     def test_get_top_clans_timeout(self):
-        clan = self.cr.get_top_clans(self.location_id[1], timeout=100).get('items')
-        self.assertTrue(isinstance(clan, list))
+        clan = self.cr.get_top_clans(self.location_id[1], timeout=100)
+        self.assertTrue(isinstance(clan, clashroyale.official_api.PaginatedAttrDict))
 
     def test_get_top_clanwar_clans(self):
-        clan = self.cr.get_top_clanwar_clans(self.location_id[0]).get('items')
-        self.assertTrue(isinstance(clan, list))
+        clan = self.cr.get_top_clanwar_clans(self.location_id[0])
+        self.assertTrue(isinstance(clan, clashroyale.official_api.PaginatedAttrDict))
 
     def test_get_top_clanwar_clans_timeout(self):
-        clan = self.cr.get_top_clanwar_clans(self.location_id[1], timeout=100).get('items')
-        self.assertTrue(isinstance(clan, list))
+        clan = self.cr.get_top_clanwar_clans(self.location_id[1], timeout=100)
+        self.assertTrue(isinstance(clan, clashroyale.official_api.PaginatedAttrDict))
 
     def test_get_top_players(self):
-        clan = self.cr.get_top_players(self.location_id[0]).get('items')
-        self.assertTrue(isinstance(clan, list))
+        clan = self.cr.get_top_players(self.location_id[0])
+        self.assertTrue(isinstance(clan, clashroyale.official_api.PaginatedAttrDict))
 
     def test_get_top_players_timeout(self):
-        clan = self.cr.get_top_players(self.location_id[1], timeout=100).get('items')
-        self.assertTrue(isinstance(clan, list))
+        clan = self.cr.get_top_players(self.location_id[1], timeout=100)
+        self.assertTrue(isinstance(clan, clashroyale.official_api.PaginatedAttrDict))
 
     # Utility Functions
     def test_get_clan_image(self):
