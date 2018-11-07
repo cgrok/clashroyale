@@ -22,7 +22,7 @@ Data Models
 .. autoclass:: clashroyale.official_api.models.Refreshable
     :members:
 
-.. autoclass:: clashroyale.official_api.models.PaginatedAttrDict
+.. .. autoclass:: clashroyale.official_api.models.PaginatedAttrDict
     :members:
 
 .. autoclass:: clashroyale.official_api.models.Battle
