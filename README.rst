@@ -1,3 +1,5 @@
+[![FOSSA Status](https://app.fossa.io/api/projects/git%2Bgithub.com%2Fcgrok%2Fclashroyale.svg?type=shield)](https://app.fossa.io/projects/git%2Bgithub.com%2Fcgrok%2Fclashroyale?ref=badge_shield)
+
 clashroyale
 ===========
 
@@ -23,3 +25,6 @@ Documentation
 
 Hosted on readthedocs.io `https://clashroyale.readthedocs.io
 <https://clashroyale.readthedocs.io>`_.
+
+## License
+[![FOSSA Status](https://app.fossa.io/api/projects/git%2Bgithub.com%2Fcgrok%2Fclashroyale.svg?type=large)](https://app.fossa.io/projects/git%2Bgithub.com%2Fcgrok%2Fclashroyale?ref=badge_large)
