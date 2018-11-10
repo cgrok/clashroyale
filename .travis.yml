@@ -1,4 +1,5 @@
 language: python
+conditions: v1
 
 python:
 - '3.5'
@@ -20,11 +21,13 @@ notifications:
   email:
   - yeejiarongg@gmail.com
 
-# deploy:
-#   provider: pypi
-#   user: "fourjr"
-#   password:
-#     secure: EZO8JK9gnMsvfMdopcXo3XBgddM8S95NDO6r+n3Gq/J1+U4M0WYDt4zIqCvWCLDiAjzDLLhVC/FuzbDIuDgh9TuicXFmbVFtGAIC9EmCCG9iGXlSitRAQdr9TnjBkCoay+G4MaNMM4YkGcI3420dUQdZUa7GLjbsISwvEhC9C/b0XHSV8VPPREBq0V34VlqGQsWdNfyjLgYUHUgrId/Dx1CITogc7k7wXQ/6oNT4wOK+UCKfjwgfjImUz5W32ZviE7dsNP0ZHokSByn74YQxkpyWq+YqNTLpLjbsrUnfAFn+4kLCrHffDrUYDI+4lbVIy5a/Qs3BfotBLQw4eZF+VzxmmRBO/2xyA3SPIrxT0c5wN4rxlyDCA5Mmt8YVxpA8X1K+IyD4tICbTwXlQt9McKTG9ep8tzsz99EQXr5K1AUiXqaubfO9d270sxURhvqF85HIbODgJ5lDJIXspNwWJ2qDIAZC+UOmyiWHZSYl0DMZufMKsKF3mirJFUzEbfAYxyFyV1jqkDfhvzZdEIgRHlN+X67NQ5pdfyTBrlSRbgAzo973u/lETLDZjw73mhD2xkBO7fs6XSGq6n/JymsIlmmW7cNl3f90l1I4qA1HiNcPhG79SvmFdG1NL4ofPH5BBykg+yGV7rcVv9VVBGPIyFmHTSMR77MimrEe7qkyiZY=
-#   on:
-#     python: "3.5"
-
+deploy:
+  if: branch == master && commit_message !~ /\[PYPI\]/
+  provider: pypi
+  user: "fourjr"
+  password:
+    secure: EZO8JK9gnMsvfMdopcXo3XBgddM8S95NDO6r+n3Gq/J1+U4M0WYDt4zIqCvWCLDiAjzDLLhVC/FuzbDIuDgh9TuicXFmbVFtGAIC9EmCCG9iGXlSitRAQdr9TnjBkCoay+G4MaNMM4YkGcI3420dUQdZUa7GLjbsISwvEhC9C/b0XHSV8VPPREBq0V34VlqGQsWdNfyjLgYUHUgrId/Dx1CITogc7k7wXQ/6oNT4wOK+UCKfjwgfjImUz5W32ZviE7dsNP0ZHokSByn74YQxkpyWq+YqNTLpLjbsrUnfAFn+4kLCrHffDrUYDI+4lbVIy5a/Qs3BfotBLQw4eZF+VzxmmRBO/2xyA3SPIrxT0c5wN4rxlyDCA5Mmt8YVxpA8X1K+IyD4tICbTwXlQt9McKTG9ep8tzsz99EQXr5K1AUiXqaubfO9d270sxURhvqF85HIbODgJ5lDJIXspNwWJ2qDIAZC+UOmyiWHZSYl0DMZufMKsKF3mirJFUzEbfAYxyFyV1jqkDfhvzZdEIgRHlN+X67NQ5pdfyTBrlSRbgAzo973u/lETLDZjw73mhD2xkBO7fs6XSGq6n/JymsIlmmW7cNl3f90l1I4qA1HiNcPhG79SvmFdG1NL4ofPH5BBykg+yGV7rcVv9VVBGPIyFmHTSMR77MimrEe7qkyiZY=
+  # edge:
+    # branch: twine-user-install
+  on:
+    python: "3.5"
