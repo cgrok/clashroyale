@@ -9,7 +9,9 @@ matrix:
     dist: xenial
     sudo: true
 
-install: pip install tox-travis flake8
+install:
+  - pip install tests/requirements.txt
+  - pip install .
 before_script: flake8
 script: tox
 
