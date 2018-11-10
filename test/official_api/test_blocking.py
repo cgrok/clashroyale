@@ -1,3 +1,4 @@
+import logging
 import unittest
 import os
 from datetime import datetime
@@ -5,7 +6,7 @@ from datetime import datetime
 import clashroyale
 from dotenv import load_dotenv, find_dotenv
 
-load_dotenv(find_dotenv())
+load_dotenv(find_dotenv('../.env'))
 
 TOKEN = os.getenv('official_api')
 URL = os.getenv('official_api_url', 'https://api.royaleapi.com')
@@ -14,16 +15,16 @@ URL = os.getenv('official_api_url', 'https://api.royaleapi.com')
 class TestBlockingClient(unittest.TestCase):
     """Tests all methods in the blocking client that
     uses the `requests` module in `clashroyale`
-
-    Powered by RoyaleAPI
     """
-    def __init__(self, *args, **kwargs):
-        self.cr = clashroyale.OfficialAPI(TOKEN, url=URL, timeout=30)
+    async def setUp(self):
         self.location_id = ['global', 57000249]  # united states
         self.player_tags = ['#2P0LYQ', '#2PP']
         self.clan_tags = ['#9Q8PYRLL', '#8LQ2P0RL']
         self.tournament_tags = ['#2PPV2VUL', '#20RUCV8Q']
-        super().__init__(*args, **kwargs)
+        self.cr = clashroyale.OfficialAPI(TOKEN, url=URL, timeout=30)
+
+    async def tearDown(self):
+        await self.cr.close()
 
     def test_get_player(self):
         player = self.cr.get_player(self.player_tags[0])
@@ -157,6 +158,12 @@ class TestBlockingClient(unittest.TestCase):
     def test_get_top_players_timeout(self):
         clan = self.cr.get_top_players(self.location_id[1], timeout=100)
         self.assertTrue(isinstance(clan, clashroyale.official_api.PaginatedAttrDict))
+
+    async def test_logging(self):
+        logger = 'clashroyale.official_api.client'
+        with self.assertLogs(logger=logger, level=logging.DEBUG) as cm:
+            self.cr.get_player(self.player_tags[0])
+        self.assertEqual(len(cm.output, 1))
 
     # Utility Functions
     def test_get_clan_image(self):

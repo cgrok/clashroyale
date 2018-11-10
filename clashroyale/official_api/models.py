@@ -5,6 +5,12 @@ from .utils import API
 
 API_ENDPOINTS = API('https://api.clashroyale.com/v1')
 
+__all__ = [
+    'BaseAttrDict', 'PaginatedAttrDict', 'Cards', 'Clan',
+    'ClanInfo', 'ClanWar', 'ClanWarLog', 'Battle', 'Cycle',
+    'Player', 'Location', 'Tournament', 'Constants', 'rlist'
+]
+
 
 class BaseAttrDict:
     """This class is the base class for all models, its a
@@ -169,6 +175,9 @@ class PaginatedAttrDict(BaseAttrDict):
             if not self.update_data():
                 break
 
+    def to_json(self):
+        return self.raw_data
+
     async def _aupdate_data(self):
         if self.cursor['after']:
             data, cached, ts, response = await self.client._request(self.response.url, timeout=None, after=self.cursor['after'])
@@ -177,13 +186,6 @@ class PaginatedAttrDict(BaseAttrDict):
             return True
 
         return False
-
-    async def _aall_data(self):
-        while await self.update_data():
-            pass
-
-    def to_json(self):
-        return self.raw_data
 
     def update_data(self):
         """Adds the NEXT data in the raw_data dictionary.
@@ -200,12 +202,16 @@ class PaginatedAttrDict(BaseAttrDict):
 
         return False
 
+    async def _aall_data(self):
+        while await self.update_data():
+            pass
+
     def all_data(self):
         """Loops through and adds all data to the raw_data
 
         This has a chance to get 429 RatelimitError"""
         if self.client.is_async:
-            return self._ato_list()
+            return self._aall_data()
 
         while self.update_data():
             pass

@@ -12,10 +12,13 @@ matrix:
 install:
 - pip install -r test/requirements.txt
 - pip install .
+
 before_script:
   - "curl -H 'Cache-Control: no-cache' https://raw.githubusercontent.com/fossas/fossa-cli/master/install.sh | sudo bash"
+
 script:
-  - pytest test/test_official_api.py
+  - flake8
+  - pytest test/official_api
   - fossa
 
 notifications:

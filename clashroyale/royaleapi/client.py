@@ -1,4 +1,5 @@
 import asyncio
+import logging
 import json
 from datetime import datetime
 from time import time
@@ -14,6 +15,7 @@ from .models import (Clan, ClanInfo, ClanHistory, ClanWar, ClanWarLog, Battle, C
 from .utils import API, SqliteDict, clansearch, tournamentsearch, crtag, keys, tournamentfilter, typecasted
 
 from_timestamp = datetime.fromtimestamp
+log = logging.getLogger(__name__)
 
 
 class Client:
@@ -52,6 +54,8 @@ class Client:
     user_agent: Optional[str] = None
         Appends to the default user-agent
     """
+
+    REQUEST_LOG = '{method} {url} has received {text}, has returned {status}'
 
     def __init__(self, token, session=None, is_async=False, **options):
         self.token = token
@@ -102,7 +106,7 @@ class Client:
         return '<RoyaleAPI Client async={}>'.format(self.is_async)
 
     def close(self):
-        self.session.close()
+        return self.session.close()
 
     def _raise_for_status(self, resp, text):
         try:
@@ -110,6 +114,7 @@ class Client:
         except json.JSONDecodeError:
             data = text
         code = getattr(resp, 'status', None) or getattr(resp, 'status_code')
+        log.debug(self.REQUEST_LOG.format(method=resp.request_info.method, url=resp.url, text=text, status=code))
         if self.error_debug:
             raise ServerError(resp, data)
         if 300 > code >= 200:  # Request was successful

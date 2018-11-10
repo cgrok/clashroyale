@@ -1,3 +1,11 @@
+__all__ = [
+    'RequestError', 'StatusError', 'NotResponding', 'NetworkError',
+    'BadRequest', 'NotFoundError', 'ServerError', 'Unauthorized',
+    'NotTrackedError', 'RatelimitError', 'UnexpectedError',
+    'RatelimitErrorDetected'
+]
+
+
 class RequestError(Exception):
     """Base class for all errors"""
     pass
@@ -37,12 +45,14 @@ class NetworkError(RequestError):
         self.error = 'Network down.'
         super().__init__(self.error)
 
+
 class BadRequest(StatusError):
     """Raised when status code 400 is returned.
     Typically when at least one search parameter
     was not provided
     """
     pass
+
 
 class NotFoundError(StatusError):
     """Raised if the player/clan is not found"""
@@ -60,7 +70,7 @@ class Unauthorized(StatusError):
 
 
 class NotTrackedError(StatusError):
-    """Raised if the requested clan is not tracked"""
+    """Raised if the requested clan is not tracked (RoyaleAPI)"""
     pass
 
 

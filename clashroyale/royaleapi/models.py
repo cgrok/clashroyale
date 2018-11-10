@@ -4,6 +4,13 @@ from .utils import API
 
 API_ENDPOINTS = API('https://api.royaleapi.com')
 
+__all__ = [
+    'Clan', 'ClanInfo', 'ClanHistory', 'ClanWar',
+    'ClanWarLog', 'Battle', 'Cycle', 'Constants',
+    'Player', 'PlayerInfo', 'Tournament', 'Deck',
+    'rlist'
+]
+
 
 class BaseAttrDict:
     """This class is the base class for all models, its a
