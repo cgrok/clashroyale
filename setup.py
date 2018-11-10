@@ -15,7 +15,7 @@ setup(
     license='MIT',
     keywords=['clashroyale', 'wrapper', 'cr', 'royaleapi'],
     include_package_data=True,
-    install_requires=['aiohttp', 'python-box', 'requests'],
+    install_requires=['aiohttp', 'python-box', 'requests', 'async_generator'],
     python_requires='>=3.5',
     project_urls={
         'Source Code': 'https://github.com/cgrok/clashroyale',

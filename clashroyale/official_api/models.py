@@ -22,6 +22,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 
+from async_generator import async_generator, yield_
 from box import Box, BoxList
 
 from .utils import API
@@ -173,11 +174,12 @@ class PaginatedAttrDict(BaseAttrDict):
         except AttributeError:
             raise KeyError('No such key: {}'.format(item))
 
+    @async_generator
     async def __aiter__(self):
         while True:
             index = 0
             for _ in range(index, len(self.raw_data)):
-                yield self.raw_data[index]
+                await yield_(self.raw_data[index])
                 index += 1
             if not await self.update_data():
                 break
