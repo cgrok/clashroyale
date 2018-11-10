@@ -2,4 +2,5 @@ python-dotenv
 flake8
 asynctest
 pytest
-tox-travis
+tox
+../
