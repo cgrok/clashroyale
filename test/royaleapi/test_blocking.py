@@ -259,7 +259,7 @@ class TestBlockingClient(unittest.TestCase):
         logger = 'clashroyale.royaleapi.client'
         with self.assertLogs(logger=logger, level=logging.DEBUG) as cm:
             self.cr.get_player(self.player_tags[0])
-        self.assertEqual(len(cm.output, 1))
+        self.assertEqual(len(cm.output), 1)
 
 
 if __name__ == '__main__':

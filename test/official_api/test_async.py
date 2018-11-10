@@ -76,7 +76,7 @@ class TestBlockingClient(asynctest.TestCase):
 
     async def test_search_clans_all_data(self):
         clans = await self.cr.search_clans(name='aaa', limit=3)
-        clans.all_data()
+        await clans.all_data()
         self.assertGreater(len(clans), 3)
 
     async def test_get_clan_war(self):
@@ -160,7 +160,7 @@ class TestBlockingClient(asynctest.TestCase):
         logger = 'clashroyale.official_api.client'
         with self.assertLogs(logger=logger, level=logging.DEBUG) as cm:
             await self.cr.get_player(self.player_tags[0])
-        self.assertEqual(len(cm.output, 1))
+        self.assertEqual(len(cm.output), 1)
 
     # Utility Functions
     async def test_get_clan_image(self):

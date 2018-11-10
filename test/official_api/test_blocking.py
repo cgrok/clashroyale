@@ -16,15 +16,15 @@ class TestBlockingClient(unittest.TestCase):
     """Tests all methods in the blocking client that
     uses the `requests` module in `clashroyale`
     """
-    async def setUp(self):
+    def setUp(self):
         self.location_id = ['global', 57000249]  # united states
         self.player_tags = ['#2P0LYQ', '#2PP']
         self.clan_tags = ['#9Q8PYRLL', '#8LQ2P0RL']
         self.tournament_tags = ['#2PPV2VUL', '#20RUCV8Q']
         self.cr = clashroyale.OfficialAPI(TOKEN, url=URL, timeout=30)
 
-    async def tearDown(self):
-        await self.cr.close()
+    def tearDown(self):
+        self.cr.close()
 
     def test_get_player(self):
         player = self.cr.get_player(self.player_tags[0])
@@ -159,11 +159,11 @@ class TestBlockingClient(unittest.TestCase):
         clan = self.cr.get_top_players(self.location_id[1], timeout=100)
         self.assertTrue(isinstance(clan, clashroyale.official_api.PaginatedAttrDict))
 
-    async def test_logging(self):
+    def test_logging(self):
         logger = 'clashroyale.official_api.client'
         with self.assertLogs(logger=logger, level=logging.DEBUG) as cm:
             self.cr.get_player(self.player_tags[0])
-        self.assertEqual(len(cm.output, 1))
+        self.assertEqual(len(cm.output), 1)
 
     # Utility Functions
     def test_get_clan_image(self):
