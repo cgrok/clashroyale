@@ -11,11 +11,10 @@ matrix:
     sudo: true
 
 install:
-- pip install -r test/requirements.txt
+- pip install -r tests/requirements.txt
 - pip install .
 
-before_script: flake8
-script: pytest test/official_api
+script: tox
 
 notifications:
   email:
