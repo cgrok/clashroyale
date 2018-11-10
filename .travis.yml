@@ -13,13 +13,8 @@ install:
 - pip install -r test/requirements.txt
 - pip install .
 
-before_script:
-  - "curl -H 'Cache-Control: no-cache' https://raw.githubusercontent.com/fossas/fossa-cli/master/install.sh | sudo bash"
-
-script:
-  - flake8
-  - pytest test/official_api
-  - fossa
+before_script: flake8
+script: pytest test/official_api
 
 notifications:
   email:
