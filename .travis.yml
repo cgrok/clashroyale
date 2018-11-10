@@ -22,7 +22,7 @@ notifications:
   - yeejiarongg@gmail.com
 
 deploy:
-  if: branch == master && commit_message !~ /\[PYPI\]/
+  if: branch == master && [PYPI] IN commit_message
   provider: pypi
   user: "fourjr"
   password:
