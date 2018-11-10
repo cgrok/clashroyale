@@ -1,5 +1,4 @@
 language: python
-conditions: v1
 
 python:
 - '3.5'
@@ -22,7 +21,7 @@ notifications:
   - yeejiarongg@gmail.com
 
 deploy:
-  if: branch == master && [PYPI] IN commit_message
+  if: branch = master AND commit_message =~ ^.*[PYPI].*$
   provider: pypi
   user: "fourjr"
   password:
