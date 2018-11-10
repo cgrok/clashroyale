@@ -267,7 +267,7 @@ class TestBlockingClient(asynctest.TestCase):
         self.assertTrue(isinstance(decks, list) or isinstance(decks, clashroyale.royaleapi.BaseAttrDict))
 
     # OTHERS #
-    def test_logging(self):
+    async def test_logging(self):
         logger = 'clashroyale.royaleapi.client'
         with self.assertLogs(logger=logger, level=logging.DEBUG) as cm:
             await self.cr.get_player(self.player_tags[0])
