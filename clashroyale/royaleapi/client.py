@@ -108,13 +108,13 @@ class Client:
     def close(self):
         return self.session.close()
 
-    def _raise_for_status(self, resp, text):
+    def _raise_for_status(self, resp, text, *, method=None):
         try:
             data = json.loads(text)
         except json.JSONDecodeError:
             data = text
         code = getattr(resp, 'status', None) or getattr(resp, 'status_code')
-        log.debug(self.REQUEST_LOG.format(method=resp.request_info.method, url=resp.url, text=text, status=code))
+        log.debug(self.REQUEST_LOG.format(method=method or resp.request_info.method, url=resp.url, text=text, status=code))
         if self.error_debug:
             raise ServerError(resp, data)
         if 300 > code >= 200:  # Request was successful
@@ -168,7 +168,7 @@ class Client:
             return self._arequest(url, **params)
         try:
             with self.session.get(url, timeout=timeout, headers=self.headers, params=params) as resp:
-                return self._raise_for_status(resp, resp.text)
+                return self._raise_for_status(resp, resp.text, method='GET')
         except requests.Timeout:
             raise NotResponding
         except requests.ConnectionError:

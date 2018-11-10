@@ -270,7 +270,7 @@ class TestBlockingClient(asynctest.TestCase):
     async def test_logging(self):
         logger = 'clashroyale.royaleapi.client'
         with self.assertLogs(logger=logger, level=logging.DEBUG) as cm:
-            await self.cr.get_player(self.player_tags[0])
+            await self.cr.get_player('2P0LYQ')
         self.assertEqual(len(cm.output), 1)
 
 
