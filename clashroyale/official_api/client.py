@@ -10,8 +10,8 @@ import requests
 
 from ..errors import (BadRequest, NotFoundError, NotResponding, NetworkError,
                       ServerError, Unauthorized, UnexpectedError, RatelimitError)
-from .models import (BaseAttrDict, PaginatedAttrDict, Cards, Clan, ClanInfo, ClanWar, ClanWarLog,
-                     Battle, Cycle, Player, Location, Tournament, Constants, rlist)
+from .models import (BaseAttrDict, PaginatedAttrDict, Refreshable, FullClan, PartialClan,
+                     PartialPlayerClan, FullPlayer, rlist)
 from .utils import API, SqliteDict, clansearch, tournamentsearch, crtag, keys, typecasted
 
 from_timestamp = datetime.fromtimestamp
@@ -83,7 +83,7 @@ class Client:
         if not constants:
             with Path(__file__).parent.parent.joinpath('constants.json').open(encoding='utf8') as f:
                 constants = json.load(f)
-        self.constants = Constants(self, constants, None)
+        self.constants = BaseAttrDict(self, constants, None)
 
     def _resolve_cache(self, url, **params):
         bucket = url + (('?' + urlencode(params)) if params else '')
@@ -149,9 +149,10 @@ class Client:
     async def _arequest(self, url, **params):
         method = params.get('method', 'GET')
         json_data = params.get('json', {})
+        timeout = params.pop('timeout', None) or self.timeout
         try:
             async with self.session.request(
-                method, url, timeout=self.timeout, headers=self.headers, params=params, data=json_data
+                method, url, timeout=timeout, headers=self.headers, params=params, data=json_data
             ) as resp:
                 return self._raise_for_status(resp, await resp.text())
         except asyncio.TimeoutError:
@@ -162,13 +163,14 @@ class Client:
     async def _wrap_coro(self, arg):
         return arg
 
-    def _request(self, url, timeout, refresh=False, **params):
+    def _request(self, url, refresh=False, **params):
         if self.using_cache and refresh is False:  # refresh=True forces a request instead of using cache
             cache = self._resolve_cache(url, **params)
             if cache is not None:
                 return cache
         method = params.get('method', 'GET')
         json_data = params.get('json', {})
+        timeout = params.pop('timeout', None) or self.timeout
         if self.is_async:  # return a coroutine
             return self._arequest(url, **params)
         try:
@@ -182,6 +184,11 @@ class Client:
             raise NetworkError
 
     def _convert_model(self, data, cached, ts, model, resp):
+        if model is None and isinstance(data, list):
+            model = BaseAttrDict
+        else:
+            model = Refreshable
+
         if isinstance(data, str):
             return data  # version endpoint, not feasable to add refresh functionality.
         if isinstance(data, list):  # extra functionality
@@ -196,9 +203,9 @@ class Client:
             else:
                 return model(self, data, resp, cached=cached, ts=ts)
 
-    async def _aget_model(self, url, timeout, model=None, **params):
+    async def _aget_model(self, url, model=None, **params):
         try:
-            data, cached, ts, resp = await self._request(url, timeout, **params)
+            data, cached, ts, resp = await self._request(url, **params)
         except Exception as e:
             if self.using_cache:
                 cache = self._resolve_cache(url, **params)
@@ -209,13 +216,12 @@ class Client:
 
         return self._convert_model(data, cached, ts, model, resp)
 
-    def _get_model(self, url, model=None, timeout=None, **params):
-        timeout = timeout or self.timeout
+    def _get_model(self, url, model=None, **params):
         if self.is_async:  # return a coroutine
-            return self._aget_model(url, timeout, model, **params)
+            return self._aget_model(url, model, **params)
         # Otherwise, do everything synchronously.
         try:
-            data, cached, ts, resp = self._request(url, timeout, **params)
+            data, cached, ts, resp = self._request(url, **params)
         except Exception as e:
             if self.using_cache:
                 cache = self._resolve_cache(url, **params)
@@ -239,13 +245,15 @@ class Client:
             Custom timeout that overwrites Client.timeout
         """
         url = self.api.PLAYER + '/' + tag
-        return self._get_model(url, Player, timeout)
+        return self._get_model(url, FullPlayer, timeout=timeout)
 
     @typecasted
     def get_player_verify(self, tag: crtag, apikey: str, timeout=None):
         """Check the API Key of a player.
         This endpoint has been **restricted** to
         certain members of the community
+
+        Raises BadRequest if the apikey is invalid
 
         Parameters
         ----------
@@ -258,10 +266,10 @@ class Client:
             Custom timeout that overwrites Client.timeout
         """
         url = self.api.PLAYER + '/' + tag + '/verifytoken'
-        return self._get_model(url, Player, timeout, method='POST', json={'token': apikey})
+        return self._get_model(url, FullPlayer, timeout=timeout, method='POST', json={'token': apikey})
 
     @typecasted
-    def get_player_battles(self, tag: crtag, timeout: int=None):
+    def get_player_battles(self, tag: crtag, **params: keys):
         """Get a player's battle log
 
         Parameters
@@ -269,11 +277,13 @@ class Client:
         tag: str
             A valid tournament tag. Minimum length: 3
             Valid characters: 0289PYLQGRJCUV
-        timeout: Optional[int] = None
+        **limit: Optional[int] = None
+            Limit the number of items returned in the response
+        **timeout: Optional[int] = None
             Custom timeout that overwrites Client.timeout
         """
         url = self.api.PLAYER + '/' + tag + '/battlelog'
-        return self._get_model(url, Battle, timeout)
+        return self._get_model(url, **params)
 
     @typecasted
     def get_player_chests(self, tag: crtag, timeout: int=None):
@@ -288,7 +298,7 @@ class Client:
             Custom timeout that overwrites Client.timeout
         """
         url = self.api.PLAYER + '/' + tag + '/upcomingchests'
-        return self._get_model(url, Cycle, timeout)
+        return self._get_model(url, timeout=timeout)
 
     @typecasted
     def get_clan(self, tag: crtag, timeout: int=None):
@@ -303,7 +313,7 @@ class Client:
             Custom timeout that overwrites Client.timeout
         """
         url = self.api.CLAN + '/' + tag
-        return self._get_model(url, Clan, timeout)
+        return self._get_model(url, FullClan, timeout=timeout)
 
     @typecasted
     def search_clans(self, **params: clansearch):
@@ -331,13 +341,8 @@ class Client:
         **timeout: Optional[int] = None
             Custom timeout that overwrites Client.timeout
         """
-        timeout = params.get('timeout')
-        try:
-            del params['timeout']
-        except KeyError:
-            pass
         url = self.api.CLAN
-        return self._get_model(url, ClanInfo, timeout, **params)
+        return self._get_model(url, PartialClan, **params)
 
     @typecasted
     def get_clan_war(self, tag: crtag, timeout: int=None):
@@ -352,7 +357,7 @@ class Client:
             Custom timeout that overwrites Client.timeout
         """
         url = self.api.CLAN + '/' + tag + '/currentwar'
-        return self._get_model(url, ClanWar, timeout)
+        return self._get_model(url, timeout=timeout)
 
     @typecasted
     def get_clan_members(self, tag: crtag, **params: keys):
@@ -365,26 +370,11 @@ class Client:
             Valid characters: 0289PYLQGRJCUV
         **limit: Optional[int] = None
             Limit the number of items returned in the response
-        **after: Optional[int] = None
-            Return only items that occur after this marker.
-            After marker can be found from the response,
-            inside the 'paging' property. Note that only after
-            or before can be specified for a request, not both
-        **before: Optional[int] = None
-            Return only items that occur before this marker.
-            Before marker can be found from the response,
-            inside the 'paging' property. Note that only after
-            or before can be specified for a request, not both
         **timeout: Optional[int] = None
             Custom timeout that overwrites Client.timeout
         """
-        timeout = params.get('timeout')
-        try:
-            del params['timeout']
-        except KeyError:
-            pass
         url = self.api.CLAN + '/' + tag + '/members'
-        return self._get_model(url, ClanWarLog, timeout, **params)
+        return self._get_model(url, **params)
 
     @typecasted
     def get_clan_war_log(self, tag: crtag, **params: keys):
@@ -397,26 +387,11 @@ class Client:
             Valid characters: 0289PYLQGRJCUV
         **limit: Optional[int] = None
             Limit the number of items returned in the response
-        **after: Optional[int] = None
-            Return only items that occur after this marker.
-            After marker can be found from the response,
-            inside the 'paging' property. Note that only after
-            or before can be specified for a request, not both
-        **before: Optional[int] = None
-            Return only items that occur before this marker.
-            Before marker can be found from the response,
-            inside the 'paging' property. Note that only after
-            or before can be specified for a request, not both
         **timeout: Optional[int] = None
             Custom timeout that overwrites Client.timeout
         """
-        timeout = params.get('timeout')
-        try:
-            del params['timeout']
-        except KeyError:
-            pass
         url = self.api.CLAN + '/' + tag + '/warlog'
-        return self._get_model(url, ClanWarLog, timeout, **params)
+        return self._get_model(url, **params)
 
     @typecasted
     def get_tournament(self, tag: crtag, timeout=0):
@@ -431,7 +406,7 @@ class Client:
             Custom timeout that overwrites Client.timeout
         """
         url = self.api.TOURNAMENT + '/' + tag
-        return self._get_model(url, Tournament, timeout)
+        return self._get_model(url, timeout=timeout)
 
     @typecasted
     def search_tournaments(self, name: str, **params: tournamentsearch):
@@ -443,26 +418,12 @@ class Client:
             The name of a tournament
         **limit: Optional[int] = None
             Limit the number of items returned in the response
-        **after: Optional[int] = None
-            Return only items that occur after this marker.
-            After marker can be found from the response,
-            inside the 'paging' property. Note that only after
-            or before can be specified for a request, not both
-        **before: Optional[int] = None
-            Return only items that occur before this marker.
-            Before marker can be found from the response,
-            inside the 'paging' property. Note that only after
-            or before can be specified for a request, not both
         **timeout: Optional[int] = None
             Custom timeout that overwrites Client.timeout
         """
+        url = self.api.TOURNAMENT
         params['name'] = name
-        timeout = params.get('timeout')
-        try:
-            del params['timeout']
-        except KeyError:
-            pass
-        return self._get_model(self.api.TOURNAMENT, ClanInfo, timeout, **params)
+        return self._get_model(url, **params)
 
     @typecasted
     def get_all_cards(self, timeout: int=None):
@@ -473,7 +434,8 @@ class Client:
         timeout: Optional[int] = None
             Custom timeout that overwrites Client.timeout
         """
-        return self._get_model(self.api.CARDS, Cards, timeout)
+        url = self.api.CARDS
+        return self._get_model(url, timeout=timeout)
 
     def get_cards(self, timeout: int=None):
         raise DeprecationWarning('Use Client.get_all_cards instead.')
@@ -488,7 +450,8 @@ class Client:
         timeout: Optional[int] = None
             Custom timeout that overwrites Client.timeout
         """
-        return self._get_model(self.api.LOCATIONS, Location, timeout)
+        url = self.api.LOCATIONS
+        return self._get_model(url, timeout=timeout)
 
     @typecasted
     def get_location(self, location_id: int, timeout: int=None):
@@ -504,7 +467,7 @@ class Client:
             Custom timeout that overwrites Client.timeout
         """
         url = self.api.LOCATIONS + '/' + str(location_id)
-        return self._get_model(url, Location, timeout)
+        return self._get_model(url, timeout=timeout)
 
     @typecasted
     def get_top_clans(self, location_id='global', **params: keys):
@@ -518,26 +481,11 @@ class Client:
             for a list of acceptable location IDs
         **limit: Optional[int] = None
             Limit the number of items returned in the response
-        **after: Optional[int] = None
-            Return only items that occur after this marker.
-            After marker can be found from the response,
-            inside the 'paging' property. Note that only after
-            or before can be specified for a request, not both
-        **before: Optional[int] = None
-            Return only items that occur before this marker.
-            Before marker can be found from the response,
-            inside the 'paging' property. Note that only after
-            or before can be specified for a request, not both
         **timeout: Optional[int] = None
             Custom timeout that overwrites Client.timeout
         """
-        timeout = params.get('timeout')
-        try:
-            del params['timeout']
-        except KeyError:
-            pass
         url = self.api.LOCATIONS + '/' + str(location_id) + '/rankings/clans'
-        return self._get_model(url, ClanInfo, timeout, **params)
+        return self._get_model(url, PartialClan, **params)
 
     @typecasted
     def get_top_clanwar_clans(self, location_id='global', **params: keys):
@@ -551,26 +499,11 @@ class Client:
             for a list of acceptable location IDs
         **limit: Optional[int] = None
             Limit the number of items returned in the response
-        **after: Optional[int] = None
-            Return only items that occur after this marker.
-            After marker can be found from the response,
-            inside the 'paging' property. Note that only after
-            or before can be specified for a request, not both
-        **before: Optional[int] = None
-            Return only items that occur before this marker.
-            Before marker can be found from the response,
-            inside the 'paging' property. Note that only after
-            or before can be specified for a request, not both
         **timeout: Optional[int] = None
             Custom timeout that overwrites Client.timeout
         """
-        timeout = params.get('timeout')
-        try:
-            del params['timeout']
-        except KeyError:
-            pass
         url = self.api.LOCATIONS + '/' + str(location_id) + '/rankings/clanwars'
-        return self._get_model(url, ClanInfo, timeout, **params)
+        return self._get_model(url, PartialClan, **params)
 
     @typecasted
     def get_top_players(self, location_id='global', **params: keys):
@@ -584,26 +517,11 @@ class Client:
             for a list of acceptable location IDs
         **limit: Optional[int] = None
             Limit the number of items returned in the response
-        **after: Optional[int] = None
-            Return only items that occur after this marker.
-            After marker can be found from the response,
-            inside the 'paging' property. Note that only after
-            or before can be specified for a request, not both
-        **before: Optional[int] = None
-            Return only items that occur before this marker.
-            Before marker can be found from the response,
-            inside the 'paging' property. Note that only after
-            or before can be specified for a request, not both
         **timeout: Optional[int] = None
             Custom timeout that overwrites Client.timeout
         """
-        timeout = params.get('timeout')
-        try:
-            del params['timeout']
-        except KeyError:
-            pass
         url = self.api.LOCATIONS + '/' + str(location_id) + '/rankings/players'
-        return self._get_model(url, ClanInfo, timeout, **params)
+        return self._get_model(url, PartialPlayerClan, **params)
 
     # Utility Functions
     def get_clan_image(self, obj: BaseAttrDict):

@@ -11,13 +11,18 @@ All notable changes to this project will be documented in this file.
 - Unit tests for async clients
 
 ### Changed
-- Repsonses with a `.items` will simply be returned as a list [BREAKING]
+- Repsonses with a `.items` will simply be returned as a list
+- `OfficialAPI.get_cards()` -> `OfficialAPI.get_all_cards()` (Deprecated till v4.1.0)
+- OfficialAPI: `before` and `after` are no longer valid parameters as pagination is natively supported
+- MIT -> GNU GPL v3
 
 ### Fixed
 - Client.close() now works if the client is async
+- function(timeout) would sometimes not work
 
 ### Removed
-- `clashroyale.*.utils` is no longer in `__init__.py`
+- `clashroyale.*.utils` are no longer in `__init__.py`
+- Individual models for all data types aren't created anymore
 
 
 [Unreleased]: https://github.com/cgrok/clashroyalecompare/v4.0.0...HEAD

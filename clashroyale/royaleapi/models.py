@@ -5,10 +5,9 @@ from .utils import API
 API_ENDPOINTS = API('https://api.royaleapi.com')
 
 __all__ = [
-    'Clan', 'ClanInfo', 'ClanHistory', 'ClanWar',
-    'ClanWarLog', 'Battle', 'Cycle', 'Constants',
-    'Player', 'PlayerInfo', 'Tournament', 'Deck',
-    'rlist'
+    'BaseAttrDict', 'Refreshable', 'PartialTournament',
+    'PartialClan', 'PartialPlayer', 'PartialPlayerClan',
+    'Member', 'FullPlayer', 'FullClan', 'rlist'
 ]
 
 
@@ -98,19 +97,6 @@ class BaseAttrDict:
         return "<{}: {}>".format(_type, self.raw_data)
 
 
-class FullClan(BaseAttrDict):
-    def get_clan(self):
-        """(a)sync function to return clan."""
-        if not self.clan.get('tag'):
-            raise ValueError('This player does not have a clan.')
-        return self.client.get_clan(self.clan.tag)
-
-
-class FullPlayer(BaseAttrDict):
-    def get_player(self):
-        return self.client.get_player(self.tag)
-
-
 class Refreshable(BaseAttrDict):
     """Mixin class for re requesting data from
     the api for the specific model.
@@ -132,12 +118,37 @@ class Refreshable(BaseAttrDict):
         return '{}/{}/{}'.format(API_ENDPOINTS.BASE, endpoint, self.tag)
 
 
-class Player(Refreshable, FullClan):
-    """A clash royale player model."""
+class PartialTournament(BaseAttrDict):
+    def get_tournament(self):
+        return self.client.get_player(self.tag)
+
+
+class PartialClan(BaseAttrDict):
+    def get_clan(self):
+        """(a)sync function to return clan."""
+        try:
+            return self.client.get_clan(self.clan.tag)
+        except AttributeError:
+            try:
+                return self.client.get_clan(self.tag)
+            except AttributeError:
+                raise ValueError('This player does not have a clan.')
+
+
+class PartialPlayer(BaseAttrDict):
+    def get_player(self):
+        """(a)sync function to return player."""
+        return self.client.get_player(self.tag)
+
+
+class PartialPlayerClan(PartialClan, PartialPlayer):
+    """Brief player model,
+    does not contain full data, non refreshable.
+    """
     pass
 
 
-class Member(FullPlayer):
+class Member(PartialPlayer):
     """A clan member model,
     keeps a reference to the clan object it came from.
     """
@@ -146,65 +157,16 @@ class Member(FullPlayer):
         super().__init__(clan.client, data, response)
 
 
-class PlayerInfo(FullClan, FullPlayer):
-    """Brief player model,
-    does not contain full data, non refreshable.
-    """
+class FullPlayer(Refreshable, PartialClan):
+    """A clash royale player model."""
     pass
 
 
-class ClanInfo(FullClan):
-    """Brief clan model,
-    does not contain full data, non refreshable.
-    """
-    pass
-
-
-class Clan(Refreshable):
+class FullClan(Refreshable):
     """A clash royale clan model, full data + refreshable."""
     def from_data(self, data, cached, ts, response):
         super().from_data(data, cached, ts, response)
         self.members = [Member(self, m, self.response) for m in data.get('members', [])]
-
-
-class ClanHistory(Refreshable):
-    """A history that RoyaleAPI saves"""
-    pass
-
-
-class ClanWar(Refreshable):
-    """Info about the current clan war"""
-    pass
-
-
-class ClanWarLog(Refreshable):
-    """A log of the past clan wars"""
-    pass
-
-
-class Battle(BaseAttrDict):
-    """Clash Royale Battle"""
-    pass
-
-
-class Cycle(BaseAttrDict):
-    """Clash Royale chest cycle"""
-    pass
-
-
-class Constants(Refreshable):
-    """Clash Royale constants storage"""
-    pass
-
-
-class Tournament(Refreshable):
-    """Represents a clash royale tournament."""
-    pass
-
-
-class Deck(Refreshable):
-    """Represents a clash royale deck."""
-    pass
 
 
 class rlist(list, Refreshable):

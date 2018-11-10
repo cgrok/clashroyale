@@ -37,8 +37,7 @@ def typecasted(func):
 
 
 BASE = (
-    'limit', 'after', 'before',
-    'timeout'
+    'limit', 'timeout'
 )
 
 

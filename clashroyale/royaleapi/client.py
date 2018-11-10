@@ -10,8 +10,8 @@ import requests
 
 from ..errors import (NotFoundError, NotResponding, NetworkError, ServerError, Unauthorized, NotTrackedError,
                       UnexpectedError, RatelimitError, RatelimitErrorDetected)
-from .models import (Clan, ClanInfo, ClanHistory, ClanWar, ClanWarLog, Battle, Cycle, Constants,
-                     Player, PlayerInfo, Tournament, Deck, rlist)
+from .models import (BaseAttrDict, Refreshable, PartialTournament, PartialClan,
+                     PartialPlayerClan, FullPlayer, FullClan, rlist)
 from .utils import API, SqliteDict, clansearch, tournamentsearch, crtag, keys, tournamentfilter, typecasted
 
 from_timestamp = datetime.fromtimestamp
@@ -145,8 +145,9 @@ class Client:
         raise UnexpectedError(resp, data)
 
     async def _arequest(self, url, **params):
+        timeout = params.pop('timeout', None) or self.timeout
         try:
-            async with self.session.get(url, timeout=self.timeout, headers=self.headers, params=params) as resp:
+            async with self.session.get(url, timeout=timeout, headers=self.headers, **params) as resp:
                 return self._raise_for_status(resp, await resp.text())
         except asyncio.TimeoutError:
             raise NotResponding
@@ -156,7 +157,7 @@ class Client:
     async def _wrap_coro(self, arg):
         return arg
 
-    def _request(self, url, timeout, refresh=False, *, params={}):
+    def _request(self, url, refresh=False, **params):
         if self.using_cache and refresh is False:  # refresh=True forces a request instead of using cache
             cache = self._resolve_cache(url, **params)
             if cache is not None:
@@ -166,8 +167,9 @@ class Client:
                 raise RatelimitErrorDetected(self.ratelimit[2] / 1000 - time())
         if self.is_async:  # return a coroutine
             return self._arequest(url, **params)
+        timeout = params.pop('timeout', None) or self.timeout
         try:
-            with self.session.get(url, timeout=timeout, headers=self.headers, params=params) as resp:
+            with self.session.get(url, timeout=timeout, headers=self.headers, **params) as resp:
                 return self._raise_for_status(resp, resp.text, method='GET')
         except requests.Timeout:
             raise NotResponding
@@ -175,6 +177,11 @@ class Client:
             raise NetworkError
 
     def _convert_model(self, data, cached, ts, model, resp):
+        if model is None and isinstance(data, list):
+            model = BaseAttrDict
+        else:
+            model = Refreshable
+
         if isinstance(data, str):
             return data  # version endpoint, not feasable to add refresh functionality.
         if isinstance(data, list):  # extra functionality
@@ -184,9 +191,9 @@ class Client:
         else:
             return model(self, data, resp, cached=cached, ts=ts)
 
-    async def _aget_model(self, url, timeout, model=None, *, params={}):
+    async def _aget_model(self, url, model=None, *, params={}):
         try:
-            data, cached, ts, resp = await self._request(url, timeout, params=params)
+            data, cached, ts, resp = await self._request(url, **params)
         except Exception as e:
             if self.using_cache:
                 cache = self._resolve_cache(url, **params)
@@ -197,16 +204,15 @@ class Client:
 
         return self._convert_model(data, cached, ts, model, resp)
 
-    def _get_model(self, url, model=None, timeout=None, *, params={}):
-        timeout = timeout or self.timeout
+    def _get_model(self, url, model=None, **params):
         if self.is_async:  # return a coroutine
-            return self._aget_model(url, timeout, model, params=params)
+            return self._aget_model(url, model, **params)
         # Otherwise, do everything synchronously.
         try:
-            data, cached, ts, resp = self._request(url, timeout, params=params)
+            data, cached, ts, resp = self._request(url, **params)
         except Exception as e:
             if self.using_cache:
-                cache = self._resolve_cache(url, params=params)
+                cache = self._resolve_cache(url, **params)
                 if cache is not None:
                     data, cached, ts = cache
             if 'data' not in locals():
@@ -237,12 +243,8 @@ class Client:
         **timeout: Optional[int] = None
             Custom timeout that overwrites Client.timeout
         """
-        timeout = params.get('timeout')
-        try:
-            del params['timeout']
-        except KeyError:
-            pass
-        return self._get_model(self.api.CONSTANTS, Constants, timeout, params=params)
+        url = self.api.CONSTANTS
+        return self._get_model(url, **params)
 
     @typecasted
     def get_player(self, *tags: crtag, **params: keys):
@@ -262,13 +264,8 @@ class Client:
         **timeout: Optional[int] = None
             Custom timeout that overwrites Client.timeout
         """
-        timeout = params.get('timeout')
-        try:
-            del params['timeout']
-        except KeyError:
-            pass
         url = self.api.PLAYER + '/' + ','.join(tags)
-        return self._get_model(url, Player, timeout, params=params)
+        return self._get_model(url, FullPlayer, **params)
 
     @typecasted
     def get_player_verify(self, tag: crtag, apikey: str, **params: keys):
@@ -292,14 +289,9 @@ class Client:
         timeout: Optional[int] = None
             Custom timeout that overwrites Client.timeout
         """
-        timeout = params.get('timeout')
-        try:
-            del params['timeout']
-        except KeyError:
-            pass
         url = self.api.PLAYER + '/' + tag + '/verify'
         params.update({'token': apikey})
-        return self._get_model(url, Player, timeout, params=params)
+        return self._get_model(url, FullPlayer, **params)
 
     @typecasted
     def get_player_battles(self, *tags: crtag, **params: keys):
@@ -324,13 +316,8 @@ class Client:
         **timeout: Optional[int] = None
             Custom timeout that overwrites Client.timeout
         """
-        timeout = params.get('timeout')
-        try:
-            del params['timeout']
-        except KeyError:
-            pass
         url = self.api.PLAYER + '/' + ','.join(tags) + '/battles'
-        return self._get_model(url, Battle, timeout, params=params)
+        return self._get_model(url, **params)
 
     @typecasted
     def get_player_chests(self, *tags: crtag, **params: keys):
@@ -350,13 +337,8 @@ class Client:
         **timeout: Optional[int] = None
             Custom timeout that overwrites Client.timeout
         """
-        timeout = params.get('timeout')
-        try:
-            del params['timeout']
-        except KeyError:
-            pass
         url = self.api.PLAYER + '/' + ','.join(tags) + '/chests'
-        return self._get_model(url, Cycle, timeout, params=params)
+        return self._get_model(url, **params)
 
     @typecasted
     def get_clan(self, *tags: crtag, **params: keys):
@@ -376,13 +358,8 @@ class Client:
         **timeout: Optional[int] = None
             Custom timeout that overwrites Client.timeout
         """
-        timeout = params.get('timeout')
-        try:
-            del params['timeout']
-        except KeyError:
-            pass
         url = self.api.CLAN + '/' + ','.join(tags)
-        return self._get_model(url, Clan, timeout, params=params)
+        return self._get_model(url, FullClan, **params)
 
     @typecasted  # Validate clan search parameters.
     def search_clans(self, **params: clansearch):
@@ -416,13 +393,8 @@ class Client:
         **timeout: Optional[int] = None
             Custom timeout that overwrites Client.timeout
         """
-        timeout = params.get('timeout')
-        try:
-            del params['timeout']
-        except KeyError:
-            pass
         url = self.api.CLAN + '/search'
-        return self._get_model(url, ClanInfo, timeout, params=params)
+        return self._get_model(url, PartialClan, **params)
 
     def get_tracking_clans(self, **params: keys):
         """Get a list of clans that are being
@@ -445,13 +417,8 @@ class Client:
         **timeout: Optional[int] = None
             Custom timeout that overwrites Client.timeout
         """
-        timeout = params.get('timeout')
-        try:
-            del params['timeout']
-        except KeyError:
-            pass
         url = self.api.CLAN + '/tracking'
-        return self._get_model(url, Clan, timeout, params=params)
+        return self._get_model(url, **params)
 
     @typecasted
     def get_clan_tracking(self, *tags: crtag, **params: keys):
@@ -473,13 +440,8 @@ class Client:
         **timeout: Optional[int] = None
             Custom timeout that overwrites Client.timeout
         """
-        timeout = params.get('timeout')
-        try:
-            del params['timeout']
-        except KeyError:
-            pass
         url = self.api.CLAN + '/' + ','.join(tags) + '/tracking'
-        return self._get_model(url, Clan, timeout, params=params)
+        return self._get_model(url, **params)
 
     @typecasted
     def get_clan_battles(self, *tags: crtag, **params: keys):
@@ -507,13 +469,8 @@ class Client:
         **timeout: Optional[int] = None
             Custom timeout that overwrites Client.timeout
         """
-        timeout = params.get('timeout')
-        try:
-            del params['timeout']
-        except KeyError:
-            pass
         url = self.api.CLAN + '/' + ','.join(tags) + '/battles'
-        return self._get_model(url, Battle, timeout, params=params)
+        return self._get_model(url, **params)
 
     @typecasted
     def get_clan_history(self, *tags: crtag, **params: keys):
@@ -540,13 +497,8 @@ class Client:
         **timeout: Optional[int] = None
             Custom timeout that overwrites Client.timeout
         """
-        timeout = params.get('timeout')
-        try:
-            del params['timeout']
-        except KeyError:
-            pass
         url = self.api.CLAN + '/' + ','.join(tags) + '/history'
-        return self._get_model(url, ClanHistory, timeout, params=params)
+        return self._get_model(url, **params)
 
     @typecasted
     def get_clan_war(self, tag: crtag, **params: keys):
@@ -566,13 +518,8 @@ class Client:
         **timeout: Optional[int] = None
             Custom timeout that overwrites Client.timeout
         """
-        timeout = params.get('timeout')
-        try:
-            del params['timeout']
-        except KeyError:
-            pass
         url = self.api.CLAN + '/' + tag + '/war'
-        return self._get_model(url, ClanWar, timeout, params=params)
+        return self._get_model(url, **params)
 
     @typecasted
     def get_clan_war_log(self, tag: crtag, **params: keys):
@@ -597,13 +544,8 @@ class Client:
         **timeout: Optional[int] = None
             Custom timeout that overwrites Client.timeout
         """
-        timeout = params.get('timeout')
-        try:
-            del params['timeout']
-        except KeyError:
-            pass
         url = self.api.CLAN + '/' + tag + '/warlog'
-        return self._get_model(url, ClanWarLog, timeout, params=params)
+        return self._get_model(url, **params)
 
     @typecasted
     def get_tournament(self, tag: crtag, **params: keys):
@@ -623,13 +565,8 @@ class Client:
         **timeout: Optional[int] = None
             Custom timeout that overwrites Client.timeout
         """
-        timeout = params.get('timeout')
-        try:
-            del params['timeout']
-        except KeyError:
-            pass
         url = self.api.TOURNAMENT + '/' + tag
-        return self._get_model(url, Tournament, timeout, params=params)
+        return self._get_model(url, **params)
 
     @typecasted
     def search_tournaments(self, **params: tournamentsearch):
@@ -653,13 +590,8 @@ class Client:
         **timeout: Optional[int] = None
             Custom timeout that overwrites Client.timeout
         """
-        timeout = params.get('timeout')
-        try:
-            del params['timeout']
-        except KeyError:
-            pass
         url = self.api.TOURNAMENT + '/search'
-        return self._get_model(url, ClanInfo, timeout, params=params)
+        return self._get_model(url, PartialClan, **params)
 
     @typecasted
     def get_top_clans(self, country_key='', **params: keys):
@@ -683,13 +615,8 @@ class Client:
         **timeout: Optional[int] = None
             Custom timeout that overwrites Client.timeout
         """
-        timeout = params.get('timeout')
-        try:
-            del params['timeout']
-        except KeyError:
-            pass
-        url = self.api.TOP + '/clans/' + country_key
-        return self._get_model(url, ClanInfo, timeout, params=params)
+        url = self.api.TOP + '/clans/' + str(country_key)
+        return self._get_model(url, PartialClan, **params)
 
     @typecasted
     def get_top_players(self, country_key='', **params: keys):
@@ -713,13 +640,8 @@ class Client:
         **timeout: Optional[int] = None
             Custom timeout that overwrites Client.timeout
         """
-        timeout = params.get('timeout')
-        try:
-            del params['timeout']
-        except KeyError:
-            pass
-        url = self.api.TOP + '/players/' + country_key
-        return self._get_model(url, PlayerInfo, timeout, params=params)
+        url = self.api.TOP + '/players/' + str(country_key)
+        return self._get_model(url, PartialPlayerClan, **params)
 
     @typecasted
     def get_popular_clans(self, **params: keys):
@@ -739,13 +661,8 @@ class Client:
         **timeout: Optional[int] = None
             Custom timeout that overwrites Client.timeout
         """
-        timeout = params.get('timeout')
-        try:
-            del params['timeout']
-        except KeyError:
-            pass
         url = self.api.POPULAR + '/clans'
-        return self._get_model(url, Clan, timeout, params=params)
+        return self._get_model(url, PartialClan, **params)
 
     @typecasted
     def get_popular_players(self, **params: keys):
@@ -765,13 +682,8 @@ class Client:
         **timeout: Optional[int] = None
             Custom timeout that overwrites Client.timeout
         """
-        timeout = params.get('timeout')
-        try:
-            del params['timeout']
-        except KeyError:
-            pass
         url = self.api.POPULAR + '/players'
-        return self._get_model(url, PlayerInfo, timeout, params=params)
+        return self._get_model(url, PartialPlayerClan, **params)
 
     @typecasted
     def get_popular_tournaments(self, **params: keys):
@@ -791,13 +703,8 @@ class Client:
         **timeout: Optional[int] = None
             Custom timeout that overwrites Client.timeout
         """
-        timeout = params.get('timeout')
-        try:
-            del params['timeout']
-        except KeyError:
-            pass
-        url = self.api.POPULAR + '/tournaments'
-        return self._get_model(url, Tournament, timeout, params=params)
+        url = self.api.POPULAR + '/tournament'
+        return self._get_model(url, PartialTournament, **params)
 
     @typecasted
     def get_popular_decks(self, **params: keys):
@@ -817,13 +724,8 @@ class Client:
         **timeout: Optional[int] = None
             Custom timeout that overwrites Client.timeout
         """
-        timeout = params.get('timeout')
-        try:
-            del params['timeout']
-        except KeyError:
-            pass
         url = self.api.POPULAR + '/decks'
-        return self._get_model(url, Deck, timeout, params=params)
+        return self._get_model(url, **params)
 
     @typecasted
     def get_known_tournaments(self, **params: tournamentfilter):
@@ -843,13 +745,8 @@ class Client:
         **timeout: Optional[int] = None
             Custom timeout that overwrites Client.timeout
         """
-        timeout = params.get('timeout')
-        try:
-            del params['timeout']
-        except KeyError:
-            pass
         url = self.api.TOURNAMENT + '/known'
-        return self._get_model(url, Tournament, timeout, params=params)
+        return self._get_model(url, PartialTournament, **params)
 
     @typecasted
     def get_open_tournaments(self, **params: tournamentfilter):
@@ -881,13 +778,8 @@ class Client:
         **timeout: Optional[int] = None
             Custom timeout that overwrites Client.timeout
         """
-        timeout = params.get('timeout')
-        try:
-            del params['timeout']
-        except KeyError:
-            pass
         url = self.api.TOURNAMENT + '/open'
-        return self._get_model(url, Tournament, timeout, params=params)
+        return self._get_model(url, PartialTournament, **params)
 
     @typecasted
     def get_1k_tournaments(self, **params: tournamentfilter):
@@ -920,13 +812,8 @@ class Client:
         **timeout: Optional[int] = None
             Custom timeout that overwrites Client.timeout
         """
-        timeout = params.get('timeout')
-        try:
-            del params['timeout']
-        except KeyError:
-            pass
         url = self.api.TOURNAMENT + '/1k'
-        return self._get_model(url, Tournament, timeout, params=params)
+        return self._get_model(url, PartialTournament, **params)
 
     @typecasted
     def get_prep_tournaments(self, **params: tournamentfilter):
@@ -958,13 +845,8 @@ class Client:
         **timeout: Optional[int] = None
             Custom timeout that overwrites Client.timeout
         """
-        timeout = params.get('timeout')
-        try:
-            del params['timeout']
-        except KeyError:
-            pass
         url = self.api.TOURNAMENT + '/inprep'
-        return self._get_model(url, Tournament, timeout, params=params)
+        return self._get_model(url, PartialTournament, **params)
 
     @typecasted
     def get_joinable_tournaments(self, **params: tournamentfilter):
@@ -996,13 +878,8 @@ class Client:
         **timeout: Optional[int] = None
             Custom timeout that overwrites Client.timeout
         """
-        timeout = params.get('timeout')
-        try:
-            del params['timeout']
-        except KeyError:
-            pass
         url = self.api.TOURNAMENT + '/joinable'
-        return self._get_model(url, Tournament, timeout, params=params)
+        return self._get_model(url, PartialTournament, **params)
 
     @typecasted
     def get_full_tournaments(self, **params: tournamentfilter):
@@ -1034,10 +911,5 @@ class Client:
         **timeout: Optional[int] = None
             Custom timeout that overwrites Client.timeout
         """
-        timeout = params.get('timeout')
-        try:
-            del params['timeout']
-        except KeyError:
-            pass
         url = self.api.TOURNAMENT + '/full'
-        return self._get_model(url, Tournament, timeout, params=params)
+        return self._get_model(url, PartialTournament, **params)
