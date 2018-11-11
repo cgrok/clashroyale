@@ -156,11 +156,28 @@ class TestBlockingClient(asynctest.TestCase):
         clan = await self.cr.get_top_players(self.location_id[1], timeout=100)
         self.assertTrue(isinstance(clan, clashroyale.official_api.PaginatedAttrDict))
 
+    # Others
+
     async def test_logging(self):
         logger = 'clashroyale.official_api.client'
         with self.assertLogs(logger=logger, level=logging.DEBUG) as cm:
             await self.cr.get_player(self.player_tags[0])
         self.assertEqual(len(cm.output), 1)
+
+    async def test_invalid_param(self):
+        async def request():
+            await self.cr.get_player_battles(self.player_tags[0], invalid=1)
+        self.assertAsyncRaises(ValueError, request)
+
+    async def test_invalid_tag(self):
+        async def request():
+            await self.cr.get_player(invalid_tag)
+        invalid_tag = 'P'
+        self.assertAsyncRaises(ValueError, request)
+        invalid_tag = 'AAA'
+        self.assertAsyncRaises(ValueError, request)
+        invalid_tag = '2PP0PP0PP'
+        self.assertAsyncRaises(clashroyale.NotFoundError, request)
 
     # Utility Functions
     async def test_get_clan_image(self):

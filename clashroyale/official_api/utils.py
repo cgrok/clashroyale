@@ -53,17 +53,6 @@ def clansearch(k, v):
     return k, v
 
 
-def tournamentsearch(k, v):
-    valid = (
-        'name',
-    )
-    valid += BASE
-    k = to_camel_case(k)
-    if k not in valid:
-        raise ValueError('Invalid search parameter passed: {}'.format(k))
-    return k, v
-
-
 def keys(k, v):
     if k not in BASE:
         raise ValueError('Invalid url parameter passed: {}'.format(k))

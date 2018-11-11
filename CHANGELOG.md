@@ -1,9 +1,11 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
-## [4.0.0] - Unreleased
+## [Unreleased]
+No changes yet
+
+## [4.0.0] - 11/11/2018
 ### Added
-- A changelog
 - OfficialAPI: A way to iterate through paginated repsonses (i.e. search_clans, search_tournaments) using asynchronus generators.
 - OfficialAPI: Tests for the pagination.
 - Requirement: async_generator (For Python 3.5 support)
@@ -14,7 +16,6 @@ All notable changes to this project will be documented in this file.
 - Repsonses with a `.items` will simply be returned as a list
 - `OfficialAPI.get_cards()` -> `OfficialAPI.get_all_cards()` (Deprecated till v4.1.0)
 - OfficialAPI: `before` and `after` are no longer valid parameters as pagination is natively supported
-- MIT -> GNU GPL v3
 
 ### Fixed
 - Client.close() now works if the client is async

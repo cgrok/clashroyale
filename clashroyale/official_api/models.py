@@ -25,8 +25,9 @@ class BaseAttrDict:
     Example
     -------
 
-    Accessing data via dot notation: ::
+    Accessing data via dot notation:
 
+    .. code-block:: python
         sample_data = {
             "stats": {
                 "maxTrophies": 5724,
@@ -105,8 +106,9 @@ class PaginatedAttrDict(BaseAttrDict):
     Example
     -------
 
-    Searching clans with a limit of 3: ::
+    Searching clans with a limit of 3:
 
+    .. code-block:: python
         >>> a_data = await a_client.search_clans(name='aaa', limit=3)
         >>> b_data = b_client.search_clans(name='aaa', limit=3)
         >>> len(a_data)

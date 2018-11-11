@@ -12,7 +12,7 @@ from ..errors import (BadRequest, NotFoundError, NotResponding, NetworkError,
                       ServerError, Unauthorized, UnexpectedError, RatelimitError)
 from .models import (BaseAttrDict, PaginatedAttrDict, Refreshable, FullClan, PartialTournament,
                      PartialClan, PartialPlayerClan, FullPlayer, rlist)
-from .utils import API, SqliteDict, clansearch, tournamentsearch, crtag, keys, typecasted
+from .utils import API, SqliteDict, clansearch, crtag, keys, typecasted
 
 from_timestamp = datetime.fromtimestamp
 
@@ -409,7 +409,7 @@ class Client:
         return self._get_model(url, PartialTournament, timeout=timeout)
 
     @typecasted
-    def search_tournaments(self, name: str, **params: tournamentsearch):
+    def search_tournaments(self, name: str, **params: keys):
         """Search for a tournament by its name
 
         Parameters

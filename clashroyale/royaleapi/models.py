@@ -24,8 +24,9 @@ class BaseAttrDict:
     Example
     -------
 
-    Accessing data via dot notation: ::
+    Accessing data via dot notation:
 
+    .. code-block:: python
         sample_data = {
             "stats": {
                 "maxTrophies": 5724,

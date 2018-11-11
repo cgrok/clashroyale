@@ -12,7 +12,7 @@ from ..errors import (NotFoundError, NotResponding, NetworkError, ServerError, U
                       UnexpectedError, RatelimitError, RatelimitErrorDetected)
 from .models import (BaseAttrDict, Refreshable, PartialTournament, PartialClan,
                      PartialPlayerClan, FullPlayer, FullClan, rlist)
-from .utils import API, SqliteDict, clansearch, tournamentsearch, crtag, keys, tournamentfilter, typecasted
+from .utils import API, SqliteDict, clansearch, crtag, keys, tournamentfilter, typecasted
 
 from_timestamp = datetime.fromtimestamp
 log = logging.getLogger(__name__)
@@ -191,7 +191,7 @@ class Client:
         else:
             return model(self, data, resp, cached=cached, ts=ts)
 
-    async def _aget_model(self, url, model=None, *, params={}):
+    async def _aget_model(self, url, model=None, **params):
         try:
             data, cached, ts, resp = await self._request(url, **params)
         except Exception as e:
@@ -569,7 +569,7 @@ class Client:
         return self._get_model(url, **params)
 
     @typecasted
-    def search_tournaments(self, **params: tournamentsearch):
+    def search_tournaments(self, **params: keys):
         """Search for a tournament
 
         Parameters

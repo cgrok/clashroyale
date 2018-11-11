@@ -20,7 +20,7 @@
 # -- Project information -----------------------------------------------------
 
 project = 'clashroyale'
-copyright = '2018, fourjr, arq'
+copyright = '2017-2018, fourjr, arq'
 author = 'fourjr, arq'
 
 # The short X.Y version
