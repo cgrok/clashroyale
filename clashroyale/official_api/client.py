@@ -10,8 +10,8 @@ import requests
 
 from ..errors import (BadRequest, NotFoundError, NotResponding, NetworkError,
                       ServerError, Unauthorized, UnexpectedError, RatelimitError)
-from .models import (BaseAttrDict, PaginatedAttrDict, Refreshable, FullClan, PartialClan,
-                     PartialPlayerClan, FullPlayer, rlist)
+from .models import (BaseAttrDict, PaginatedAttrDict, Refreshable, FullClan, PartialTournament,
+                     PartialClan, PartialPlayerClan, FullPlayer, rlist)
 from .utils import API, SqliteDict, clansearch, tournamentsearch, crtag, keys, typecasted
 
 from_timestamp = datetime.fromtimestamp
@@ -277,9 +277,9 @@ class Client:
         tag: str
             A valid tournament tag. Minimum length: 3
             Valid characters: 0289PYLQGRJCUV
-        **limit: Optional[int] = None
+        \*\*limit: Optional[int] = None
             Limit the number of items returned in the response
-        **timeout: Optional[int] = None
+        \*\*timeout: Optional[int] = None
             Custom timeout that overwrites Client.timeout
         """
         url = self.api.PLAYER + '/' + tag + '/battlelog'
@@ -336,9 +336,9 @@ class Client:
         minScore: Optional[int]
             The minimum trophy score of
             a clan
-        **limit: Optional[int] = None
+        \*\*limit: Optional[int] = None
             Limit the number of items returned in the response
-        **timeout: Optional[int] = None
+        \*\*timeout: Optional[int] = None
             Custom timeout that overwrites Client.timeout
         """
         url = self.api.CLAN
@@ -368,9 +368,9 @@ class Client:
         tag: str
             A valid tournament tag. Minimum length: 3
             Valid characters: 0289PYLQGRJCUV
-        **limit: Optional[int] = None
+        \*\*limit: Optional[int] = None
             Limit the number of items returned in the response
-        **timeout: Optional[int] = None
+        \*\*timeout: Optional[int] = None
             Custom timeout that overwrites Client.timeout
         """
         url = self.api.CLAN + '/' + tag + '/members'
@@ -385,9 +385,9 @@ class Client:
         tag: str
             A valid tournament tag. Minimum length: 3
             Valid characters: 0289PYLQGRJCUV
-        **limit: Optional[int] = None
+        \*\*limit: Optional[int] = None
             Limit the number of items returned in the response
-        **timeout: Optional[int] = None
+        \*\*timeout: Optional[int] = None
             Custom timeout that overwrites Client.timeout
         """
         url = self.api.CLAN + '/' + tag + '/warlog'
@@ -402,11 +402,11 @@ class Client:
         tag: str
             A valid tournament tag. Minimum length: 3
             Valid characters: 0289PYLQGRJCUV
-        **timeout: Optional[int] = None
+        \*\*timeout: Optional[int] = None
             Custom timeout that overwrites Client.timeout
         """
         url = self.api.TOURNAMENT + '/' + tag
-        return self._get_model(url, timeout=timeout)
+        return self._get_model(url, PartialTournament, timeout=timeout)
 
     @typecasted
     def search_tournaments(self, name: str, **params: tournamentsearch):
@@ -416,14 +416,14 @@ class Client:
         ----------
         name: str
             The name of a tournament
-        **limit: Optional[int] = None
+        \*\*limit: Optional[int] = None
             Limit the number of items returned in the response
-        **timeout: Optional[int] = None
+        \*\*timeout: Optional[int] = None
             Custom timeout that overwrites Client.timeout
         """
         url = self.api.TOURNAMENT
         params['name'] = name
-        return self._get_model(url, **params)
+        return self._get_model(url, PartialTournament, **params)
 
     @typecasted
     def get_all_cards(self, timeout: int=None):
@@ -479,9 +479,9 @@ class Client:
             A location ID or global
             See https://github.com/RoyaleAPI/cr-api-data/blob/master/json/regions.json
             for a list of acceptable location IDs
-        **limit: Optional[int] = None
+        \*\*limit: Optional[int] = None
             Limit the number of items returned in the response
-        **timeout: Optional[int] = None
+        \*\*timeout: Optional[int] = None
             Custom timeout that overwrites Client.timeout
         """
         url = self.api.LOCATIONS + '/' + str(location_id) + '/rankings/clans'
@@ -497,9 +497,9 @@ class Client:
             A location ID or global
             See https://github.com/RoyaleAPI/cr-api-data/blob/master/json/regions.json
             for a list of acceptable location IDs
-        **limit: Optional[int] = None
+        \*\*limit: Optional[int] = None
             Limit the number of items returned in the response
-        **timeout: Optional[int] = None
+        \*\*timeout: Optional[int] = None
             Custom timeout that overwrites Client.timeout
         """
         url = self.api.LOCATIONS + '/' + str(location_id) + '/rankings/clanwars'
@@ -515,9 +515,9 @@ class Client:
             A location ID or global
             See https://github.com/RoyaleAPI/cr-api-data/blob/master/json/regions.json
             for a list of acceptable location IDs
-        **limit: Optional[int] = None
+        \*\*limit: Optional[int] = None
             Limit the number of items returned in the response
-        **timeout: Optional[int] = None
+        \*\*timeout: Optional[int] = None
             Custom timeout that overwrites Client.timeout
         """
         url = self.api.LOCATIONS + '/' + str(location_id) + '/rankings/players'
@@ -529,9 +529,9 @@ class Client:
 
         Parameters
         ---------
-        obj: BaseAttrDict
+        obj: official_api.models.BaseAttrDict
             An object that has the clan badge ID either in ``.clan.badge_id`` or ``.badge_id``
-            Can be ``Clan`` or ``Profile`` for example.
+            Can be a clan or a profile for example.
 
         Returns str
         """
@@ -556,7 +556,7 @@ class Client:
 
         Parameters
         ---------
-        obj: BaseAttrDict
+        obj: official_api.models.BaseAttrDict
             An object that has the arena ID in ``.arena.id``
             Can be ``Profile`` for example.
 
@@ -600,7 +600,7 @@ class Client:
 
         Parameters
         ---------
-        deck: BaseAttrDict
+        deck: official_api.models.BaseAttrDict
             An object is a deck. Can be retrieved from ``Player.current_deck``
 
         Returns str

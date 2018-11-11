@@ -1,7 +1,7 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
-## [Unreleased] - 4.0.0
+## [4.0.0] - Unreleased
 ### Added
 - A changelog
 - OfficialAPI: A way to iterate through paginated repsonses (i.e. search_clans, search_tournaments) using asynchronus generators.
@@ -26,3 +26,4 @@ All notable changes to this project will be documented in this file.
 
 
 [Unreleased]: https://github.com/cgrok/clashroyalecompare/v4.0.0...HEAD
+[4.0.0]: https://github.com/cgrok/clashroyale/compare/6c9215a...HEAD

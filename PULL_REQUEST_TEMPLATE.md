@@ -10,4 +10,5 @@
 # Checklist
 - [ ] Docstrings added ([NumpyDoc](https://numpydoc.readthedocs.io/en/latest/format.html#docstring-standard))
 - [ ] If necessary, add to the documentation files
-- [ ] Continous Integration checked
+- [ ] Add to the CHANGELOG file
+- [ ] Tox checked

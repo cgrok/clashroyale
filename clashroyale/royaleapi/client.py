@@ -147,7 +147,7 @@ class Client:
     async def _arequest(self, url, **params):
         timeout = params.pop('timeout', None) or self.timeout
         try:
-            async with self.session.get(url, timeout=timeout, headers=self.headers, **params) as resp:
+            async with self.session.get(url, timeout=timeout, headers=self.headers, params=params) as resp:
                 return self._raise_for_status(resp, await resp.text())
         except asyncio.TimeoutError:
             raise NotResponding
@@ -169,7 +169,7 @@ class Client:
             return self._arequest(url, **params)
         timeout = params.pop('timeout', None) or self.timeout
         try:
-            with self.session.get(url, timeout=timeout, headers=self.headers, **params) as resp:
+            with self.session.get(url, timeout=timeout, headers=self.headers, params=params) as resp:
                 return self._raise_for_status(resp, resp.text, method='GET')
         except requests.Timeout:
             raise NotResponding
@@ -234,13 +234,13 @@ class Client:
 
         Parameters
         ----------
-        **keys: Optional[list] = None
+        \*\*keys: Optional[list] = None
             Filter which keys should be included in the
             response
-        **exclude: Optional[list] = None
+        \*\*exclude: Optional[list] = None
             Filter which keys should be excluded from the
             response
-        **timeout: Optional[int] = None
+        \*\*timeout: Optional[int] = None
             Custom timeout that overwrites Client.timeout
         """
         url = self.api.CONSTANTS
@@ -252,16 +252,16 @@ class Client:
 
         Parameters
         ----------
-        *tags: str
+        \*tags: str
             Valid player tags. Minimum length: 3
             Valid characters: 0289PYLQGRJCUV
-        **keys: Optional[list] = None
+        \*\*keys: Optional[list] = None
             Filter which keys should be included in the
             response
-        **exclude: Optional[list] = None
+        \*\*exclude: Optional[list] = None
             Filter which keys should be excluded from the
             response
-        **timeout: Optional[int] = None
+        \*\*timeout: Optional[int] = None
             Custom timeout that overwrites Client.timeout
         """
         url = self.api.PLAYER + '/' + ','.join(tags)
@@ -280,13 +280,13 @@ class Client:
             Valid characters: 0289PYLQGRJCUV
         apikey: str
             The API Key in the player's settings
-        **keys: Optional[list] = None
+        \*\*keys: Optional[list] = None
             Filter which keys should be included in the
             response
-        **exclude: Optional[list] = None
+        \*\*exclude: Optional[list] = None
             Filter which keys should be excluded from the
             response
-        timeout: Optional[int] = None
+        \*\*timeout: Optional[int] = None
             Custom timeout that overwrites Client.timeout
         """
         url = self.api.PLAYER + '/' + tag + '/verify'
@@ -299,21 +299,21 @@ class Client:
 
         Parameters
         ----------
-        *tags: str
+        \*tags: str
             Valid player tags. Minimum length: 3
             Valid characters: 0289PYLQGRJCUV
-        **keys: Optional[list] = None
+        \*\*keys: Optional[list] = None
             Filter which keys should be included in the
             response
-        **exclude: Optional[list] = None
+        \*\*exclude: Optional[list] = None
             Filter which keys should be excluded from the
             response
-        **max: Optional[int] = None
+        \*\*max: Optional[int] = None
             Limit the number of items returned in the response
-        **page: Optional[int] = None
+        \*\*page: Optional[int] = None
             Works with max, the zero-based page of the
             items
-        **timeout: Optional[int] = None
+        \*\*timeout: Optional[int] = None
             Custom timeout that overwrites Client.timeout
         """
         url = self.api.PLAYER + '/' + ','.join(tags) + '/battles'
@@ -325,16 +325,16 @@ class Client:
 
         Parameters
         ----------
-        *tags: str
+        \*tags: str
             Valid player tags. Minimum length: 3
             Valid characters: 0289PYLQGRJCUV
-        **keys: Optional[list] = None
+        \*\*keys: Optional[list] = None
             Filter which keys should be included in the
             response
-        **exclude: Optional[list] = None
+        \*\*exclude: Optional[list] = None
             Filter which keys should be excluded from the
             response
-        **timeout: Optional[int] = None
+        \*\*timeout: Optional[int] = None
             Custom timeout that overwrites Client.timeout
         """
         url = self.api.PLAYER + '/' + ','.join(tags) + '/chests'
@@ -346,16 +346,16 @@ class Client:
 
         Parameters
         ----------
-        *tags: str
+        \*tags: str
             Valid clan tags. Minimum length: 3
             Valid characters: 0289PYLQGRJCUV
-        **keys: Optional[list] = None
+        \*\*keys: Optional[list] = None
             Filter which keys should be included in the
             response
-        **exclude: Optional[list] = None
+        \*\*exclude: Optional[list] = None
             Filter which keys should be excluded from the
             response
-        **timeout: Optional[int] = None
+        \*\*timeout: Optional[int] = None
             Custom timeout that overwrites Client.timeout
         """
         url = self.api.CLAN + '/' + ','.join(tags)
@@ -379,18 +379,18 @@ class Client:
         score: Optional[int]
             The minimum trophy score of
             a clan
-        **keys: Optional[list] = None
+        \*\*keys: Optional[list] = None
             Filter which keys should be included in the
             response
-        **exclude: Optional[list] = None
+        \*\*exclude: Optional[list] = None
             Filter which keys should be excluded from the
             response
-        **max: Optional[int] = None
+        \*\*max: Optional[int] = None
             Limit the number of items returned in the response
-        **page: Optional[int] = None
+        \*\*page: Optional[int] = None
             Works with max, the zero-based page of the
             items
-        **timeout: Optional[int] = None
+        \*\*timeout: Optional[int] = None
             Custom timeout that overwrites Client.timeout
         """
         url = self.api.CLAN + '/search'
@@ -403,18 +403,18 @@ class Client:
 
         Parameters
         ----------
-        **keys: Optional[list] = None
+        \*\*keys: Optional[list] = None
             Filter which keys should be included in the
             response
-        **exclude: Optional[list] = None
+        \*\*exclude: Optional[list] = None
             Filter which keys should be excluded from the
             response
-        **max: Optional[int] = None
+        \*\*max: Optional[int] = None
             Limit the number of items returned in the response
-        **page: Optional[int] = None
+        \*\*page: Optional[int] = None
             Works with max, the zero-based page of the
             items
-        **timeout: Optional[int] = None
+        \*\*timeout: Optional[int] = None
             Custom timeout that overwrites Client.timeout
         """
         url = self.api.CLAN + '/tracking'
@@ -428,16 +428,16 @@ class Client:
 
         Parameters
         ----------
-        *tags: str
+        \*tags: str
             Valid clan tags. Minimum length: 3
             Valid characters: 0289PYLQGRJCUV
-        **keys: Optional[list] = None
+        \*\*keys: Optional[list] = None
             Filter which keys should be included in the
             response
-        **exclude: Optional[list] = None
+        \*\*exclude: Optional[list] = None
             Filter which keys should be excluded from the
             response
-        **timeout: Optional[int] = None
+        \*\*timeout: Optional[int] = None
             Custom timeout that overwrites Client.timeout
         """
         url = self.api.CLAN + '/' + ','.join(tags) + '/tracking'
@@ -449,24 +449,24 @@ class Client:
 
         Parameters
         ----------
-        *tags: str
+        \*tags: str
             Valid player tags. Minimum length: 3
             Valid characters: 0289PYLQGRJCUV
-        **type: str
+        \*\*type: str
             Filters what kind of battles. Pick from:
             :all:, :war:, :clanMate:
-        **keys: Optional[list] = None
+        \*\*keys: Optional[list] = None
             Filter which keys should be included in the
             response
-        **exclude: Optional[list] = None
+        \*\*exclude: Optional[list] = None
             Filter which keys should be excluded from the
             response
-        **max: Optional[int] = None
+        \*\*max: Optional[int] = None
             Limit the number of items returned in the response
-        **page: Optional[int] = None
+        \*\*page: Optional[int] = None
             Works with max, the zero-based page of the
             items
-        **timeout: Optional[int] = None
+        \*\*timeout: Optional[int] = None
             Custom timeout that overwrites Client.timeout
         """
         url = self.api.CLAN + '/' + ','.join(tags) + '/battles'
@@ -480,21 +480,21 @@ class Client:
 
         Parameters
         ----------
-        *tags: str
+        \*tags: str
             Valid clan tags. Minimum length: 3
             Valid characters: 0289PYLQGRJCUV
-        **keys: Optional[list] = None
+        \*\*keys: Optional[list] = None
             Filter which keys should be included in the
             response
-        **exclude: Optional[list] = None
+        \*\*exclude: Optional[list] = None
             Filter which keys should be excluded from the
             response
-        **max: Optional[int] = None
+        \*\*max: Optional[int] = None
             Limit the number of items returned in the response
-        **page: Optional[int] = None
+        \*\*page: Optional[int] = None
             Works with max, the zero-based page of the
             items
-        **timeout: Optional[int] = None
+        \*\*timeout: Optional[int] = None
             Custom timeout that overwrites Client.timeout
         """
         url = self.api.CLAN + '/' + ','.join(tags) + '/history'
@@ -509,13 +509,13 @@ class Client:
         *tag: str
             A valid clan tag. Minimum length: 3
             Valid characters: 0289PYLQGRJCUV
-        **keys: Optional[list] = None
+        \*\*keys: Optional[list] = None
             Filter which keys should be included in the
             response
-        **exclude: Optional[list] = None
+        \*\*exclude: Optional[list] = None
             Filter which keys should be excluded from the
             response
-        **timeout: Optional[int] = None
+        \*\*timeout: Optional[int] = None
             Custom timeout that overwrites Client.timeout
         """
         url = self.api.CLAN + '/' + tag + '/war'
@@ -527,21 +527,21 @@ class Client:
 
         Parameters
         ----------
-        *tags: str
+        \*tags: str
             Valid clan tags. Minimum length: 3
             Valid characters: 0289PYLQGRJCUV
-        **keys: Optional[list] = None
+        \*\*keys: Optional[list] = None
             Filter which keys should be included in the
             response
-        **exclude: Optional[list] = None
+        \*\*exclude: Optional[list] = None
             Filter which keys should be excluded from the
             response
-        **max: Optional[int] = None
+        \*\*max: Optional[int] = None
             Limit the number of items returned in the response
-        **page: Optional[int] = None
+        \*\*page: Optional[int] = None
             Works with max, the zero-based page of the
             items
-        **timeout: Optional[int] = None
+        \*\*timeout: Optional[int] = None
             Custom timeout that overwrites Client.timeout
         """
         url = self.api.CLAN + '/' + tag + '/warlog'
@@ -556,13 +556,13 @@ class Client:
         tag: str
             A valid tournament tag. Minimum length: 3
             Valid characters: 0289PYLQGRJCUV
-        **keys: Optional[list] = None
+        \*\*keys: Optional[list] = None
             Filter which keys should be included in the
             response
-        **exclude: Optional[list] = None
+        \*\*exclude: Optional[list] = None
             Filter which keys should be excluded from the
             response
-        **timeout: Optional[int] = None
+        \*\*timeout: Optional[int] = None
             Custom timeout that overwrites Client.timeout
         """
         url = self.api.TOURNAMENT + '/' + tag
@@ -576,18 +576,18 @@ class Client:
         ----------
         name: str
             The name of the tournament
-        **keys: Optional[list] = None
+        \*\*keys: Optional[list] = None
             Filter which keys should be included in the
             response
-        **exclude: Optional[list] = None
+        \*\*exclude: Optional[list] = None
             Filter which keys should be excluded from the
             response
-        **max: Optional[int] = None
+        \*\*max: Optional[int] = None
             Limit the number of items returned in the response
-        **page: Optional[int] = None
+        \*\*page: Optional[int] = None
             Works with max, the zero-based page of the
             items
-        **timeout: Optional[int] = None
+        \*\*timeout: Optional[int] = None
             Custom timeout that overwrites Client.timeout
         """
         url = self.api.TOURNAMENT + '/search'
@@ -601,18 +601,18 @@ class Client:
             A location ID or '' (global)
             See https://github.com/RoyaleAPI/cr-api-data/blob/master/json/regions.json
             for a list of acceptable location IDs
-        **keys: Optional[list] = None
+        \*\*keys: Optional[list] = None
             Filter which keys should be included in the
             response
-        **exclude: Optional[list] = None
+        \*\*exclude: Optional[list] = None
             Filter which keys should be excluded from the
             response
-        **max: Optional[int] = None
+        \*\*max: Optional[int] = None
             Limit the number of items returned in the response
-        **page: Optional[int] = None
+        \*\*page: Optional[int] = None
             Works with max, the zero-based page of the
             items
-        **timeout: Optional[int] = None
+        \*\*timeout: Optional[int] = None
             Custom timeout that overwrites Client.timeout
         """
         url = self.api.TOP + '/clans/' + str(country_key)
@@ -626,18 +626,18 @@ class Client:
             A location ID or '' (global)
             See https://github.com/RoyaleAPI/cr-api-data/blob/master/json/regions.json
             for a list of acceptable location IDs
-        **keys: Optional[list] = None
+        \*\*keys: Optional[list] = None
             Filter which keys should be included in the
             response
-        **exclude: Optional[list] = None
+        \*\*exclude: Optional[list] = None
             Filter which keys should be excluded from the
             response
-        **max: Optional[int] = None
+        \*\*max: Optional[int] = None
             Limit the number of items returned in the response
-        **page: Optional[int] = None
+        \*\*page: Optional[int] = None
             Works with max, the zero-based page of the
             items
-        **timeout: Optional[int] = None
+        \*\*timeout: Optional[int] = None
             Custom timeout that overwrites Client.timeout
         """
         url = self.api.TOP + '/players/' + str(country_key)
@@ -647,18 +647,18 @@ class Client:
     def get_popular_clans(self, **params: keys):
         """Get a list of most queried clans
 
-        **keys: Optional[list] = None
+        \*\*keys: Optional[list] = None
             Filter which keys should be included in the
             response
-        **exclude: Optional[list] = None
+        \*\*exclude: Optional[list] = None
             Filter which keys should be excluded from the
             response
-        **max: Optional[int] = None
+        \*\*max: Optional[int] = None
             Limit the number of items returned in the response
-        **page: Optional[int] = None
+        \*\*page: Optional[int] = None
             Works with max, the zero-based page of the
             items
-        **timeout: Optional[int] = None
+        \*\*timeout: Optional[int] = None
             Custom timeout that overwrites Client.timeout
         """
         url = self.api.POPULAR + '/clans'
@@ -668,18 +668,18 @@ class Client:
     def get_popular_players(self, **params: keys):
         """Get a list of most queried players
 
-        **keys: Optional[list] = None
+        \*\*keys: Optional[list] = None
             Filter which keys should be included in the
             response
-        **exclude: Optional[list] = None
+        \*\*exclude: Optional[list] = None
             Filter which keys should be excluded from the
             response
-        **max: Optional[int] = None
+        \*\*max: Optional[int] = None
             Limit the number of items returned in the response
-        **page: Optional[int] = None
+        \*\*page: Optional[int] = None
             Works with max, the zero-based page of the
             items
-        **timeout: Optional[int] = None
+        \*\*timeout: Optional[int] = None
             Custom timeout that overwrites Client.timeout
         """
         url = self.api.POPULAR + '/players'
@@ -689,18 +689,18 @@ class Client:
     def get_popular_tournaments(self, **params: keys):
         """Get a list of most queried tournaments
 
-        **keys: Optional[list] = None
+        \*\*keys: Optional[list] = None
             Filter which keys should be included in the
             response
-        **exclude: Optional[list] = None
+        \*\*exclude: Optional[list] = None
             Filter which keys should be excluded from the
             response
-        **max: Optional[int] = None
+        \*\*max: Optional[int] = None
             Limit the number of items returned in the response
-        **page: Optional[int] = None
+        \*\*page: Optional[int] = None
             Works with max, the zero-based page of the
             items
-        **timeout: Optional[int] = None
+        \*\*timeout: Optional[int] = None
             Custom timeout that overwrites Client.timeout
         """
         url = self.api.POPULAR + '/tournament'
@@ -710,18 +710,18 @@ class Client:
     def get_popular_decks(self, **params: keys):
         """Get a list of most queried decks
 
-        **keys: Optional[list] = None
+        \*\*keys: Optional[list] = None
             Filter which keys should be included in the
             response
-        **exclude: Optional[list] = None
+        \*\*exclude: Optional[list] = None
             Filter which keys should be excluded from the
             response
-        **max: Optional[int] = None
+        \*\*max: Optional[int] = None
             Limit the number of items returned in the response
-        **page: Optional[int] = None
+        \*\*page: Optional[int] = None
             Works with max, the zero-based page of the
             items
-        **timeout: Optional[int] = None
+        \*\*timeout: Optional[int] = None
             Custom timeout that overwrites Client.timeout
         """
         url = self.api.POPULAR + '/decks'
@@ -731,18 +731,18 @@ class Client:
     def get_known_tournaments(self, **params: tournamentfilter):
         """Get a list of queried tournaments
 
-        **keys: Optional[list] = None
+        \*\*keys: Optional[list] = None
             Filter which keys should be included in the
             response
-        **exclude: Optional[list] = None
+        \*\*exclude: Optional[list] = None
             Filter which keys should be excluded from the
             response
-        **max: Optional[int] = None
+        \*\*max: Optional[int] = None
             Limit the number of items returned in the response
-        **page: Optional[int] = None
+        \*\*page: Optional[int] = None
             Works with max, the zero-based page of the
             items
-        **timeout: Optional[int] = None
+        \*\*timeout: Optional[int] = None
             Custom timeout that overwrites Client.timeout
         """
         url = self.api.TOURNAMENT + '/known'
@@ -752,30 +752,30 @@ class Client:
     def get_open_tournaments(self, **params: tournamentfilter):
         """Get a list of open tournaments
 
-        **1k: Optional[int] = 0
+        \*\*1k: Optional[int] = 0
             Set to 1 to filter tournaments that have
             at least 1000 max players
-        **full: Optional[int] = 0
+        \*\*full: Optional[int] = 0
             Set to 1 to filter tournaments that are
             full
-        **inprep: Optional[int] = 0
+        \*\*inprep: Optional[int] = 0
             Set to 1 to filter tournaments that are
             in preperation
-        **joinable: Optional[int] = 0
+        \*\*joinable: Optional[int] = 0
             Set to 1 to filter tournaments that are
             joinable
-        **keys: Optional[list] = None
+        \*\*keys: Optional[list] = None
             Filter which keys should be included in the
             response
-        **exclude: Optional[list] = None
+        \*\*exclude: Optional[list] = None
             Filter which keys should be excluded from the
             response
-        **max: Optional[int] = None
+        \*\*max: Optional[int] = None
             Limit the number of items returned in the response
-        **page: Optional[int] = None
+        \*\*page: Optional[int] = None
             Works with max, the zero-based page of the
             items
-        **timeout: Optional[int] = None
+        \*\*timeout: Optional[int] = None
             Custom timeout that overwrites Client.timeout
         """
         url = self.api.TOURNAMENT + '/open'
@@ -786,30 +786,30 @@ class Client:
         """Get a list of tournaments that have at least 1000
         max players
 
-        **open: Optional[int] = 0
+        \*\*open: Optional[int] = 0
             Set to 1 to filter tournaments that are
             open
-        **full: Optional[int] = 0
+        \*\*full: Optional[int] = 0
             Set to 1 to filter tournaments that are
             full
-        **inprep: Optional[int] = 0
+        \*\*inprep: Optional[int] = 0
             Set to 1 to filter tournaments that are
             in preperation
-        **joinable: Optional[int] = 0
+        \*\*joinable: Optional[int] = 0
             Set to 1 to filter tournaments that are
             joinable
-        **keys: Optional[list] = None
+        \*\*keys: Optional[list] = None
             Filter which keys should be included in the
             response
-        **exclude: Optional[list] = None
+        \*\*exclude: Optional[list] = None
             Filter which keys should be excluded from the
             response
-        **max: Optional[int] = None
+        \*\*max: Optional[int] = None
             Limit the number of items returned in the response
-        **page: Optional[int] = None
+        \*\*page: Optional[int] = None
             Works with max, the zero-based page of the
             items
-        **timeout: Optional[int] = None
+        \*\*timeout: Optional[int] = None
             Custom timeout that overwrites Client.timeout
         """
         url = self.api.TOURNAMENT + '/1k'
@@ -819,30 +819,30 @@ class Client:
     def get_prep_tournaments(self, **params: tournamentfilter):
         """Get a list of tournaments that are in preperation
 
-        **1k: Optional[int] = 0
+        \*\*1k: Optional[int] = 0
             Set to 1 to filter tournaments that have
             at least 1000 max players
-        **open: Optional[int] = 0
+        \*\*open: Optional[int] = 0
             Set to 1 to filter tournaments that are
             open
-        **full: Optional[int] = 0
+        \*\*full: Optional[int] = 0
             Set to 1 to filter tournaments that are
             full
-        **joinable: Optional[int] = 0
+        \*\*joinable: Optional[int] = 0
             Set to 1 to filter tournaments that are
             joinable
-        **keys: Optional[list] = None
+        \*\*keys: Optional[list] = None
             Filter which keys should be included in the
             response
-        **exclude: Optional[list] = None
+        \*\*exclude: Optional[list] = None
             Filter which keys should be excluded from the
             response
-        **max: Optional[int] = None
+        \*\*max: Optional[int] = None
             Limit the number of items returned in the response
-        **page: Optional[int] = None
+        \*\*page: Optional[int] = None
             Works with max, the zero-based page of the
             items
-        **timeout: Optional[int] = None
+        \*\*timeout: Optional[int] = None
             Custom timeout that overwrites Client.timeout
         """
         url = self.api.TOURNAMENT + '/inprep'
@@ -852,30 +852,30 @@ class Client:
     def get_joinable_tournaments(self, **params: tournamentfilter):
         """Get a list of tournaments that are joinable
 
-        **1k: Optional[int] = 0
+        \*\*1k: Optional[int] = 0
             Set to 1 to filter tournaments that have
             at least 1000 max players
-        **open: Optional[int] = 0
+        \*\*open: Optional[int] = 0
             Set to 1 to filter tournaments that are
             open
-        **full: Optional[int] = 0
+        \*\*full: Optional[int] = 0
             Set to 1 to filter tournaments that are
             full
-        **inprep: Optional[int] = 0
+        \*\*inprep: Optional[int] = 0
             Set to 1 to filter tournaments that are
             in preperation
-        **keys: Optional[list] = None
+        \*\*keys: Optional[list] = None
             Filter which keys should be included in the
             response
-        **exclude: Optional[list] = None
+        \*\*exclude: Optional[list] = None
             Filter which keys should be excluded from the
             response
-        **max: Optional[int] = None
+        \*\*max: Optional[int] = None
             Limit the number of items returned in the response
-        **page: Optional[int] = None
+        \*\*page: Optional[int] = None
             Works with max, the zero-based page of the
             items
-        **timeout: Optional[int] = None
+        \*\*timeout: Optional[int] = None
             Custom timeout that overwrites Client.timeout
         """
         url = self.api.TOURNAMENT + '/joinable'
@@ -885,30 +885,30 @@ class Client:
     def get_full_tournaments(self, **params: tournamentfilter):
         """Get a list of tournaments that are full
 
-        **1k: Optional[int] = 0
+        \*\*1k: Optional[int] = 0
             Set to 1 to filter tournaments that have
             at least 1000 max players
-        **open: Optional[int] = 0
+        \*\*open: Optional[int] = 0
             Set to 1 to filter tournaments that are
             open
-        **inprep: Optional[int] = 0
+        \*\*inprep: Optional[int] = 0
             Set to 1 to filter tournaments that are
             in preperation
-        **joinable: Optional[int] = 0
+        \*\*joinable: Optional[int] = 0
             Set to 1 to filter tournaments that are
             joinable
-        **keys: Optional[list] = None
+        \*\*keys: Optional[list] = None
             Filter which keys should be included in the
             response
-        **exclude: Optional[list] = None
+        \*\*exclude: Optional[list] = None
             Filter which keys should be excluded from the
             response
-        **max: Optional[int] = None
+        \*\*max: Optional[int] = None
             Limit the number of items returned in the response
-        **page: Optional[int] = None
+        \*\*page: Optional[int] = None
             Works with max, the zero-based page of the
             items
-        **timeout: Optional[int] = None
+        \*\*timeout: Optional[int] = None
             Custom timeout that overwrites Client.timeout
         """
         url = self.api.TOURNAMENT + '/full'

@@ -21,8 +21,8 @@ class BaseAttrDict:
 
     .. _python-box: https://github.com/cdgriffith/Box
 
-    Examples
-    --------
+    Example
+    -------
 
     Accessing data via dot notation: ::
 

@@ -24,5 +24,8 @@ Installation
 Documentation
 =============
 
-Hosted on readthedocs.io `https://clashroyale.readthedocs.io
-<https://clashroyale.readthedocs.io>`_.
+Hosted on readthedocs.io (https://clashroyale.readthedocs.io)
+
+Docstrings are written using the `NumpyDoc`_ specification
+
+.. _NumpyDoc: https://github.com/cdgriffith/Box

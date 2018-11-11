@@ -105,5 +105,7 @@ ENV/
 # pytest
 .pytest_cache/
 
+# custom
 .vscode
 test/config.yaml
+.todo

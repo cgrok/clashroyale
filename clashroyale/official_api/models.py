@@ -22,8 +22,8 @@ class BaseAttrDict:
 
     .. _python-box: https://github.com/cdgriffith/Box
 
-    Examples
-    --------
+    Example
+    -------
 
     Accessing data via dot notation: ::
 
@@ -101,13 +101,42 @@ class BaseAttrDict:
 class PaginatedAttrDict(BaseAttrDict):
     """Mixin class to allow for the paginated
     endpoints to be iterable
+
+    Example
+    -------
+
+    Searching clans with a limit of 3: ::
+
+        >>> a_data = await a_client.search_clans(name='aaa', limit=3)
+        >>> b_data = b_client.search_clans(name='aaa', limit=3)
+        >>> len(a_data)
+        3
+        >>> len(b_data)
+        3
+        >>> async for n, i in enumerate(a_data):  # async client
+        ...     pass
+
+        >>> # or
+        >>> for n, i in enumerate(b_data):
+        ...     pass
+
+        >>> print(n)
+        929
+        >>> # Iteration would call ``update_data``
+        >>> # until the limit has been hit
+
+    This functionality allows this library to present API
+    data in a clean dynamic way.
+
+    Best use case: Set the ``limit`` to as low as possible without compromising
+    runtime. Everytime the ``limit`` has been hit, an API call is made.
     """
     def __init__(self, client, data, response, model, cached=False, ts=None):
         self.cursor = {'after': data['paging']['cursors'].get('after'), 'before': data['paging']['cursors'].get('before')}
         self.client = client
         self.response = response
         self.model = model
-        self.raw_data = [self.model(self.client, d, response, cached=cached, ts=ts) for d in data['items']]
+        self.raw_data = [model(client, d, response, cached=cached, ts=ts) for d in data['items']]
 
     def __len__(self):
         return len(self.raw_data)
@@ -214,6 +243,11 @@ class PartialClan(BaseAttrDict):
                 return self.client.get_clan(self.tag)
             except AttributeError:
                 raise ValueError('This player does not have a clan.')
+
+
+class PartialTournament(BaseAttrDict):
+    def get_tournament(self):
+        return self.client.get_player(self.tag)
 
 
 class PartialPlayer(BaseAttrDict):
