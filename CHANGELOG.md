@@ -27,4 +27,4 @@ No changes yet
 
 
 [Unreleased]: https://github.com/cgrok/clashroyalecompare/v4.0.0...HEAD
-[4.0.0]: https://github.com/cgrok/clashroyale/compare/6c9215a...HEAD
+[4.0.0]: https://github.com/cgrok/clashroyale/compare/6c9215a...v4.0.0

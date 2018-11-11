@@ -26,11 +26,13 @@ Installation
 ============
 
 Development build
+
 .. code-block:: python
 
     pip install git+https://github.com/cgrok/clashroyale
 
 Stable build
+
 .. code-block:: python
 
     pip install clashroyale
