@@ -2,7 +2,9 @@
 All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
-No changes yet
+
+### Added
+- RuntimeError if you were calling the wrong method (iter/aiter) on an inappropriate client (i.e. async client -> iter/blocking client -> aiter)
 
 ## [4.0.0] - 11/11/2018
 ### Added

@@ -160,6 +160,8 @@ class PaginatedAttrDict(BaseAttrDict):
 
     @async_generator
     async def __aiter__(self):
+        if not self.client.is_async:
+            raise RuntimeError('Calling __aiter__ on an asynchronus client. Use :for: not :async for:')
         while True:
             index = 0
             for _ in range(index, len(self.raw_data)):
@@ -169,6 +171,8 @@ class PaginatedAttrDict(BaseAttrDict):
                 break
 
     def __iter__(self):
+        if self.client.is_async:
+            raise RuntimeError('Calling __iter__ on an asynchronus client. Use :async for: not :for:')
         while True:
             index = 0
             for _ in range(index, len(self.raw_data)):
