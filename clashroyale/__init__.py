@@ -6,7 +6,7 @@ from .errors import *
 # METADATA #
 ############
 
-__version__ = 'v4.0.0'
+__version__ = 'v4.0.1'
 __title__ = 'clashroyale'
-__license__ = 'GPLv3'
+__license__ = 'MIT'
 __github__ = 'https://github.com/cgrok/clashroyale'

@@ -1,7 +1,7 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
-## [Unreleased]
+## [4.0.1] - 17/11/2018
 
 ### Added
 - RuntimeError if you were calling the wrong method (iter/aiter) on an inappropriate client (i.e. async client -> iter/blocking client -> aiter)
@@ -29,4 +29,5 @@ All notable changes to this project will be documented in this file.
 
 
 [Unreleased]: https://github.com/cgrok/clashroyalecompare/v4.0.0...HEAD
+[4.0.1]: https://github.com/cgrok/clashroyale/compare/v4.0.0...v4.0.1
 [4.0.0]: https://github.com/cgrok/clashroyale/compare/6c9215a...v4.0.0

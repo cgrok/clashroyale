@@ -8,11 +8,11 @@ with open('README.rst', encoding='utf8') as f:
 setup(
     name='clashroyale',
     packages=find_packages(),
-    version='4.0.0',
+    version='4.0.1',
     description='An (a)sync wrapper for royaleapi.com',
     long_description=long_description,
     long_description_content_type='text/x-rst',
-    license='GPLv3',
+    license='MIT',
     keywords=['clashroyale', 'wrapper', 'cr', 'royaleapi'],
     include_package_data=True,
     install_requires=['aiohttp', 'python-box', 'requests', 'async_generator'],
