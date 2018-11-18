@@ -90,6 +90,11 @@ class Client:
             return ret
         return None
 
+    @classmethod
+    def Async(cls, token, session=None, **options):
+        '''Returns the webhook in async mode.'''
+        return cls(token, session=session, is_async=True, **options)
+
     def __enter__(self):
         return self
 
