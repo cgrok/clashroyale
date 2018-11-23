@@ -31,7 +31,7 @@
 </div>
 <br>
 <div align="center">
-    This library enables you to effortlessly retrieve data from either the official Clash Royale API or royaleapi.com and dynamically interact with the data recieved with an object oriented approach. Asynchronous usage is also supported.
+    This library enables you to effortlessly retrieve data from either the official Clash Royale API or royaleapi.com and dynamically interact with the data recieved with an object oriented design. Asynchronous usage is also supported.
 </div>
 
 ### Installation
