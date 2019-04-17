@@ -622,7 +622,7 @@ class Client:
         """
         url = self.api.TOP + '/clans/' + str(country_key)
         return self._get_model(url, PartialClan, **params)
-      
+
     @typecasted
     def get_top_war_clans(self, country_key='', **params: keys):
         """Get a list of top clans by war
