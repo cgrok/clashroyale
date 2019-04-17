@@ -201,6 +201,13 @@ class TestBlockingClient(unittest.TestCase):
         clans = self.cr.get_top_clans()
         self.assertTrue(isinstance(clans, list))
 
+    def test_get_top_war_clans(self):
+        """This test will test out:
+        - Top war clans endpoint
+        """
+        clans = self.cr.get_top_war_clans()
+        self.assertTrue(isinstance(clans, list))
+
     def test_get_popular_clans(self):
         """This test will test out:
         - Popular clans endpoint

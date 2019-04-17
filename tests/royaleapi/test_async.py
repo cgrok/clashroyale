@@ -210,6 +210,13 @@ class TestBlockingClient(asynctest.TestCase):
         clans = await self.cr.get_top_clans()
         self.assertTrue(isinstance(clans, list))
 
+    async def test_get_top_war_clans(self):
+        """This test will test out:
+        - Top war clans endpoint
+        """
+        clans = await self.cr.get_top_war_clans()
+        self.assertTrue(isinstance(clans, list))
+
     async def test_get_popular_clans(self):
         """This test will test out:
         - Popular clans endpoint
