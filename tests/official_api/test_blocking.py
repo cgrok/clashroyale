@@ -9,7 +9,7 @@ from dotenv import load_dotenv, find_dotenv
 load_dotenv(find_dotenv('../.env'))
 
 TOKEN = os.getenv('official_api')
-URL = os.getenv('official_api_url', 'https://api.royaleapi.com')
+URL = os.getenv('official_api_url', 'https://api.clashroyale.com/v1')
 
 
 class TestBlockingClient(unittest.TestCase):
