@@ -1,6 +1,11 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [4.0.2] - 14/04/2019
+
+### Added
+- RoyaleAPI: Added `/top/war/{location_id}` end point
+
 ## [4.0.1] - 17/11/2018
 
 ### Added

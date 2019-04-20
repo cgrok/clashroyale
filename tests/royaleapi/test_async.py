@@ -13,7 +13,7 @@ TOKEN = os.getenv('royaleapi')
 URL = os.getenv('url', 'https://api.royaleapi.com')
 
 
-class TestBlockingClient(asynctest.TestCase):
+class TestAsyncClient(asynctest.TestCase):
     """Tests all methods in the blocking client that
     uses the `aiohttp` module in `clashroyale`
     """
@@ -168,16 +168,17 @@ class TestBlockingClient(asynctest.TestCase):
         - Clan without history enabled history fetching
         """
 
-        get_clan_history = await self.cr.get_clan_history()
+        get_clan_history = self.cr.get_clan_history
 
         tag = '2U2GGQJ'
-        history = get_clan_history(tag)
+        history = await get_clan_history(tag)
         self.assertTrue(isinstance(history.raw_data, dict))
+
+        tag = '000000'
 
         async def request():
             await self.cr.get_player(tag)
 
-        tag = '29UQQ282'
         self.assertAsyncRaises(clashroyale.NotTrackedError, request)
 
     async def test_get_clan_tracking(self):
@@ -186,14 +187,14 @@ class TestBlockingClient(asynctest.TestCase):
         - Clan without history enabled history fetching
         """
 
-        get_clan_tracking = await self.cr.get_clan_tracking()
+        get_clan_tracking = self.cr.get_clan_tracking
 
         tag = '2U2GGQJ'
-        history = get_clan_tracking(tag)
+        history = await get_clan_tracking(tag)
         self.assertTrue(history.available)
 
-        tag = '29UQQ282'
-        history = get_clan_tracking(tag)
+        tag = '000000'
+        history = await get_clan_tracking(tag)
         self.assertFalse(history.available)
 
     async def test_get_tracking_clans(self):
@@ -208,6 +209,13 @@ class TestBlockingClient(asynctest.TestCase):
         - Top clans endpoint
         """
         clans = await self.cr.get_top_clans()
+        self.assertTrue(isinstance(clans, list))
+
+    async def test_get_top_war_clans(self):
+        """This test will test out:
+        - Top war clans endpoint
+        """
+        clans = await self.cr.get_top_war_clans()
         self.assertTrue(isinstance(clans, list))
 
     async def test_get_popular_clans(self):

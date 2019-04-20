@@ -162,13 +162,13 @@ class TestBlockingClient(unittest.TestCase):
         - Clan without history enabled history fetching
         """
 
-        get_clan_history = self.cr.get_clan_history()
+        get_clan_history = self.cr.get_clan_history
 
         tag = '2U2GGQJ'
         history = get_clan_history(tag)
         self.assertTrue(isinstance(history.raw_data, dict))
 
-        tag = '29UQQ282'
+        tag = '000000'
         self.assertRaises(clashroyale.NotTrackedError, get_clan_history, tag)
 
     def test_get_clan_tracking(self):
@@ -177,13 +177,13 @@ class TestBlockingClient(unittest.TestCase):
         - Clan without history enabled history fetching
         """
 
-        get_clan_tracking = self.cr.get_clan_tracking()
+        get_clan_tracking = self.cr.get_clan_tracking
 
         tag = '2U2GGQJ'
         history = get_clan_tracking(tag)
         self.assertTrue(history.available)
 
-        tag = '29UQQ282'
+        tag = '000000'
         history = get_clan_tracking(tag)
         self.assertFalse(history.available)
 
@@ -199,6 +199,13 @@ class TestBlockingClient(unittest.TestCase):
         - Top clans endpoint
         """
         clans = self.cr.get_top_clans()
+        self.assertTrue(isinstance(clans, list))
+
+    def test_get_top_war_clans(self):
+        """This test will test out:
+        - Top war clans endpoint
+        """
+        clans = self.cr.get_top_war_clans()
         self.assertTrue(isinstance(clans, list))
 
     def test_get_popular_clans(self):
