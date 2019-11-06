@@ -1,6 +1,11 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## 06/11/2019
+
+### Fixed
+- RoyaleAPI: Updated the endpoints URLs to match the latest version of the API. This affects all endpoints for players and clans.
+
 ## [4.0.2] - 14/04/2019
 
 ### Added

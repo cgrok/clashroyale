@@ -164,9 +164,9 @@ class TestBlockingClient(unittest.TestCase):
 
         get_clan_history = self.cr.get_clan_history
 
-        tag = '2U2GGQJ'
+        tag = '9PJ82CRC'
         history = get_clan_history(tag)
-        self.assertTrue(isinstance(history.raw_data, dict))
+        self.assertTrue(isinstance(history, list))
 
         tag = '000000'
         self.assertRaises(clashroyale.NotTrackedError, get_clan_history, tag)
@@ -179,13 +179,12 @@ class TestBlockingClient(unittest.TestCase):
 
         get_clan_tracking = self.cr.get_clan_tracking
 
-        tag = '2U2GGQJ'
+        tag = '2GJU9Y2G'
         history = get_clan_tracking(tag)
         self.assertTrue(history.available)
 
         tag = '000000'
-        history = get_clan_tracking(tag)
-        self.assertFalse(history.available)
+        self.assertRaises(clashroyale.NotTrackedError, get_clan_tracking, tag)
 
     def test_get_tracking_clans(self):
         """This test will test out:
