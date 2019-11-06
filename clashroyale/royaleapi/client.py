@@ -599,7 +599,7 @@ class Client:
         return self._get_model(url, PartialClan, **params)
 
     @typecasted
-    def get_top_clans(self, country_key='', **params: keys):
+    def get_top_clans(self, country_key='all', **params: keys):
         """Get a list of top clans by trophy
 
         location_id: Optional[str] = ''
@@ -624,7 +624,7 @@ class Client:
         return self._get_model(url, PartialClan, **params)
 
     @typecasted
-    def get_top_war_clans(self, country_key='', **params: keys):
+    def get_top_war_clans(self, country_key='all', **params: keys):
         """Get a list of top clans by war
 
         location_id: Optional[str] = ''
@@ -649,7 +649,7 @@ class Client:
         return self._get_model(url, PartialClan, **params)
 
     @typecasted
-    def get_top_players(self, country_key='', **params: keys):
+    def get_top_players(self, country_key='all', **params: keys):
         """Get a list of top players
 
         location_id: Optional[str] = ''

@@ -103,8 +103,8 @@ def _to_camel_case(snake):
 class API:
     def __init__(self, url):
         self.BASE = url
-        self.PLAYER = self.BASE + '/players'
-        self.CLAN = self.BASE + '/clans'
+        self.PLAYER = self.BASE + '/player'
+        self.CLAN = self.BASE + '/clan'
         self.TOURNAMENT = self.BASE + '/tournaments'
         self.TOP = self.BASE + '/top'
         self.POPULAR = self.BASE + '/popular'
