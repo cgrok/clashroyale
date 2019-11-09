@@ -72,8 +72,8 @@ def crtag(tag):
             bad.append(c)
     if bad:
         raise ValueError('Invalid tag characters passed: {}'.format(', '.join(bad)))
-    if len(tag[3:]) < 3:
-        raise ValueError('Tag ({}) too short, length {}, expected 3'.format(tag[3:], len(tag[3:])))
+    if len(tag) < 3:
+        raise ValueError('Tag ({}) too short, length {}, expected 3'.format(tag, len(tag)))
     return tag
 
 
