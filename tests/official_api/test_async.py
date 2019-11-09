@@ -79,8 +79,8 @@ class TestAsyncClient(asynctest.TestCase):
         await clans.all_data()
         self.assertGreater(len(clans), 3)
 
-    async def test_get_clan_war(self):
-        clan = await self.cr.get_clan_war(self.clan_tags[0])
+    async def test_get_clan_river_race(self):
+        clan = await self.cr.get_clan_river_race(self.clan_tags[0])
         self.assertTrue(isinstance(clan.state, str))
 
     async def test_get_clan_war_timeout(self):
@@ -97,6 +97,10 @@ class TestAsyncClient(asynctest.TestCase):
 
     async def test_get_clan_war_log(self):
         clan = await self.cr.get_clan_war_log(self.clan_tags[0])
+        self.assertTrue(isinstance(clan, clashroyale.official_api.PaginatedAttrDict))
+
+    async def test_get_clan_river_race_log(self):
+        clan = await self.cr.get_clan_river_race_log(self.clan_tags[0])
         self.assertTrue(isinstance(clan, clashroyale.official_api.PaginatedAttrDict))
 
     async def test_get_clan_war_log_timeout(self):

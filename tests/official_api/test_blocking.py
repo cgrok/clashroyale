@@ -82,8 +82,8 @@ class TestBlockingClient(unittest.TestCase):
         clans.all_data()
         self.assertGreater(len(clans), 3)
 
-    def test_get_clan_war(self):
-        clan = self.cr.get_clan_war(self.clan_tags[0])
+    def test_get_clan_river_race(self):
+        clan = self.cr.get_clan_river_race(self.clan_tags[0])
         self.assertTrue(isinstance(clan.state, str))
 
     def test_get_clan_war_timeout(self):
@@ -100,6 +100,10 @@ class TestBlockingClient(unittest.TestCase):
 
     def test_get_clan_war_log(self):
         clan = self.cr.get_clan_war_log(self.clan_tags[0])
+        self.assertTrue(isinstance(clan, clashroyale.official_api.PaginatedAttrDict))
+
+    def test_get_clan_river_race_log(self):
+        clan = self.cr.get_clan_river_race_log(self.clan_tags[0])
         self.assertTrue(isinstance(clan, clashroyale.official_api.PaginatedAttrDict))
 
     def test_get_clan_war_log_timeout(self):
