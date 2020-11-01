@@ -1,6 +1,11 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## 15/09/2020
+
+### Added
+- OfficialAPI: Added `get_clan_river_race` and `get_clan_river_race_log`
+
 ## 09/11/2019
 
 ### Fixed

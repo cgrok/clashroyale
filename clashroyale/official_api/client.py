@@ -244,7 +244,7 @@ class Client:
         Parameters
         ----------
         tag: str
-            A valid tournament tag. Minimum length: 3
+            A valid player tag. Minimum length: 3
             Valid characters: 0289PYLQGRJCUV
         timeout: Optional[int] = None
             Custom timeout that overwrites Client.timeout
@@ -263,7 +263,7 @@ class Client:
         Parameters
         ----------
         tag: str
-            A valid tournament tag. Minimum length: 3
+            A valid player tag. Minimum length: 3
             Valid characters: 0289PYLQGRJCUV
         apikey: str
             The API Key in the player's settings
@@ -280,7 +280,7 @@ class Client:
         Parameters
         ----------
         tag: str
-            A valid tournament tag. Minimum length: 3
+            A valid player tag. Minimum length: 3
             Valid characters: 0289PYLQGRJCUV
         \*\*limit: Optional[int] = None
             Limit the number of items returned in the response
@@ -297,7 +297,7 @@ class Client:
         Parameters
         ----------
         tag: str
-            A valid tournament tag. Minimum length: 3
+            A valid player tag. Minimum length: 3
             Valid characters: 0289PYLQGRJCUV
         timeout: Optional[int] = None
             Custom timeout that overwrites Client.timeout
@@ -312,7 +312,7 @@ class Client:
         Parameters
         ----------
         tag: str
-            A valid tournament tag. Minimum length: 3
+            A valid clan tag. Minimum length: 3
             Valid characters: 0289PYLQGRJCUV
         timeout: Optional[int] = None
             Custom timeout that overwrites Client.timeout
@@ -350,18 +350,18 @@ class Client:
         return self._get_model(url, PartialClan, **params)
 
     @typecasted
-    def get_clan_war(self, tag: crtag, timeout: int=None):
-        """Get inforamtion about a clan's current clan war
+    def get_clan_river_race(self, tag: crtag, timeout: int = None):
+        """Get inforamtion about a clan's current river race
 
         Parameters
         ----------
         tag: str
-            A valid tournament tag. Minimum length: 3
+            A valid clan tag. Minimum length: 3
             Valid characters: 0289PYLQGRJCUV
         timeout: Optional[int] = None
             Custom timeout that overwrites Client.timeout
         """
-        url = self.api.CLAN + '/' + tag + '/currentwar'
+        url = self.api.CLAN + '/' + tag + '/currentriverrace'
         return self._get_model(url, timeout=timeout)
 
     @typecasted
@@ -371,7 +371,7 @@ class Client:
         Parameters
         ----------
         tag: str
-            A valid tournament tag. Minimum length: 3
+            A valid clan tag. Minimum length: 3
             Valid characters: 0289PYLQGRJCUV
         \*\*limit: Optional[int] = None
             Limit the number of items returned in the response
@@ -388,7 +388,7 @@ class Client:
         Parameters
         ----------
         tag: str
-            A valid tournament tag. Minimum length: 3
+            A valid clan tag. Minimum length: 3
             Valid characters: 0289PYLQGRJCUV
         \*\*limit: Optional[int] = None
             Limit the number of items returned in the response
@@ -396,6 +396,23 @@ class Client:
             Custom timeout that overwrites Client.timeout
         """
         url = self.api.CLAN + '/' + tag + '/warlog'
+        return self._get_model(url, **params)
+
+    @typecasted
+    def get_clan_river_race_log(self, tag: crtag, **params: keys):
+        """Get a clan's river race log
+
+        Parameters
+        ----------
+        tag: str
+            A valid clan tag. Minimum length: 3
+            Valid characters: 0289PYLQGRJCUV
+        \*\*limit: Optional[int] = None
+            Limit the number of items returned in the response
+        \*\*timeout: Optional[int] = None
+            Custom timeout that overwrites Client.timeout
+        """
+        url = self.api.CLAN + '/' + tag + '/riverracelog'
         return self._get_model(url, **params)
 
     @typecasted
