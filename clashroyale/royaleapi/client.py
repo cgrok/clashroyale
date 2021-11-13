@@ -105,7 +105,7 @@ class Client:
         return self
 
     async def __aexit__(self, exc_type, exc_value, traceback):
-        self.close()
+        await self.close()
 
     def __repr__(self):
         return '<RoyaleAPI Client async={}>'.format(self.is_async)
